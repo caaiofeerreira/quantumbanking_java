@@ -43,7 +43,7 @@ public class ManagerService {
         Manager manager = new Manager(dto, encryptedPassword, agency);
         managerRepository.save(manager);
 
-        return managerMapper.toRegister(manager);
+        return managerMapper.toResponseDTO(manager);
     }
 
 

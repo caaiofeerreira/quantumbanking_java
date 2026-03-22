@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class AgencyMapper {
 
-    public AgencyResponseDTO toAgency(Agency agency) {
+    public AgencyResponseDTO toResponseDTO(Agency agency) {
         return new AgencyResponseDTO(
                 agency.getId(),
                 agency.getNumber(),

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class CompanyMapper {
 
-    public CompanyResponseDTO toRegisterCompany(Company company) {
+    public CompanyResponseDTO toResponseDTO(Company company) {
         return new CompanyResponseDTO(
                 company.getCompanyName(),
                 company.getTradeName(),

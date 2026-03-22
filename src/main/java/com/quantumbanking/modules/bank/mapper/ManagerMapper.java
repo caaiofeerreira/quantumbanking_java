@@ -11,7 +11,7 @@ public class ManagerMapper {
 
     private final AgencyMapper agencyMapper;
 
-    public ManagerResponseDTO toRegister(Manager manager) {
+    public ManagerResponseDTO toResponseDTO(Manager manager) {
         return new ManagerResponseDTO(
                 manager.getId(),
                 manager.getName(),
@@ -19,7 +19,7 @@ public class ManagerMapper {
                 manager.getEmail(),
                 manager.getPhone(),
                 manager.getStatus(),
-                agencyMapper.toAgency(manager.getAgency())
+                agencyMapper.toResponseDTO(manager.getAgency())
         );
     }
 }

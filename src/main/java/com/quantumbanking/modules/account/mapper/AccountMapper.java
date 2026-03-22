@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class AccountMapper {
-    public AccountResponseDTO toRegisterAccount(Account account) {
+    public AccountResponseDTO toResponseDTO(Account account) {
         return new AccountResponseDTO(
                 account.getId(),
                 account.getAccountNumber(),

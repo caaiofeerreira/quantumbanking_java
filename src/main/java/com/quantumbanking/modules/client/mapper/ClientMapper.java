@@ -15,7 +15,7 @@ public class ClientMapper {
     private final AccountMapper accountMapper;
     private final CompanyMapper companyMapper;
 
-    public ClientResponseDTO toRegisterClient(Client client, Account account, Company company) {
+    public ClientResponseDTO toResponseDTO(Client client, Account account, Company company) {
         return new ClientResponseDTO(
                 client.getId(),
                 client.getName(),
@@ -24,8 +24,8 @@ public class ClientMapper {
                 client.getPhone(),
                 client.getType(),
                 client.getStatus(),
-                accountMapper.toRegisterAccount(account),
-                company != null ? companyMapper.toRegisterCompany(company) : null
+                accountMapper.toResponseDTO(account),
+                company != null ? companyMapper.toResponseDTO(company) : null
         );
     }
 }
