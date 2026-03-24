@@ -11,4 +11,7 @@ import java.util.Optional;
 public interface AccountRepository extends JpaRepository<Account, Long> {
 
     boolean existsByAccountNumber(String accountNumber);
+
+    @Query("SELECT a.balance FROM Account a WHERE a.client.id = :clientId")
+    Optional<BigDecimal> findBalanceByClientId(@Param("clientId") Long clientId);
 }

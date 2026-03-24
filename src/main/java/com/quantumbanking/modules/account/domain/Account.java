@@ -2,6 +2,7 @@ package com.quantumbanking.modules.account.domain;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.quantumbanking.infra.exception.TransactionNotAuthorizedException;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.client.domain.Client;
 import jakarta.persistence.*;
@@ -19,7 +20,7 @@ import java.util.concurrent.locks.ReentrantLock;
 @Getter
 @Setter
 @EqualsAndHashCode(of = "id")
-public class Account {
+public class Account implements AccountOperations{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -53,4 +54,37 @@ public class Account {
     @JsonIgnore
     @Transient
     private final Lock lock = new ReentrantLock();
+
+    @Override
+    public void debit(BigDecimal amount) {
+
+        lock.lock();
+        try {
+            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new TransactionNotAuthorizedException("O valor deve ser positivo");
+            }
+            if (amount.compareTo(balance) > 0) {
+                throw new TransactionNotAuthorizedException("Saldo insuficiente");
+            }
+            this.balance = this.balance.subtract(amount);
+
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public void credit(BigDecimal amount) {
+
+        lock.lock();
+        try {
+            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new TransactionNotAuthorizedException("O valor deve ser positivo");
+            }
+            this.balance = this.balance.add(amount);
+
+        } finally {
+            lock.unlock();
+        }
+    }
 }
