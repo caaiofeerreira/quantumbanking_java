@@ -14,4 +14,7 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     @Query("SELECT a.balance FROM Account a WHERE a.client.id = :clientId")
     Optional<BigDecimal> findBalanceByClientId(@Param("clientId") Long clientId);
+
+    @Query("SELECT a FROM Account a WHERE a.client.id = :clientId")
+    Optional<Account> findByClientId(@Param("clientId") Long clientId);
 }
