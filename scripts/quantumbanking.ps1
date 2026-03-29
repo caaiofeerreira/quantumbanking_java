@@ -81,3 +81,30 @@ function ExecuteExternalTransaction {
         -Headers @{ Authorization = "Bearer $global:token" } `
         -Body $body
 }
+
+function RegisterPixKey {
+
+    $body = @{
+        key = "maria@empresa.com.br"
+        type = "EMAIL"
+    } | ConvertTo-Json
+
+    $response = Invoke-RestMethod -Uri "$env:BASE_URL/api/auth/account/pix/register" `
+        -Method POST `
+        -ContentType "application/json" `
+        -Headers @{ Authorization = "Bearer $global:token" } `
+        -Body $body
+}
+
+function ListPixKey {
+
+    Invoke-RestMethod -Uri "$env:BASE_URL/api/auth/account/pix/keys" `
+        -Method GET `
+        -Headers @{ Authorization = "Bearer $global:token" }
+}
+
+function RemovePixKey($KeyId) {
+    Invoke-RestMethod -Uri "$env:BASE_URL/api/auth/account/pix/$KeyId" `
+        -Method DELETE `
+        -Headers @{ Authorization = "Bearer $global:token" }
+}

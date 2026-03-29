@@ -37,7 +37,7 @@ public class ClientService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public ClientResponseDTO clientRegister(ClientRegistrationDTO requestDTO) {
+    public ClientResponseDTO registerClient(ClientRegistrationDTO requestDTO) {
 
         if (userRepository.existsByCpf(requestDTO.cpf())) {
             throw new ValidateException("CPF já cadastrado.");

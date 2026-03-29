@@ -63,4 +63,10 @@ public class ResourceExceptionHandler {
         log.warn("Conta não encontrada: {}", ex.getMessage());
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), getPath());
     }
+
+    @ExceptionHandler(UnauthorizedAccessException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedException(UnauthorizedAccessException ex) {
+        log.warn("Acesso não autorizado: {}", ex.getMessage());
+        return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), getPath());
+    }
 }
