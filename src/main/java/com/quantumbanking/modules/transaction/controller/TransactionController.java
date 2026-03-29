@@ -1,10 +1,7 @@
 package com.quantumbanking.modules.transaction.controller;
 
 import com.quantumbanking.modules.shared.domain.user.User;
-import com.quantumbanking.modules.transaction.dto.DepositRequestDTO;
-import com.quantumbanking.modules.transaction.dto.DepositResponseDTO;
-import com.quantumbanking.modules.transaction.dto.WithdrawRequestDTO;
-import com.quantumbanking.modules.transaction.dto.WithdrawResponseDTO;
+import com.quantumbanking.modules.transaction.dto.*;
 import com.quantumbanking.modules.transaction.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -38,4 +35,21 @@ public class TransactionController {
         WithdrawResponseDTO responseDTO = transactionService.executeWithdraw(user, requestDTO);
         return ResponseEntity.ok(responseDTO);
     }
+
+    @PostMapping("/transaction/internal")
+    public ResponseEntity<InternalTransactionResponseDTO> internalTransaction(@AuthenticationPrincipal User user,
+                                                                              @RequestBody @Valid InternalTransactionRequestDTO requestDTO) {
+
+        InternalTransactionResponseDTO response = transactionService.executeInternalTransaction(user, requestDTO);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/transaction/external")
+    public ResponseEntity<ExternalTransactionResponseDTO> externalTransaction(@AuthenticationPrincipal User user,
+                                                                              @RequestBody @Valid ExternalTransactionRequestDTO requestDTO) {
+
+        ExternalTransactionResponseDTO response = transactionService.executeExternalTransaction(user, requestDTO);
+        return ResponseEntity.ok(response);
+    }
+
 }
