@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -17,9 +18,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ResourceExceptionHandler {
 
-    private ResponseEntity<ErrorResponse> buildResponse(
-            HttpStatus status, String message, String path
-    ) {
+    private ResponseEntity<ErrorResponse> buildResponse(HttpStatus status, String message, String path) {
         ErrorResponse error = new ErrorResponse(
                 status.value(),
                 message,
@@ -46,10 +45,16 @@ public class ResourceExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, message, getPath());
     }
 
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
+        log.warn("Tentativa de login inválido: {}", ex.getMessage());
+        return buildResponse(HttpStatus.UNAUTHORIZED, "Cpf ou senha inválidos.", getPath());
+    }
+
     @ExceptionHandler(ValidateException.class)
     public ResponseEntity<ErrorResponse> handleValidateException(ValidateException ex) {
         log.warn("Erro de validação: {}", ex.getMessage());
-        return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), getPath());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
     }
 
     @ExceptionHandler(TransactionNotAuthorizedException.class)

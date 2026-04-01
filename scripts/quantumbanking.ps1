@@ -1,110 +1,160 @@
+function Request-Api {
+    param (
+        [Parameter(Mandatory=$true)][string]$Path,
+        [Parameter(Mandatory=$false)][string]$Method = "GET",
+        [Parameter(Mandatory=$false)]$Body = $null
+    )
 
-function Login {
+    $params = @{
+        Uri         = "$env:BASE_URL$Path"
+        Method      = $Method
+        ContentType = "application/json"
+        ErrorAction = "Stop"
+    }
 
-    $body = @{
-        cpf      = $env:QB_USER
-        password = $env:QB_PASS
-    } | ConvertTo-Json
+    if ($global:token) {
+        $params.Headers = @{ Authorization = "Bearer $global:token" }
+    }
 
-    $response = Invoke-RestMethod -Uri "$env:BASE_URL/api/auth/login" `
+    if ($Body) {
+        $params.Body = ($Body | ConvertTo-Json)
+    }
+
+    try {
+        return Invoke-RestMethod @params
+    }
+    catch {
+        $errorResponse = $_.Exception.Response
+        if ($errorResponse) {
+            $reader = New-Object System.IO.StreamReader($errorResponse.GetResponseStream())
+            $errorBody = $reader.ReadToEnd() | ConvertFrom-Json
+            $reader.Close()
+
+            Write-Host "Status: $($errorBody.status) - $($errorBody.message)" -ForegroundColor Yellow
+
+
+            if ($errorResponse.StatusCode.value__ -eq 401) {
+                $global:token = $null
+                Write-Host "Sessão expirada ou inválida." -ForegroundColor Red
+            }
+        } else {
+            Write-Host "Erro Crítico: $($_.Exception.Message)" -ForegroundColor Red
+        }
+        return $null
+    }
+}
+
+
+function RegisterClient($name, $cpf, $phone, $email, $pass, $street, $number, $complement,
+                        $neighborhood, $city, $state, $zip, $clientType, $accountType, $agency) {
+    $global:token =$null
+
+    return Request-Api `
+        -Path "/api/client/register"`
         -Method POST `
-        -ContentType "application/json" `
-        -Body $body
+        -Body @{
+            name = $name
+            cpf = $cpf
+            phone = $phone
+            email = $email
+            password = $pass
+            address = @{
+                logradouro = $street
+                numero = $number
+                complemento = $complement
+                bairro = $neighborhood
+                cidade = $city
+                estado = $state
+                cep = $zip
+            }
+            clientType = $clientType
+            accountType = $accountType
+            agencyNumber = $agency
+        }
+}
 
-    $global:token = $response.token
+function Login($cpf, $pass) {
+    $global:token = $null
+    $res = Request-Api `
+        -Path "/api/auth/login"`
+        -Method POST `
+        -Body @{
+            cpf = $cpf;
+            password = $pass
+        }
+
+    if ($res) {
+        $global:token = $res.token
+        Write-Host "Logado com sucesso!" -ForegroundColor Green
+    }
 }
 
 function GetBalance {
-
-    Invoke-RestMethod -Uri "$env:BASE_URL/api/auth/account/balance" `
-        -Method GET `
-        -Headers @{ Authorization = "Bearer $global:token" }
+    return Request-Api `
+        -Path "/api/account/balance"
 }
 
-function ExecuteDeposit {
-
-    $body = @{
-        amount      = 250.00
-        description = "Depósito via script"
-    } | ConvertTo-Json
-
-    $response = Invoke-RestMethod -Uri "$env:BASE_URL/api/auth/account/deposit" `
+function ExecuteDeposit($amount) {
+    return Request-Api `
+        -Path "/api/account/deposit" `
         -Method POST `
-        -ContentType "application/json" `
-        -Headers @{ Authorization = "Bearer $global:token" } `
-        -Body $body
+        -Body @{
+            amount = $amount;
+            description = "Depósito via script"
+        }
 }
 
-function ExecuteWithdraw {
-
-    $body = @{
-        amount = 150.00
-        description = "Saque via script"
-    } | ConvertTo-Json
-
-    $response = Invoke-RestMethod -Uri "$env:BASE_URL/api/auth/account/withdraw" `
+function ExecuteWithdraw($amount) {
+    return Request-Api `
+        -Path "/api/account/withdraw" `
         -Method POST `
-        -ContentType "application/json" `
-        -Headers @{ Authorization = "Bearer $global:token" } `
-        -Body $body
+        -Body @{
+            amount = $amount;
+            description = "Saque via script"
+        }
 }
 
-function ExecuteInternalTransaction {
-
-    $body = @{
-        accountNumber = "73075618-1"
-        amount = 100.00
-        agencyNumber = "001"
-    } | ConvertTo-Json
-
-    $response = Invoke-RestMethod -Uri "$env:BASE_URL/api/auth/account/transaction/internal" `
+function ExecuteInternalTransaction($account, $agency, $amount) {
+    return Request-Api `
+        -Path "/api/account/transaction/internal" `
         -Method POST `
-        -ContentType "application/json" `
-        -Headers @{ Authorization = "Bearer $global:token" } `
-        -Body $body
+        -Body @{
+            accountNumber = $account;
+            agencyNumber = $agency;
+            amount = $amount
+        }
 }
 
-function ExecuteExternalTransaction {
-
-    $body = @{
-        destinyName = "José Pereira"
-        destinyAccount = "1345678-10"
-        destinyAgency = "011"
-        bankCode = "002"
-        destinyDocument = "456.002.825-01"
-        amount = 150.00
-    } | ConvertTo-Json
-
-    $response = Invoke-RestMethod -Uri "$env:BASE_URL/api/auth/account/transaction/external" `
+function ExecuteExternalTransaction($name, $account, $agency, $bank, $doc, $amount) {
+    return Request-Api `
+        -Path "/api/account/transaction/external" `
         -Method POST `
-        -ContentType "application/json" `
-        -Headers @{ Authorization = "Bearer $global:token" } `
-        -Body $body
+        -Body @{
+            destinyName = $name
+            destinyAccount = $account
+            destinyAgency = $agency
+            bankCode = $bank
+            destinyDocument = $doc
+            amount = $amount
+        }
 }
 
-function RegisterPixKey {
-
-    $body = @{
-        key = "maria@empresa.com.br"
-        type = "EMAIL"
-    } | ConvertTo-Json
-
-    $response = Invoke-RestMethod -Uri "$env:BASE_URL/api/auth/account/pix/register" `
+function RegisterPixKey($key, $type) {
+    return Request-Api `
+        -Path "/api/account/pix/register" `
         -Method POST `
-        -ContentType "application/json" `
-        -Headers @{ Authorization = "Bearer $global:token" } `
-        -Body $body
+        -Body @{
+            key = $key;
+            type = $type
+        }
 }
 
 function ListPixKey {
-
-    Invoke-RestMethod -Uri "$env:BASE_URL/api/auth/account/pix/keys" `
-        -Method GET `
-        -Headers @{ Authorization = "Bearer $global:token" }
+    return Request-Api `
+        -Path "/api/account/pix/keys"
 }
 
 function RemovePixKey($KeyId) {
-    Invoke-RestMethod -Uri "$env:BASE_URL/api/auth/account/pix/$KeyId" `
-        -Method DELETE `
-        -Headers @{ Authorization = "Bearer $global:token" }
+    return Request-Api `
+        -Path "/api/account/pix/$KeyId" -Method DELETE
 }

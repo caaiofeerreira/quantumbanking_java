@@ -28,11 +28,11 @@ public class SecurityConfigurations {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(req -> {
-                    req.requestMatchers("/api/auth/client/register").permitAll();
-                    req.requestMatchers("/api/auth/register/manager").hasRole("MANAGER");
+                    req.requestMatchers("/api/client/register").permitAll();
+                    req.requestMatchers("/api/register/manager").hasRole("MANAGER");
                     req.requestMatchers("/api/auth/login").permitAll();
-                    req.requestMatchers("/api/auth/account/**").hasRole("CLIENT");
-                    req.requestMatchers("/api/auth/manager/**").hasRole("MANAGER");
+                    req.requestMatchers("/api/account/**").hasRole("CLIENT");
+                    req.requestMatchers("/api/manager/**").hasRole("MANAGER");
                     req.anyRequest().authenticated();
                 })
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)

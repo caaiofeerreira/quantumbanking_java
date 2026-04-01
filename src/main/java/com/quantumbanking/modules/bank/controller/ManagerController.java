@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/auth/manager")
+@RequestMapping("/api/manager")
 public class ManagerController {
 
     private final ManagerService managerService;

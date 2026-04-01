@@ -28,13 +28,18 @@ public class SecurityFilter extends OncePerRequestFilter {
         var tokenJWT = recoverToken(request);
 
         if (tokenJWT != null) {
-            var cpf = tokenService.getSubject(tokenJWT);
-            var user = userRepository.findByCpf(cpf)
-                    .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
+            try {
 
-            var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                var cpf = tokenService.getSubject(tokenJWT);
+                var user = userRepository.findByCpf(cpf)
+                        .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+                var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } catch (Exception e) {
+                SecurityContextHolder.clearContext();
+            }
         }
 
         filterChain.doFilter(request, response);

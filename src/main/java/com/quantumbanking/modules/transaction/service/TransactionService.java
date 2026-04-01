@@ -43,8 +43,6 @@ public class TransactionService {
             throw new TransactionNotAuthorizedException("Conta não está ativa.");
         }
 
-        account.credit(requestDTO.amount());
-
         Transaction transaction = new Transaction();
         transaction.setAccountDestiny(account);
         transaction.setAmount(requestDTO.amount());
@@ -53,6 +51,8 @@ public class TransactionService {
                 (requestDTO.description() == null || requestDTO.description().isBlank()
                         ? "Depósito": requestDTO.description())
         );
+
+        account.credit(requestDTO.amount());
 
         accountRepository.save(account);
         transactionRepository.save(transaction);
@@ -69,8 +69,6 @@ public class TransactionService {
             throw new TransactionNotAuthorizedException("Conta não está ativa.");
         }
 
-        account.debit(requestDTO.amount());
-
         Transaction transaction = new Transaction();
         transaction.setAccountOrigin(account);
         transaction.setAmount(requestDTO.amount());
@@ -79,6 +77,8 @@ public class TransactionService {
                 (requestDTO.description() == null || requestDTO.description().isBlank()
                         ? "Saque": requestDTO.description())
         );
+
+        account.debit(requestDTO.amount());
 
         accountRepository.save(account);
         transactionRepository.save(transaction);
@@ -106,15 +106,15 @@ public class TransactionService {
             throw new TransactionNotAuthorizedException("Não é possível transferir para a própria conta.");
         }
 
-        account.debit(requestDTO.amount());
-        accountDestiny.credit(requestDTO.amount());
-
         Transaction transaction = new Transaction();
         transaction.setAccountOrigin(account);
         transaction.setAccountDestiny(accountDestiny);
         transaction.setAmount(requestDTO.amount());
         transaction.setDestinyAgency(requestDTO.agencyNumber());
         transaction.setType(TransactionType.TRANSFER_INTERNAL);
+
+        account.debit(requestDTO.amount());
+        accountDestiny.credit(requestDTO.amount());
 
         accountRepository.save(account);
         accountRepository.save(accountDestiny);
@@ -137,8 +137,6 @@ public class TransactionService {
             throw new TransactionNotAuthorizedException("Não é possível transferir para a própria conta.");
         }
 
-        account.debit(requestDTO.amount());
-
         Transaction transaction = new Transaction();
         transaction.setAccountOrigin(account);
         transaction.setDestinyName(requestDTO.destinyName());
@@ -148,6 +146,8 @@ public class TransactionService {
         transaction.setDestinyDocument(requestDTO.destinyDocument());
         transaction.setAmount(requestDTO.amount());
         transaction.setType(TransactionType.TRANSFER_EXTERNAL);
+
+        account.debit(requestDTO.amount());
 
         accountRepository.save(account);
         transactionRepository.save(transaction);

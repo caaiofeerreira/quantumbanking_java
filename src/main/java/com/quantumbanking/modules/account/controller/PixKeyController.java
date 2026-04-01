@@ -16,7 +16,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/auth/account/pix")
+@RequestMapping("/api/account/pix")
 public class PixKeyController {
 
     private final PixKeyService pixKeyService;
