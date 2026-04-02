@@ -1,10 +1,7 @@
 package com.quantumbanking.modules.transaction.mapper;
 
 import com.quantumbanking.modules.transaction.domain.Transaction;
-import com.quantumbanking.modules.transaction.dto.DepositResponseDTO;
-import com.quantumbanking.modules.transaction.dto.ExternalTransactionResponseDTO;
-import com.quantumbanking.modules.transaction.dto.InternalTransactionResponseDTO;
-import com.quantumbanking.modules.transaction.dto.WithdrawResponseDTO;
+import com.quantumbanking.modules.transaction.dto.*;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -48,6 +45,18 @@ public class TransactionMapper {
                 transaction.getDestinyAgency(),
                 transaction.getBankCode(),
                 transaction.getDestinyDocument(),
+                transaction.getAmount(),
+                transaction.getType(),
+                transaction.getCreatedAt()
+        );
+    }
+
+    public PixTransactionResponseDTO toPixResponse(Transaction transaction) {
+        return new PixTransactionResponseDTO(
+                transaction.getId(),
+                transaction.getAccountDestiny() != null
+                        ? transaction.getAccountDestiny().getAccountNumber()
+                        : transaction.getDestinyDocument(),
                 transaction.getAmount(),
                 transaction.getType(),
                 transaction.getCreatedAt()

@@ -158,3 +158,14 @@ function RemovePixKey($KeyId) {
     return Request-Api `
         -Path "/api/account/pix/$KeyId" -Method DELETE
 }
+
+function ExecutePixTransaction($key, $amount, $description) {
+    return Request-Api `
+        -Path "/api/account/transaction/pix" `
+        -Method POST `
+        -Body @{
+            key = $key
+            amount = $amount
+            description = $description
+        }
+}

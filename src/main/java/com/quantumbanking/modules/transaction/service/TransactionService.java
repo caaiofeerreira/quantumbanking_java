@@ -4,7 +4,9 @@ import com.quantumbanking.infra.exception.AccountNotFoundException;
 import com.quantumbanking.infra.exception.TransactionNotAuthorizedException;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.domain.AccountStatus;
+import com.quantumbanking.modules.account.domain.PixKey;
 import com.quantumbanking.modules.account.repository.AccountRepository;
+import com.quantumbanking.modules.account.repository.PixKeyRepository;
 import com.quantumbanking.modules.shared.domain.user.User;
 import com.quantumbanking.modules.transaction.domain.Transaction;
 import com.quantumbanking.modules.transaction.domain.TransactionType;
@@ -16,12 +18,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
 
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
+    private final PixKeyRepository pixKeyRepository;
 
     private final TransactionMapper transactionMapper;
 
@@ -153,6 +158,48 @@ public class TransactionService {
         transactionRepository.save(transaction);
 
         return transactionMapper.toExternalResponse(transaction);
+    }
+
+    @Transactional
+    public PixTransactionResponseDTO executePixTransaction(User user, PixTransactionRequestDTO requestDTO) {
+
+        Account account = getAccountByUser(user);
+
+        if (account.getStatus() != AccountStatus.ATIVA) {
+            throw new TransactionNotAuthorizedException("Conta não está ativa.");
+        }
+
+        Transaction transaction = new Transaction();
+        transaction.setAccountOrigin(account);
+        transaction.setAmount(requestDTO.amount());
+        transaction.setType(TransactionType.PIX);
+        transaction.setDescription(
+                (requestDTO.description() == null || requestDTO.description().isBlank()
+                        ? "Pix": requestDTO.description())
+        );
+
+        Optional<PixKey> pixKey = pixKeyRepository.findByKey(requestDTO.key());
+
+        if (pixKey.isPresent()) {
+            Account accountDestiny = pixKey.get().getAccount();
+
+            if (account.getId().equals(accountDestiny.getId())) {
+                throw new TransactionNotAuthorizedException("Não é possível fazer Pix para a própria conta.");
+            }
+
+            accountDestiny.credit(requestDTO.amount());
+            transaction.setAccountDestiny(accountDestiny);
+            accountRepository.save(accountDestiny);
+        } else {
+            transaction.setDestinyDocument(requestDTO.key());
+        }
+
+        account.debit(requestDTO.amount());
+
+        accountRepository.save(account);
+        transactionRepository.save(transaction);
+
+        return transactionMapper.toPixResponse(transaction);
     }
 
 }

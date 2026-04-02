@@ -52,4 +52,11 @@ public class TransactionController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/transaction/pix")
+    public ResponseEntity<PixTransactionResponseDTO> pix(@AuthenticationPrincipal User user,
+                                                         @RequestBody @Valid PixTransactionRequestDTO requestDTO) {
+
+        PixTransactionResponseDTO response = transactionService.executePixTransaction(user, requestDTO);
+        return ResponseEntity.ok(response);
+    }
 }
