@@ -13,6 +13,7 @@ public record ExternalTransactionResponseDTO(UUID id,
                                              String bankCode,
                                              String destinyDocument,
                                              BigDecimal amount,
+                                             String description,
                                              TransactionType type,
                                              LocalDateTime createdAt) {
 }

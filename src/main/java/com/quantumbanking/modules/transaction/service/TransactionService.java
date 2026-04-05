@@ -116,6 +116,9 @@ public class TransactionService {
         transaction.setAccountDestiny(accountDestiny);
         transaction.setAmount(requestDTO.amount());
         transaction.setDestinyAgency(requestDTO.agencyNumber());
+        transaction.setDescription(
+                (requestDTO.description() == null || requestDTO.description().isBlank()
+                        ? "Transferência Interna Efetuada.": requestDTO.description()));
         transaction.setType(TransactionType.TRANSFER_INTERNAL);
 
         account.debit(requestDTO.amount());
@@ -150,6 +153,9 @@ public class TransactionService {
         transaction.setBankCode(requestDTO.bankCode());
         transaction.setDestinyDocument(requestDTO.destinyDocument());
         transaction.setAmount(requestDTO.amount());
+        transaction.setDescription(
+                (requestDTO.description() == null || requestDTO.description().isBlank()
+                        ? "Transferência Externa Efetuada.": requestDTO.description()));
         transaction.setType(TransactionType.TRANSFER_EXTERNAL);
 
         account.debit(requestDTO.amount());
@@ -175,7 +181,7 @@ public class TransactionService {
         transaction.setType(TransactionType.PIX);
         transaction.setDescription(
                 (requestDTO.description() == null || requestDTO.description().isBlank()
-                        ? "Pix": requestDTO.description())
+                        ? "Pix Efetuado.": requestDTO.description())
         );
 
         Optional<PixKey> pixKey = pixKeyRepository.findByKey(requestDTO.key());

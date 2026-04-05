@@ -12,6 +12,7 @@ public record ExternalTransactionRequestDTO(
         @NotBlank String destinyAgency,
         @NotBlank String bankCode,
         @NotBlank String destinyDocument,
-        @NotNull @Positive BigDecimal amount) {
+        @NotNull @Positive BigDecimal amount,
+        String description) {
 
 }

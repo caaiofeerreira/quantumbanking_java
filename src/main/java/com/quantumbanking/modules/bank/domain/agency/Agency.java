@@ -23,11 +23,11 @@ public class Agency {
     private Long id;
 
     @Setter
-    @Column(name = "name", nullable = false)
-    private String name;
+    @Column(name = "agency_name", nullable = false)
+    private String agencyName;
 
-    @Column(name = "number", nullable = false)
-    private String number;
+    @Column(name = "agency_number", nullable = false)
+    private String agencyNumber;
 
     @Setter
     @Column(name = "phone", nullable = false)

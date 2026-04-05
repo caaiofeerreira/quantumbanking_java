@@ -1,6 +1,9 @@
 package com.quantumbanking.modules.bank.dto;
 
 public record AgencyResponseDTO(Long id,
-                                String name,
-                                String number) {
+                                String agency_name,
+                                String agency_number,
+                                String city,
+                                String state,
+                                String zipCode) {
 }

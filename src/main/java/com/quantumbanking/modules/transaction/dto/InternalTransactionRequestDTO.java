@@ -4,5 +4,6 @@ import java.math.BigDecimal;
 
 public record InternalTransactionRequestDTO(String accountNumber,
                                             BigDecimal amount,
-                                            String agencyNumber) {
+                                            String agencyNumber,
+                                            String description) {
 }

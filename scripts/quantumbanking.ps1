@@ -35,10 +35,10 @@ function Request-Api {
 
             if ($errorResponse.StatusCode.value__ -eq 401) {
                 $global:token = $null
-                Write-Host "Sessão expirada ou inválida." -ForegroundColor Red
+                Write-Host "Sessao expirada ou invalida." -ForegroundColor Red
             }
         } else {
-            Write-Host "Erro Crítico: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "Erro Critico: $($_.Exception.Message)" -ForegroundColor Red
         }
         return $null
     }
@@ -59,13 +59,13 @@ function RegisterClient($name, $cpf, $phone, $email, $pass, $street, $number, $c
             email = $email
             password = $pass
             address = @{
-                logradouro = $street
-                numero = $number
-                complemento = $complement
-                bairro = $neighborhood
-                cidade = $city
-                estado = $state
-                cep = $zip
+                street = $street
+                number = $number
+                complement = $complement
+                neighborhood = $neighborhood
+                city = $city
+                state = $state
+                zipCode = $zip
             }
             clientType = $clientType
             accountType = $accountType
@@ -85,7 +85,7 @@ function Login($cpf, $pass) {
 
     if ($res) {
         $global:token = $res.token
-        Write-Host "Logado com sucesso!" -ForegroundColor Green
+        Write-Host "Logado com sucesso!"-ForegroundColor Green
     }
 }
 
@@ -100,7 +100,7 @@ function ExecuteDeposit($amount) {
         -Method POST `
         -Body @{
             amount = $amount;
-            description = "Depósito via script"
+            description = "Deposito via script"
         }
 }
 
@@ -114,7 +114,7 @@ function ExecuteWithdraw($amount) {
         }
 }
 
-function ExecuteInternalTransaction($account, $agency, $amount) {
+function ExecuteInternalTransaction($account, $agency, $amount, $description) {
     return Request-Api `
         -Path "/api/account/transaction/internal" `
         -Method POST `
@@ -122,10 +122,11 @@ function ExecuteInternalTransaction($account, $agency, $amount) {
             accountNumber = $account;
             agencyNumber = $agency;
             amount = $amount
+            description = $description
         }
 }
 
-function ExecuteExternalTransaction($name, $account, $agency, $bank, $doc, $amount) {
+function ExecuteExternalTransaction($name, $account, $agency, $bank, $doc, $amount, $description) {
     return Request-Api `
         -Path "/api/account/transaction/external" `
         -Method POST `
@@ -136,6 +137,7 @@ function ExecuteExternalTransaction($name, $account, $agency, $bank, $doc, $amou
             bankCode = $bank
             destinyDocument = $doc
             amount = $amount
+            description = $description
         }
 }
 
@@ -156,7 +158,8 @@ function ListPixKey {
 
 function RemovePixKey($KeyId) {
     return Request-Api `
-        -Path "/api/account/pix/$KeyId" -Method DELETE
+        -Path "/api/account/pix/$KeyId" `
+        -Method DELETE
 }
 
 function ExecutePixTransaction($key, $amount, $description) {
@@ -168,4 +171,16 @@ function ExecutePixTransaction($key, $amount, $description) {
             amount = $amount
             description = $description
         }
+}
+
+function GetStatement($month, $year) {
+
+    $resp = Request-Api `
+        -Path "/api/account/statement?month=$month&year=$year"
+
+    Write-Host "`n--- EXTRATO BANCARIO: Mes $month / Ano $year ---" -ForegroundColor Cyan
+    Write-Host "Saldo: R$ $($resp.currentBalance)" -ForegroundColor Green
+    Write-Host "-------------------------------------------"
+
+    return $resp.transactions | Format-Table -AutoSize
 }

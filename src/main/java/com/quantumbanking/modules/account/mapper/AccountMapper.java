@@ -13,7 +13,7 @@ public class AccountMapper {
                 account.getType(),
                 account.getBalance(),
                 account.getStatus(),
-                account.getAgency().getNumber()
+                account.getAgency().getAgencyNumber()
         );
     }
 }

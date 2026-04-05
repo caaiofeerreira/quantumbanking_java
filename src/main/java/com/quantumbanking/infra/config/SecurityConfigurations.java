@@ -1,5 +1,6 @@
-package com.quantumbanking.infra.security;
+package com.quantumbanking.infra.config;
 
+import com.quantumbanking.infra.security.SecurityFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -29,7 +30,7 @@ public class SecurityConfigurations {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(req -> {
                     req.requestMatchers("/api/client/register").permitAll();
-                    req.requestMatchers("/api/register/manager").hasRole("MANAGER");
+                    req.requestMatchers("/api/manager/register").hasRole("MANAGER");
                     req.requestMatchers("/api/auth/login").permitAll();
                     req.requestMatchers("/api/account/**").hasRole("CLIENT");
                     req.requestMatchers("/api/manager/**").hasRole("MANAGER");

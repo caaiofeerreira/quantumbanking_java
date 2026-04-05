@@ -7,7 +7,9 @@ import java.util.UUID;
 
 public record InternalTransactionResponseDTO(UUID id,
                                              String accountDestiny,
+                                             String destinyName,
                                              BigDecimal amount,
                                              TransactionType transactionType,
-                                             String agencyNumber) {
+                                             String agencyNumber,
+                                             String description) {
 }

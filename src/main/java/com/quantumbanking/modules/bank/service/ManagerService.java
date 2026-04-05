@@ -33,9 +33,9 @@ public class ManagerService {
             throw new ValidateException("CPF já cadastrado.");
         }
 
-        Agency agency = agencyRepository.findByNumber(dto.agencyNumber())
+        Agency agency = agencyRepository.findByAgencyNumber(dto.agencyNumber())
                 .orElseThrow(() -> {
-                    String agencies = String.join(", ", agencyRepository.findAllAgencyNumbersAndCidade());
+                    String agencies = String.join(", ", agencyRepository.findAllAgencyNumbersAndCity());
                     return new ValidateException("Agência não encontrada. Disponíveis: " + agencies);
                 });
 

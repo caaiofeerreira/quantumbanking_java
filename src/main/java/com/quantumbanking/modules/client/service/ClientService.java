@@ -47,9 +47,9 @@ public class ClientService {
             throw new ValidateException("Dados da empresa são obrigatórios para pessoa jurídica.");
         }
 
-        Agency agency = agencyRepository.findByNumber(requestDTO.agencyNumber())
+        Agency agency = agencyRepository.findByAgencyNumber(requestDTO.agencyNumber())
                 .orElseThrow(() -> {
-                    String agencies = String.join(", ", agencyRepository.findAllAgencyNumbersAndCidade());
+                    String agencies = String.join(", ", agencyRepository.findAllAgencyNumbersAndCity());
                     return new ValidateException("Agência não encontrada. Disponíveis: " + agencies);
                 });
 

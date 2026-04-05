@@ -11,11 +11,11 @@ import java.util.Optional;
 public interface AgencyRepository extends JpaRepository<Agency, Long> {
 
 
-    @Query("SELECT a FROM Agency a WHERE a.number = :number")
-    Optional<Agency> findByNumber(@Param("number") String number);
+    @Query("SELECT a FROM Agency a WHERE a.agencyNumber = :number")
+    Optional<Agency> findByAgencyNumber(@Param("number") String number);
 
 
-    @Query("SELECT a.number AS number, a.address.cidade AS cidade FROM Agency a")
-    List<String> findAllAgencyNumbersAndCidade();
+    @Query("SELECT a.agencyNumber AS number, a.address.city AS city FROM Agency a")
+    List<String> findAllAgencyNumbersAndCity();
 }
 

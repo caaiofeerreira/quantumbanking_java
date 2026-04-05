@@ -10,8 +10,11 @@ public class AgencyMapper {
     public AgencyResponseDTO toResponseDTO(Agency agency) {
         return new AgencyResponseDTO(
                 agency.getId(),
-                agency.getNumber(),
-                agency.getNumber()
+                agency.getAgencyName(),
+                agency.getAgencyNumber(),
+                agency.getAddress().getCity(),
+                agency.getAddress().getState(),
+                agency.getAddress().getZipCode()
         );
     }
 }

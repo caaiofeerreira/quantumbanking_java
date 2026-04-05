@@ -8,6 +8,7 @@ import java.util.UUID;
 
 public record PixTransactionResponseDTO(
         UUID id,
+        String destinyName,
         String pixKey,
         BigDecimal amount,
         TransactionType type,
