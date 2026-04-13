@@ -30,10 +30,11 @@ public class SecurityConfigurations {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(req -> {
                     req.requestMatchers("/api/client/register").permitAll();
-                    req.requestMatchers("/api/manager/register").hasRole("MANAGER");
+                    req.requestMatchers("/api/manager/register").hasRole("ADMIN");
                     req.requestMatchers("/api/auth/login").permitAll();
                     req.requestMatchers("/api/account/**").hasRole("CLIENT");
                     req.requestMatchers("/api/manager/**").hasRole("MANAGER");
+                    req.requestMatchers("/api/admin/**").hasRole("ADMIN");
                     req.anyRequest().authenticated();
                 })
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)

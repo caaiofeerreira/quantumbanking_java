@@ -44,9 +44,35 @@ function Request-Api {
     }
 }
 
+#ADMIN
+function RegisterAgency($agencyName, $agencyNumber, $phone,
+                       $street, $number, $complement, $neighborhood, $city, $state, $zip, $bankCode) {
 
-function RegisterClient($name, $cpf, $phone, $email, $pass, $street, $number, $complement,
-                        $neighborhood, $city, $state, $zip, $clientType, $accountType, $agency) {
+    return Request-Api `
+        -Path "/api/admin/agency/register"`
+        -Method POST `
+        -Body @{
+            agencyName = $agencyName
+            agencyNumber = $agencyNumber
+            phone = $phone
+            address = @{
+                street = $street
+                number = $number
+                complement = $complement
+                neighborhood = $neighborhood
+                city = $city
+                state = $state
+                zipCode = $zip
+            }
+            bankCode = $bankCode
+        }
+}
+
+#CLIENT
+function RegisterClient($name, $cpf, $phone, $email, $pass,
+                        $street, $number, $complement, $neighborhood, $city, $state, $zip,
+                        $clientType, $accountType, $agency) {
+
     $global:token =$null
 
     return Request-Api `

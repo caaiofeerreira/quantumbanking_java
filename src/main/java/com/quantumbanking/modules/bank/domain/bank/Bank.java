@@ -21,4 +21,9 @@ public class Bank {
 
     @Column(name = "bank_code", length = 3, unique = true, nullable = false)
     private String bankCode;
+
+    public Bank(String name, String bankCode) {
+        this.name= name;
+        this.bankCode = bankCode;
+    }
 }

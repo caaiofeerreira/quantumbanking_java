@@ -23,4 +23,12 @@ api:
       secret: ${JWT_SECRET}
 
 bank:
-  code: "001"
+  code: ${ADMIN_BANK_CODE:001}
+  name: ${ADMIN_BANK_NAME:Quantum Banking S.A.}
+
+admin:
+  cpf: ${ADMIN_CPF:000.000.000-00}
+  password: ${ADMIN_PASSWORD:root123}
+  name: ${ADMIN_NAME:Admin}
+  phone: ${ADMIN_PHONE:4004-0042}
+  email: ${ADMIN_EMAIL:admin@quantumbank.com.br}

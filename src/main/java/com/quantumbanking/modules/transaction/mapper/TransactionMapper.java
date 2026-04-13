@@ -2,8 +2,11 @@ package com.quantumbanking.modules.transaction.mapper;
 
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.transaction.domain.Transaction;
+import com.quantumbanking.modules.transaction.domain.TransactionType;
 import com.quantumbanking.modules.transaction.dto.*;
 import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
 
 @Component
 public class TransactionMapper {
@@ -72,26 +75,46 @@ public class TransactionMapper {
 
     public TransactionStatementDTO toStatementResponse(Transaction transaction, Account userAccount) {
 
+        boolean origin = transaction.getAccountOrigin() != null &&
+                transaction.getAccountOrigin().getId().equals(userAccount.getId());
+
+        BigDecimal amount = origin ? transaction.getAmount().negate() : transaction.getAmount();
+
+        String displayDescription = transaction.getDescription();
+
+        if (displayDescription == null || displayDescription.isBlank()) {
+            displayDescription = switch (transaction.getType()) {
+                case TRANSFER_INTERNAL, TRANSFER_EXTERNAL -> origin ? "Transferência Enviada" : "Transferência Recebida";
+                case PIX -> origin ? "Pix Enviado" : "Pix Recebido";
+                case SAQUE -> "Saque";
+                case DEPOSITO -> "Depósito";
+                default -> transaction.getType().name();
+            };
+        }
+
         String counterpartName = null;
 
-        if (transaction.getAccountOrigin() != null &&
-                !transaction.getAccountOrigin().getId().equals(userAccount.getId())) {
-            counterpartName = transaction.getAccountOrigin().getClient().getName();
-        } else if (transaction.getAccountDestiny() != null &&
-                !transaction.getAccountDestiny().getId().equals(userAccount.getId())) {
-            counterpartName = transaction.getAccountDestiny().getClient().getName();
-        } else if (transaction.getDestinyName() != null) {
-            counterpartName = transaction.getDestinyName();
+        if (transaction.getType() == TransactionType.SAQUE) {
+            counterpartName = "Caixa Eletrônico";
+        } else if (transaction.getType() == TransactionType.DEPOSITO) {
+            counterpartName = "Depósito em Espécie";
+        } else if (origin) {
+            counterpartName = (transaction.getAccountDestiny() != null)
+                    ? transaction.getAccountDestiny().getClient().getName()
+                    : transaction.getDestinyName();
+        } else {
+            counterpartName = (transaction.getAccountOrigin() != null)
+                    ? transaction.getAccountOrigin().getClient().getName()
+                    : "Origem Externa";
         }
 
         return new TransactionStatementDTO(
                 transaction.getId(),
                 transaction.getType(),
-                transaction.getAmount(),
-                transaction.getDescription(),
+                amount,
+                displayDescription,
                 counterpartName,
                 transaction.getCreatedAt()
         );
     }
-
 }

@@ -2,9 +2,10 @@ package com.quantumbanking.modules.bank.mapper;
 
 import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.bank.dto.AgencyResponseDTO;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
-@Service
+@Component
 public class AgencyMapper {
 
     public AgencyResponseDTO toResponseDTO(Agency agency) {
