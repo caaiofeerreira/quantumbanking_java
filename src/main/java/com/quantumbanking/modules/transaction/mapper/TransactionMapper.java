@@ -2,21 +2,22 @@ package com.quantumbanking.modules.transaction.mapper;
 
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.transaction.domain.Transaction;
-import com.quantumbanking.modules.transaction.domain.TransactionType;
 import com.quantumbanking.modules.transaction.dto.*;
+import com.quantumbanking.modules.transaction.formater.TransactionStatementFormatter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
-
 @Component
+@RequiredArgsConstructor
 public class TransactionMapper {
+
+    private final TransactionStatementFormatter transactionStatementFormatter;
 
     public DepositResponseDTO toDepositResponse(Transaction transaction) {
         return new DepositResponseDTO(
                 transaction.getId(),
                 transaction.getAmount(),
                 transaction.getType(),
-                transaction.getDescription(),
                 transaction.getCreatedAt()
         );
     }
@@ -26,7 +27,6 @@ public class TransactionMapper {
                 transaction.getId(),
                 transaction.getAmount(),
                 transaction.getType(),
-                transaction.getDescription(),
                 transaction.getCreatedAt()
         );
     }
@@ -38,9 +38,7 @@ public class TransactionMapper {
                 transaction.getAccountDestiny().getClient().getName(),
                 transaction.getAmount(),
                 transaction.getType(),
-                transaction.getDestinyAgency(),
-                transaction.getDescription()
-        );
+                transaction.getDestinyAgency());
     }
 
     public ExternalTransactionResponseDTO toExternalResponse(Transaction transaction) {
@@ -52,7 +50,6 @@ public class TransactionMapper {
                 transaction.getBankCode(),
                 transaction.getDestinyDocument(),
                 transaction.getAmount(),
-                transaction.getDescription(),
                 transaction.getType(),
                 transaction.getCreatedAt()
         );
@@ -73,47 +70,16 @@ public class TransactionMapper {
         );
     }
 
-    public TransactionStatementDTO toStatementResponse(Transaction transaction, Account userAccount) {
-
-        boolean origin = transaction.getAccountOrigin() != null &&
-                transaction.getAccountOrigin().getId().equals(userAccount.getId());
-
-        BigDecimal amount = origin ? transaction.getAmount().negate() : transaction.getAmount();
-
-        String displayDescription = transaction.getDescription();
-
-        if (displayDescription == null || displayDescription.isBlank()) {
-            displayDescription = switch (transaction.getType()) {
-                case TRANSFER_INTERNAL, TRANSFER_EXTERNAL -> origin ? "Transferência Enviada" : "Transferência Recebida";
-                case PIX -> origin ? "Pix Enviado" : "Pix Recebido";
-                case SAQUE -> "Saque";
-                case DEPOSITO -> "Depósito";
-                default -> transaction.getType().name();
-            };
-        }
-
-        String counterpartName = null;
-
-        if (transaction.getType() == TransactionType.SAQUE) {
-            counterpartName = "Caixa Eletrônico";
-        } else if (transaction.getType() == TransactionType.DEPOSITO) {
-            counterpartName = "Depósito em Espécie";
-        } else if (origin) {
-            counterpartName = (transaction.getAccountDestiny() != null)
-                    ? transaction.getAccountDestiny().getClient().getName()
-                    : transaction.getDestinyName();
-        } else {
-            counterpartName = (transaction.getAccountOrigin() != null)
-                    ? transaction.getAccountOrigin().getClient().getName()
-                    : "Origem Externa";
-        }
+    public TransactionStatementDTO toStatementResponse(Transaction transaction, Account account) {
+        boolean isOrigin = transaction.getAccountOrigin() != null &&
+                transaction.getAccountOrigin().getId().equals(account.getId());
 
         return new TransactionStatementDTO(
                 transaction.getId(),
                 transaction.getType(),
-                amount,
-                displayDescription,
-                counterpartName,
+                isOrigin ? transaction.getAmount().negate() : transaction.getAmount(),
+                transactionStatementFormatter.getDisplayDescription(transaction, isOrigin),
+                transactionStatementFormatter.getCounterpartName(transaction, isOrigin),
                 transaction.getCreatedAt()
         );
     }

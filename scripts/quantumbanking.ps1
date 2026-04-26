@@ -17,7 +17,7 @@ function Request-Api {
     }
 
     if ($Body) {
-        $params.Body = ($Body | ConvertTo-Json)
+        $params.Body = ($Body | ConvertTo-Json -Depth 10)
     }
 
     try {
@@ -65,6 +65,31 @@ function RegisterAgency($agencyName, $agencyNumber, $phone,
                 zipCode = $zip
             }
             bankCode = $bankCode
+        }
+}
+
+function RegisterManager($name, $cpf, $phone, $email, $pass,
+                        $street, $number, $complement, $neighborhood, $city, $state, $zip, $agency) {
+
+    return Request-Api `
+        -Path "/api/admin/manager/register"`
+        -Method POST `
+        -Body @{
+            name = $name
+            cpf = $cpf
+            phone = $phone
+            email = $email
+            password = $pass
+            address = @{
+                street = $street
+                number = $number
+                complement = $complement
+                neighborhood = $neighborhood
+                city = $city
+                state = $state
+                zipCode = $zip
+            }
+            agencyNumber = $agency
         }
 }
 

@@ -13,6 +13,7 @@ import com.quantumbanking.modules.transaction.mapper.TransactionMapper;
 import com.quantumbanking.modules.transaction.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -26,18 +27,20 @@ public class AccountService {
 
     private final TransactionMapper transactionMapper;
 
+    @Transactional(readOnly = true)
     public BigDecimal getBalance(User user) {
 
         return accountRepository.findBalanceByClientId(user.getId())
                 .orElseThrow(() -> new AccountNotFoundException("Conta não encontrada."));
     }
 
+    @Transactional(readOnly = true)
     public StatementResponseDTO getStatement(User user, Integer month, Integer year) {
 
         Account account = accountRepository.findByClientId(user.getId())
                 .orElseThrow(() -> new AccountNotFoundException("Conta não encontrada."));
 
-        if (account.getStatus() != AccountStatus.ATIVA) {
+        if (account.getStatus() != AccountStatus.ACTIVE) {
             throw new TransactionNotAuthorizedException("Conta não está ativa.");
         }
 

@@ -11,6 +11,7 @@ import com.quantumbanking.modules.shared.domain.user.User;
 import com.quantumbanking.modules.transaction.domain.Transaction;
 import com.quantumbanking.modules.transaction.domain.TransactionType;
 import com.quantumbanking.modules.transaction.dto.*;
+import com.quantumbanking.modules.transaction.formater.TransactionStatementFormatter;
 import com.quantumbanking.modules.transaction.mapper.TransactionMapper;
 import com.quantumbanking.modules.transaction.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,8 @@ public class TransactionService {
 
     private final TransactionMapper transactionMapper;
 
+    private final TransactionStatementFormatter transactionStatementFormatter;
+
     @Value("${bank.code}")
     private String bankCode;
 
@@ -44,15 +47,16 @@ public class TransactionService {
 
         Account account = getAccountByUser(user);
 
-        if (account.getStatus() != AccountStatus.ATIVA) {
+        if (account.getStatus() != AccountStatus.ACTIVE) {
             throw new TransactionNotAuthorizedException("Conta não está ativa.");
         }
 
         Transaction transaction = new Transaction();
         transaction.setAccountDestiny(account);
         transaction.setAmount(requestDTO.amount());
-        transaction.setType(TransactionType.DEPOSITO);
-        transaction.setDescription(requestDTO.description());
+        transaction.setType(TransactionType.DEPOSIT);
+        transaction.setDescription(
+                transactionStatementFormatter.getDisplayDescription(transaction, true));
 
         account.credit(requestDTO.amount());
 
@@ -67,15 +71,17 @@ public class TransactionService {
 
         Account account = getAccountByUser(user);
 
-        if (account.getStatus() != AccountStatus.ATIVA) {
+        if (account.getStatus() != AccountStatus.ACTIVE) {
             throw new TransactionNotAuthorizedException("Conta não está ativa.");
         }
 
         Transaction transaction = new Transaction();
         transaction.setAccountOrigin(account);
         transaction.setAmount(requestDTO.amount());
-        transaction.setType(TransactionType.SAQUE);
-        transaction.setDescription(requestDTO.description());
+        transaction.setType(TransactionType.WITHDRAWAL);
+        transaction.setDescription(
+                transactionStatementFormatter.getDisplayDescription(transaction, true)
+        );
 
         account.debit(requestDTO.amount());
 
@@ -90,14 +96,14 @@ public class TransactionService {
 
         Account account = getAccountByUser(user);
 
-        if (account.getStatus() != AccountStatus.ATIVA) {
+        if (account.getStatus() != AccountStatus.ACTIVE) {
             throw new TransactionNotAuthorizedException("Conta não está ativa.");
         }
 
         Account accountDestiny = accountRepository.findByAccountNumber(requestDTO.accountNumber())
                 .orElseThrow(() -> new TransactionNotAuthorizedException("Conta de destino não encontrada."));
 
-        if (accountDestiny.getStatus() != AccountStatus.ATIVA) {
+        if (accountDestiny.getStatus() != AccountStatus.ACTIVE) {
             throw new TransactionNotAuthorizedException("Conta de destino não está ativa.");
         }
 
@@ -111,8 +117,9 @@ public class TransactionService {
         transaction.setDestinyName(accountDestiny.getClient().getName());
         transaction.setAmount(requestDTO.amount());
         transaction.setDestinyAgency(requestDTO.agencyNumber());
-        transaction.setDescription(requestDTO.description());
-        transaction.setType(TransactionType.TRANSFER_INTERNAL);
+        transaction.setType(TransactionType.INTERNAL_TRANSFER);
+        transaction.setDescription(
+                transactionStatementFormatter.getDisplayDescription(transaction, true));
 
         account.debit(requestDTO.amount());
         accountDestiny.credit(requestDTO.amount());
@@ -129,7 +136,7 @@ public class TransactionService {
 
         Account account = getAccountByUser(user);
 
-        if (account.getStatus() != AccountStatus.ATIVA) {
+        if (account.getStatus() != AccountStatus.ACTIVE) {
             throw new TransactionNotAuthorizedException("Conta não está ativa.");
         }
 
@@ -146,8 +153,9 @@ public class TransactionService {
         transaction.setBankCode(requestDTO.bankCode());
         transaction.setDestinyDocument(requestDTO.destinyDocument());
         transaction.setAmount(requestDTO.amount());
-        transaction.setDescription(requestDTO.description());
-        transaction.setType(TransactionType.TRANSFER_EXTERNAL);
+        transaction.setType(TransactionType.EXTERNAL_TRANSFER);
+        transaction.setDescription(
+                transactionStatementFormatter.getDisplayDescription(transaction, true));
 
         account.debit(requestDTO.amount());
 
@@ -162,7 +170,7 @@ public class TransactionService {
 
         Account account = getAccountByUser(user);
 
-        if (account.getStatus() != AccountStatus.ATIVA) {
+        if (account.getStatus() != AccountStatus.ACTIVE) {
             throw new TransactionNotAuthorizedException("Conta não está ativa.");
         }
 
@@ -170,7 +178,9 @@ public class TransactionService {
         transaction.setAccountOrigin(account);
         transaction.setAmount(requestDTO.amount());
         transaction.setType(TransactionType.PIX);
-        transaction.setDescription(requestDTO.description());
+        transaction.setDescription(
+                transactionStatementFormatter.getDisplayDescription(transaction, true));
+
         Optional<PixKey> pixKey = pixKeyRepository.findByKey(requestDTO.key());
 
         if (pixKey.isPresent()) {

@@ -10,6 +10,5 @@ public record InternalTransactionResponseDTO(UUID id,
                                              String destinyName,
                                              BigDecimal amount,
                                              TransactionType transactionType,
-                                             String agencyNumber,
-                                             String description) {
+                                             String agencyNumber) {
 }

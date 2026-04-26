@@ -69,7 +69,7 @@ public class User implements UserDetails {
         this.password = password;
         this.role = role;
         this.address = address;
-        this.status = UserStatus.ATIVO;
+        this.status = UserStatus.ACTIVE;
     }
 
     @Override

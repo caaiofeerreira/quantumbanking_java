@@ -9,6 +9,5 @@ import java.util.UUID;
 public record DepositResponseDTO(UUID id,
                                  BigDecimal amount,
                                  TransactionType type,
-                                 String description,
                                  LocalDateTime createdAt) {
 }

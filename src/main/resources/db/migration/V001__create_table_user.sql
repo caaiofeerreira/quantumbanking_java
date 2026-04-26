@@ -1,0 +1,20 @@
+CREATE TABLE `tb_user` (
+                           `id` bigint NOT NULL AUTO_INCREMENT,
+                           `name` varchar(255) DEFAULT NULL,
+                           `cpf` varchar(14) NOT NULL,
+                           `phone` varchar(20) DEFAULT NULL,
+                           `email` varchar(100) DEFAULT NULL,
+                           `password` varchar(255) NOT NULL,
+                           `role` varchar(20) NOT NULL,
+                           `street` varchar(255) DEFAULT NULL,
+                           `number` varchar(10) DEFAULT NULL,
+                           `complement` varchar(255) DEFAULT NULL,
+                           `neighborhood` varchar(255) DEFAULT NULL,
+                           `city` varchar(255) DEFAULT NULL,
+                           `state` varchar(2) DEFAULT NULL,
+                           `zip_code` varchar(9) DEFAULT NULL,
+                           `created_at` datetime DEFAULT NULL,
+                           `status` varchar(20) NOT NULL DEFAULT 'ATIVO',
+                           PRIMARY KEY (`id`),
+                           UNIQUE KEY `cpf` (`cpf`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

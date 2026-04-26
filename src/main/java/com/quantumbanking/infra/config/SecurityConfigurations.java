@@ -30,7 +30,6 @@ public class SecurityConfigurations {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(req -> {
                     req.requestMatchers("/api/client/register").permitAll();
-                    req.requestMatchers("/api/manager/register").hasRole("ADMIN");
                     req.requestMatchers("/api/auth/login").permitAll();
                     req.requestMatchers("/api/account/**").hasRole("CLIENT");
                     req.requestMatchers("/api/manager/**").hasRole("MANAGER");
@@ -45,6 +44,7 @@ public class SecurityConfigurations {
                 )
                 .build();
     }
+
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {

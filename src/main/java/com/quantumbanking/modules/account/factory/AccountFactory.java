@@ -24,7 +24,7 @@ public class AccountFactory {
         account.setAccountNumber(generateAccountNumber());
         account.setAgency(agency);
         account.setBalance(BigDecimal.ZERO);
-        account.setStatus(AccountStatus.ATIVA);
+        account.setStatus(AccountStatus.ACTIVE);
 
         if (clientType == ClientType.FISICA && accountType == AccountType.JURIDICA) {
             throw new ValidateException("Pessoa física não pode ter conta jurídica.");

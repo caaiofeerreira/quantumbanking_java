@@ -1,9 +1,8 @@
 package com.quantumbanking.modules.shared.domain.user;
 
 public enum UserStatus {
-
-    ATIVO,
-    INATIVO,
-    BLOQUEADO,
-    PENDENTE
+    ACTIVE,
+    INACTIVE,
+    BLOCKED,
+    PENDING
 }
