@@ -1,8 +1,16 @@
 services:
+  cache-quantum:
+    image: redis:alpine
+    container_name: quantum_redis
+    ports:
+      - "6379:6379"
+    restart: always
+
   db-quantum:
     image: mysql:8.0
     container_name: quantum_mysql
     restart: always
+    command: --innodb_flush_method=nosync
     environment:
       MYSQL_DATABASE: quantumbanking_db
       MYSQL_USER: ${DB_USER}
