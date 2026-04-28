@@ -6,12 +6,11 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public record PixTransactionResponseDTO(
-        UUID id,
-        String destinyName,
-        String pixKey,
-        BigDecimal amount,
-        TransactionType type,
-        LocalDateTime createdAt) {
+public record PixTransactionResponseDTO(UUID id,
+                                        String destinyName,
+                                        String pixKey,
+                                        BigDecimal amount,
+                                        TransactionType type,
+                                        LocalDateTime createdAt) {
 
 }

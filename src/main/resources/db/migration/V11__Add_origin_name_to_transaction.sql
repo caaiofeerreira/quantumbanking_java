@@ -1,0 +1,1 @@
+ALTER TABLE tb_transaction ADD COLUMN origin_name VARCHAR(100);

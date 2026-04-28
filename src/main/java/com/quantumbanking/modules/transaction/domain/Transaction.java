@@ -22,32 +22,28 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne
     @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_origin_id")
     private Account accountOrigin;
 
-    @ManyToOne
     @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_destiny_id")
     private Account accountDestiny;
 
+    private String originName;
     private String destinyName;
-
     private String destinyAccount;
-
     private String destinyAgency;
-
     private String bankCode;
-
     private String destinyDocument;
-
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
     private TransactionType type;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     private String description;
@@ -56,4 +52,13 @@ public class Transaction {
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
     }
+
+    public boolean isSentBy(Long accountId) {
+        return this.accountOrigin != null && this.accountOrigin.getId().equals(accountId);
+    }
+
+    public boolean isReceivedBy(Long accountId) {
+        return this.accountDestiny != null && this.accountDestiny.getId().equals(accountId);
+    }
+
 }

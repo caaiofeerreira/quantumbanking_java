@@ -71,8 +71,10 @@ public class TransactionMapper {
     }
 
     public TransactionStatementDTO toStatementResponse(Transaction transaction, Account account) {
-        boolean isOrigin = transaction.getAccountOrigin() != null &&
-                transaction.getAccountOrigin().getId().equals(account.getId());
+        Long accountId = account.getId();
+
+        boolean isOrigin = transaction.isSentBy(accountId);
+        boolean isDestiny = transaction.isReceivedBy(accountId);
 
         return new TransactionStatementDTO(
                 transaction.getId(),

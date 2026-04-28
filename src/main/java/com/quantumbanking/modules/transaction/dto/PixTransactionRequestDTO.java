@@ -6,9 +6,8 @@ import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 
-public record PixTransactionRequestDTO(
-        @NotBlank String key,
-        @NotNull @Positive BigDecimal amount,
-        String description) {
+public record PixTransactionRequestDTO(@NotBlank String key,
+                                       @NotNull @Positive BigDecimal amount,
+                                       String description) {
 
 }

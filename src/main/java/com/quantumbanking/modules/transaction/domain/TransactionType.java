@@ -5,25 +5,21 @@ public enum TransactionType {
     DEPOSIT {
         @Override
         public String getDisplayName(boolean isOrigin) { return "Depósito"; }
-        @Override
-        public String getCounterpartName(Transaction t, boolean isOrigin) { return "Depósito em Espécie"; }
     },
     WITHDRAWAL {
         @Override
         public String getDisplayName(boolean isOrigin) { return "Saque"; }
-        @Override
-        public String getCounterpartName(Transaction t, boolean isOrigin) { return "Caixa Eletrônico"; }
     },
     INTERNAL_TRANSFER {
         @Override
         public String getDisplayName(boolean isOrigin) {
-            return isOrigin ? "Transferencia Enviada" : "Transferencia Recebida";
+            return isOrigin ? "Transferência Enviada" : "Transferência Recebida";
         }
     },
     EXTERNAL_TRANSFER {
         @Override
         public String getDisplayName(boolean isOrigin) {
-            return isOrigin ? "Transferencia Enviada" : "Transferencia Recebida";
+            return isOrigin ? "Transferência Enviada" : "Transferência Recebida";
         }
     },
     PIX {
@@ -35,7 +31,7 @@ public enum TransactionType {
     LOAN {
         @Override
         public String getDisplayName(boolean isOrigin) {
-            return isOrigin ? "Parcela de Emprestimo" : "Crédito de Emprestimo";
+            return isOrigin ? "Parcela de Empréstimo" : "Crédito de Empréstimo";
         }
         @Override
         public String getCounterpartName(Transaction t, boolean isOrigin) { return "Quantum Banking"; }

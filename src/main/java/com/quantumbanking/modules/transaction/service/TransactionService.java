@@ -1,5 +1,6 @@
 package com.quantumbanking.modules.transaction.service;
 
+import com.quantumbanking.infra.event.TransactionCompletedEvent;
 import com.quantumbanking.infra.exception.AccountNotFoundException;
 import com.quantumbanking.infra.exception.TransactionNotAuthorizedException;
 import com.quantumbanking.modules.account.domain.Account;
@@ -11,15 +12,17 @@ import com.quantumbanking.modules.shared.domain.user.User;
 import com.quantumbanking.modules.transaction.domain.Transaction;
 import com.quantumbanking.modules.transaction.domain.TransactionType;
 import com.quantumbanking.modules.transaction.dto.*;
-import com.quantumbanking.modules.transaction.formater.TransactionStatementFormatter;
 import com.quantumbanking.modules.transaction.mapper.TransactionMapper;
 import com.quantumbanking.modules.transaction.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -31,13 +34,12 @@ public class TransactionService {
 
     private final TransactionMapper transactionMapper;
 
-    private final TransactionStatementFormatter transactionStatementFormatter;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Value("${bank.code}")
     private String bankCode;
 
     private Account getAccountByUser(User user) {
-
         return accountRepository.findByClientId(user.getId())
                 .orElseThrow(() -> new AccountNotFoundException("Conta não encontrada."));
     }
@@ -51,17 +53,24 @@ public class TransactionService {
             throw new TransactionNotAuthorizedException("Conta não está ativa.");
         }
 
+        Set<Long> usersToInvalidate = Set.of(user.getId());
+
         Transaction transaction = new Transaction();
         transaction.setAccountDestiny(account);
         transaction.setAmount(requestDTO.amount());
         transaction.setType(TransactionType.DEPOSIT);
         transaction.setDescription(
-                transactionStatementFormatter.getDisplayDescription(transaction, true));
+                (requestDTO.description() != null && !requestDTO.description().isBlank())
+                        ? requestDTO.description().trim()
+                        : null
+        );
 
         account.credit(requestDTO.amount());
 
         accountRepository.save(account);
         transactionRepository.save(transaction);
+
+        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(usersToInvalidate));
 
         return transactionMapper.toDepositResponse(transaction);
     }
@@ -75,18 +84,24 @@ public class TransactionService {
             throw new TransactionNotAuthorizedException("Conta não está ativa.");
         }
 
+        Set<Long> usersToInvalidate = Set.of(user.getId());
+
         Transaction transaction = new Transaction();
         transaction.setAccountOrigin(account);
         transaction.setAmount(requestDTO.amount());
         transaction.setType(TransactionType.WITHDRAWAL);
         transaction.setDescription(
-                transactionStatementFormatter.getDisplayDescription(transaction, true)
+                (requestDTO.description() != null && !requestDTO.description().isBlank())
+                        ? requestDTO.description().trim()
+                        : null
         );
 
         account.debit(requestDTO.amount());
 
         accountRepository.save(account);
         transactionRepository.save(transaction);
+
+        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(usersToInvalidate));
 
         return transactionMapper.toWithdrawResponse(transaction);
     }
@@ -111,15 +126,23 @@ public class TransactionService {
             throw new TransactionNotAuthorizedException("Não é possível transferir para a própria conta.");
         }
 
+        Set<Long> usersToInvalidate = new HashSet<>();
+        usersToInvalidate.add(user.getId());
+        usersToInvalidate.add(accountDestiny.getClient().getId());
+
         Transaction transaction = new Transaction();
         transaction.setAccountOrigin(account);
+        transaction.setOriginName(account.getClient().getName());
         transaction.setAccountDestiny(accountDestiny);
         transaction.setDestinyName(accountDestiny.getClient().getName());
         transaction.setAmount(requestDTO.amount());
         transaction.setDestinyAgency(requestDTO.agencyNumber());
         transaction.setType(TransactionType.INTERNAL_TRANSFER);
         transaction.setDescription(
-                transactionStatementFormatter.getDisplayDescription(transaction, true));
+                (requestDTO.description() != null && !requestDTO.description().isBlank())
+                        ? requestDTO.description().trim()
+                        : null
+        );
 
         account.debit(requestDTO.amount());
         accountDestiny.credit(requestDTO.amount());
@@ -127,6 +150,8 @@ public class TransactionService {
         accountRepository.save(account);
         accountRepository.save(accountDestiny);
         transactionRepository.save(transaction);
+
+        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(usersToInvalidate));
 
         return transactionMapper.toInternalResponse(transaction);
     }
@@ -145,22 +170,30 @@ public class TransactionService {
             throw new TransactionNotAuthorizedException("Não é possível transferir para a própria conta.");
         }
 
+        Set<Long> usersToInvalidate = Set.of(user.getId());
+
         Transaction transaction = new Transaction();
         transaction.setAccountOrigin(account);
-        transaction.setDestinyName(requestDTO.destinyName());
+        transaction.setOriginName(account.getClient().getName());
         transaction.setDestinyAccount(requestDTO.destinyAccount());
+        transaction.setDestinyName(requestDTO.destinyName());
         transaction.setDestinyAgency(requestDTO.destinyAgency());
         transaction.setBankCode(requestDTO.bankCode());
         transaction.setDestinyDocument(requestDTO.destinyDocument());
         transaction.setAmount(requestDTO.amount());
         transaction.setType(TransactionType.EXTERNAL_TRANSFER);
         transaction.setDescription(
-                transactionStatementFormatter.getDisplayDescription(transaction, true));
+                (requestDTO.description() != null && !requestDTO.description().isBlank())
+                        ? requestDTO.description().trim()
+                        : null
+        );
 
         account.debit(requestDTO.amount());
 
         accountRepository.save(account);
         transactionRepository.save(transaction);
+
+        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(usersToInvalidate));
 
         return transactionMapper.toExternalResponse(transaction);
     }
@@ -174,12 +207,19 @@ public class TransactionService {
             throw new TransactionNotAuthorizedException("Conta não está ativa.");
         }
 
+        Set<Long> usersToInvalidate = new HashSet<>();
+        usersToInvalidate.add(user.getId());
+
         Transaction transaction = new Transaction();
         transaction.setAccountOrigin(account);
+        transaction.setOriginName(account.getClient().getName());
         transaction.setAmount(requestDTO.amount());
         transaction.setType(TransactionType.PIX);
         transaction.setDescription(
-                transactionStatementFormatter.getDisplayDescription(transaction, true));
+                (requestDTO.description() != null && !requestDTO.description().isBlank())
+                        ? requestDTO.description().trim()
+                        : null
+        );
 
         Optional<PixKey> pixKey = pixKeyRepository.findByKey(requestDTO.key());
 
@@ -192,10 +232,12 @@ public class TransactionService {
 
             accountDestiny.credit(requestDTO.amount());
             transaction.setAccountDestiny(accountDestiny);
+            transaction.setDestinyName(accountDestiny.getClient().getName());
+            usersToInvalidate.add(accountDestiny.getClient().getId());
+
             accountRepository.save(accountDestiny);
         } else {
             transaction.setDestinyDocument(requestDTO.key());
-            transaction.setDestinyName(requestDTO.key());
         }
 
         account.debit(requestDTO.amount());
@@ -203,7 +245,8 @@ public class TransactionService {
         accountRepository.save(account);
         transactionRepository.save(transaction);
 
+        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(usersToInvalidate));
+
         return transactionMapper.toPixResponse(transaction);
     }
-
 }
