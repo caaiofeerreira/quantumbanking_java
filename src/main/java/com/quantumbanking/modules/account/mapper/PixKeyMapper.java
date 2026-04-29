@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class PixKeyMapper {
 
-    public PixKeyResponseDTO toResponseDTO(PixKey pixKey) {
+    public PixKeyResponseDTO toPixKeyResponseDTO(PixKey pixKey) {
         return new PixKeyResponseDTO(
                 pixKey.getId(),
                 pixKey.getKey(),

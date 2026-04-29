@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 public interface AccountRepository extends JpaRepository<Account, Long> {
@@ -19,4 +20,7 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     @Query("SELECT a FROM Account a WHERE a.client.id = :clientId")
     Optional<Account> findByClientId(@Param("clientId") Long clientId);
+
+    @Query("SELECT a FROM Account a WHERE a.agency.id = :agencyId")
+    List<Account> findByAgencyId(@Param("agencyId") Long agencyId);
 }

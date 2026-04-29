@@ -73,6 +73,6 @@ public class ClientService {
         account.setClient(client);
         accountRepository.save(account);
 
-        return clientMapper.toResponseDTO(client,account, company);
+        return clientMapper.toClientResponseDTO(client,account, company);
     }
 }

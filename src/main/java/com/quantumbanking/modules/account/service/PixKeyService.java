@@ -53,7 +53,7 @@ public class PixKeyService {
 
         pixRepository.save(pixKey);
 
-        return pixKeyMapper.toResponseDTO(pixKey);
+        return pixKeyMapper.toPixKeyResponseDTO(pixKey);
     }
 
     public List<PixKeyResponseDTO> listPixKey(User user) {
@@ -62,7 +62,7 @@ public class PixKeyService {
 
         return account.getPixKeys()
                 .stream()
-                .map(pixKeyMapper::toResponseDTO)
+                .map(pixKeyMapper::toPixKeyResponseDTO)
                 .toList();
     }
 

@@ -46,7 +46,7 @@ public class AdminService {
         Agency agency = new Agency(dto, bank);
         agencyRepository.save(agency);
 
-        return agencyMapper.toResponseDTO(agency);
+        return agencyMapper.toAgencyResponseDTO(agency);
     }
 
     @Transactional
@@ -66,6 +66,6 @@ public class AdminService {
         Manager manager = new Manager(dto, encryptedPassword, agency);
         managerRepository.save(manager);
 
-        return managerMapper.toResponseDTO(manager);
+        return managerMapper.toManagerResponseDTO(manager);
     }
 }

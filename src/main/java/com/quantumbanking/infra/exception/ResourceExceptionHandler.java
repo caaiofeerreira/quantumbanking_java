@@ -74,4 +74,10 @@ public class ResourceExceptionHandler {
         log.warn("Acesso não autorizado: {}", ex.getMessage());
         return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), getPath());
     }
+
+    @ExceptionHandler(ManagerNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleManagerNotFoundException(ManagerNotFoundException ex) {
+        log.warn("Conta Gerente não encontrada: {}", ex.getMessage());
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), getPath());
+    }
 }
