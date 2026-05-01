@@ -15,12 +15,12 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     Optional<Account> findByAccountNumber(@Param("accountNumber") String accountNumber);
 
-    @Query("SELECT a.balance FROM Account a WHERE a.client.id = :clientId")
-    Optional<BigDecimal> findBalanceByClientId(@Param("clientId") Long clientId);
+    @Query("SELECT a FROM Account a WHERE a.agency.id = :agencyId")
+    List<Account> findByAgencyId(@Param("agencyId") Long agencyId);
+
+    @Query("SELECT a FROM Account a WHERE a.client.id = :userId")
+    Optional<Account> findByUserId(@Param("userId") Long userId);
 
     @Query("SELECT a FROM Account a WHERE a.client.id = :clientId")
     Optional<Account> findByClientId(@Param("clientId") Long clientId);
-
-    @Query("SELECT a FROM Account a WHERE a.agency.id = :agencyId")
-    List<Account> findByAgencyId(@Param("agencyId") Long agencyId);
 }
