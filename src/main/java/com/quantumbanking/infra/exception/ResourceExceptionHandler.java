@@ -80,4 +80,10 @@ public class ResourceExceptionHandler {
         log.warn("Conta Gerente não encontrada: {}", ex.getMessage());
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), getPath());
     }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex) {
+        log.warn("Falha na busca de usuário: {}", ex.getMessage());
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), getPath());
+    }
 }
