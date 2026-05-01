@@ -1,7 +1,6 @@
 package com.quantumbanking.modules.transaction.service;
 
 import com.quantumbanking.infra.event.TransactionCompletedEvent;
-import com.quantumbanking.infra.exception.AccountNotFoundException;
 import com.quantumbanking.infra.exception.TransactionNotAuthorizedException;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.domain.AccountStatus;
@@ -9,6 +8,7 @@ import com.quantumbanking.modules.account.domain.PixKey;
 import com.quantumbanking.modules.account.repository.AccountRepository;
 import com.quantumbanking.modules.account.repository.PixKeyRepository;
 import com.quantumbanking.modules.shared.domain.user.User;
+import com.quantumbanking.modules.shared.service.UserService;
 import com.quantumbanking.modules.transaction.domain.Transaction;
 import com.quantumbanking.modules.transaction.domain.TransactionType;
 import com.quantumbanking.modules.transaction.dto.*;
@@ -36,18 +36,16 @@ public class TransactionService {
 
     private final ApplicationEventPublisher applicationEventPublisher;
 
+    private final UserService userService;
+
     @Value("${bank.code}")
     private String bankCode;
-
-    private Account getAccountByUser(User user) {
-        return accountRepository.findByClientId(user.getId())
-                .orElseThrow(() -> new AccountNotFoundException("Conta não encontrada."));
-    }
 
     @Transactional
     public DepositResponseDTO executeDeposit(User user, DepositRequestDTO requestDTO) {
 
-        Account account = getAccountByUser(user);
+        Account account = userService
+                .getAuthenticatedUserAccount(user.getId());
 
         if (account.getStatus() != AccountStatus.ACTIVE) {
             throw new TransactionNotAuthorizedException("Conta não está ativa.");
@@ -78,7 +76,8 @@ public class TransactionService {
     @Transactional
     public WithdrawResponseDTO executeWithdraw(User user, WithdrawRequestDTO requestDTO) {
 
-        Account account = getAccountByUser(user);
+        Account account = userService
+                .getAuthenticatedUserAccount(user.getId());
 
         if (account.getStatus() != AccountStatus.ACTIVE) {
             throw new TransactionNotAuthorizedException("Conta não está ativa.");
@@ -109,7 +108,8 @@ public class TransactionService {
     @Transactional
     public InternalTransactionResponseDTO executeInternalTransaction(User user, InternalTransactionRequestDTO requestDTO) {
 
-        Account account = getAccountByUser(user);
+        Account account = userService
+                .getAuthenticatedUserAccount(user.getId());
 
         if (account.getStatus() != AccountStatus.ACTIVE) {
             throw new TransactionNotAuthorizedException("Conta não está ativa.");
@@ -159,7 +159,8 @@ public class TransactionService {
     @Transactional
     public ExternalTransactionResponseDTO executeExternalTransaction(User user, ExternalTransactionRequestDTO requestDTO) {
 
-        Account account = getAccountByUser(user);
+        Account account = userService
+                .getAuthenticatedUserAccount(user.getId());
 
         if (account.getStatus() != AccountStatus.ACTIVE) {
             throw new TransactionNotAuthorizedException("Conta não está ativa.");
@@ -201,7 +202,8 @@ public class TransactionService {
     @Transactional
     public PixTransactionResponseDTO executePixTransaction(User user, PixTransactionRequestDTO requestDTO) {
 
-        Account account = getAccountByUser(user);
+        Account account = userService
+                .getAuthenticatedUserAccount(user.getId());
 
         if (account.getStatus() != AccountStatus.ACTIVE) {
             throw new TransactionNotAuthorizedException("Conta não está ativa.");

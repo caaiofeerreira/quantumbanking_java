@@ -1,6 +1,5 @@
 package com.quantumbanking.modules.account.service;
 
-import com.quantumbanking.infra.exception.AccountNotFoundException;
 import com.quantumbanking.infra.exception.UnauthorizedAccessException;
 import com.quantumbanking.infra.exception.ValidateException;
 import com.quantumbanking.modules.account.domain.Account;
@@ -8,9 +7,9 @@ import com.quantumbanking.modules.account.domain.PixKey;
 import com.quantumbanking.modules.account.dto.PixKeyRequestDTO;
 import com.quantumbanking.modules.account.dto.PixKeyResponseDTO;
 import com.quantumbanking.modules.account.mapper.PixKeyMapper;
-import com.quantumbanking.modules.account.repository.AccountRepository;
 import com.quantumbanking.modules.account.repository.PixKeyRepository;
 import com.quantumbanking.modules.shared.domain.user.User;
+import com.quantumbanking.modules.shared.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,21 +21,17 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PixKeyService {
 
-    private final AccountRepository accountRepository;
     private final PixKeyRepository pixRepository;
 
     private final PixKeyMapper pixKeyMapper;
 
-    private Account getAccountByUser(User user) {
-
-        return accountRepository.findByClientId(user.getId())
-                .orElseThrow(() -> new AccountNotFoundException("Conta não encontrada."));
-    }
+    private final UserService userService;
 
     @Transactional
     public PixKeyResponseDTO registerPixKey(User user, PixKeyRequestDTO requestDTO) {
 
-        Account account = getAccountByUser(user);
+        Account account = userService
+                .getAuthenticatedUserAccount(user.getId());
 
         if (pixRepository.countByAccountId(account.getId()) >= 5) {
             throw new ValidateException("Limite de 5 chaves Pix atingido.");
@@ -58,7 +53,8 @@ public class PixKeyService {
 
     public List<PixKeyResponseDTO> listPixKey(User user) {
 
-        Account account = getAccountByUser(user);
+        Account account = userService
+                .getAuthenticatedUserAccount(user.getId());
 
         return account.getPixKeys()
                 .stream()
@@ -78,7 +74,4 @@ public class PixKeyService {
 
         pixRepository.delete(pixKey);
     }
-
-
-
 }
