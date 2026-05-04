@@ -67,10 +67,10 @@ public class ClientService {
         Account account = accountFactory.createDefaultAccount(
                 requestDTO.clientType(),
                 requestDTO.accountType(),
-                agency
+                agency,
+                client
         );
 
-        account.setClient(client);
         accountRepository.save(account);
 
         return clientMapper.toClientResponseDTO(client,account, company);

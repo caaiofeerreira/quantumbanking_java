@@ -6,6 +6,7 @@ import com.quantumbanking.modules.account.domain.AccountStatus;
 import com.quantumbanking.modules.account.domain.AccountType;
 import com.quantumbanking.modules.account.repository.AccountRepository;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
+import com.quantumbanking.modules.client.domain.Client;
 import com.quantumbanking.modules.client.domain.ClientType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -19,28 +20,31 @@ public class AccountFactory {
 
     private final AccountRepository accountRepository;
 
-    public Account createDefaultAccount(ClientType clientType, AccountType accountType, Agency agency) {
-        Account account = new Account();
-        account.setAccountNumber(generateAccountNumber());
-        account.setAgency(agency);
-        account.setBalance(BigDecimal.ZERO);
-        account.setStatus(AccountStatus.ACTIVE);
+    public Account createDefaultAccount(ClientType clientType, AccountType accountType, Agency agency, Client client) {
 
         if (clientType == ClientType.FISICA && accountType == AccountType.JURIDICA) {
             throw new ValidateException("Pessoa física não pode ter conta jurídica.");
         }
-        account.setType(accountType);
 
-        return account;
+        return Account.builder()
+                .accountNumber(generateAccountNumber())
+                .agency(agency)
+                .client(client)
+                .balance(BigDecimal.ZERO)
+                .status(AccountStatus.ACTIVE)
+                .type(accountType)
+                .build();
     }
 
     private String generateAccountNumber() {
         String number;
         String fullNumber;
         do {
-            number = String.format("%08d", new Random().nextInt(99999999));
-            fullNumber = number + "-" + generateVerifierDigit(number);
+            number = String.format("%08d", new Random().nextInt(100000000));
+            fullNumber = number + generateVerifierDigit(number);
+
         } while (accountRepository.existsByAccountNumber(fullNumber));
+
         return fullNumber;
     }
 

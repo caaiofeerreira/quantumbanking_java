@@ -9,16 +9,17 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Entity(name = "Account")
 @Table(name = "tb_account")
+@Getter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
 @EqualsAndHashCode(of = "id")
 public class Account implements AccountOperations{
 
@@ -48,8 +49,9 @@ public class Account implements AccountOperations{
     @Enumerated(EnumType.STRING)
     private AccountStatus status;
 
+    @Builder.Default
     @OneToMany(mappedBy = "account", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<PixKey> pixKeys;
+    private List<PixKey> pixKeys = new ArrayList<>();
 
     @JsonIgnore
     @Transient
