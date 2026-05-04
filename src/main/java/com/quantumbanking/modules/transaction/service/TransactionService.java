@@ -105,42 +105,42 @@ public class TransactionService {
     @Transactional
     public InternalTransactionResponseDTO executeInternalTransaction(User user, InternalTransactionRequestDTO requestDTO) {
 
-        Account account = userService
+        Account originAccount = userService
                 .getAuthenticatedUserAccount(user.getId());
 
-        if (account.getStatus() != AccountStatus.ACTIVE) {
+        if (originAccount.getStatus() != AccountStatus.ACTIVE) {
             throw new TransactionNotAuthorizedException("Conta não está ativa.");
         }
 
-        Account accountDestiny = accountRepository.findByAccountNumber(requestDTO.accountNumber())
+        Account destinyAccount = accountRepository.findByAccountNumber(requestDTO.accountNumber())
                 .orElseThrow(() -> new TransactionNotAuthorizedException("Conta de destino não encontrada."));
 
-        if (accountDestiny.getStatus() != AccountStatus.ACTIVE) {
+        if (destinyAccount.getStatus() != AccountStatus.ACTIVE) {
             throw new TransactionNotAuthorizedException("Conta de destino não está ativa.");
         }
 
-        if (account.getId().equals(accountDestiny.getId())) {
+        if (originAccount.getId().equals(destinyAccount.getId())) {
             throw new TransactionNotAuthorizedException("Não é possível transferir para a própria conta.");
         }
 
         Set<Long> usersToInvalidate = new HashSet<>();
         usersToInvalidate.add(user.getId());
-        usersToInvalidate.add(accountDestiny.getClient().getId());
+        usersToInvalidate.add(destinyAccount.getClient().getId());
 
         Transaction transaction = transactionFactory
                 .createInternalTransfer(
-                        account,
-                        accountDestiny,
+                        originAccount,
+                        destinyAccount,
                         requestDTO.agencyNumber(),
                         requestDTO.amount(),
                         requestDTO.description()
                 );
 
-        account.debit(requestDTO.amount());
-        accountDestiny.credit(requestDTO.amount());
+        originAccount.debit(requestDTO.amount());
+        destinyAccount.credit(requestDTO.amount());
 
-        accountRepository.save(account);
-        accountRepository.save(accountDestiny);
+        accountRepository.save(originAccount);
+        accountRepository.save(destinyAccount);
         transactionRepository.save(transaction);
 
         applicationEventPublisher.publishEvent(new TransactionCompletedEvent(usersToInvalidate));

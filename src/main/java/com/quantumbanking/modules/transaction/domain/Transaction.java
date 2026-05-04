@@ -13,6 +13,7 @@ import java.util.UUID;
 @Table(name = "tb_transaction")
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
