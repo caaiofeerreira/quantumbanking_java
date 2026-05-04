@@ -11,6 +11,7 @@ public record PixTransactionResponseDTO(UUID id,
                                         String pixKey,
                                         BigDecimal amount,
                                         TransactionType type,
-                                        LocalDateTime createdAt) {
+                                        LocalDateTime createdAt,
+                                        String description) {
 
 }

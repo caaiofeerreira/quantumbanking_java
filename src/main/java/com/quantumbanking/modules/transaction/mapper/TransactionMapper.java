@@ -34,7 +34,7 @@ public class TransactionMapper {
     public InternalTransactionResponseDTO toInternalResponse(Transaction transaction) {
         return new InternalTransactionResponseDTO(
                 transaction.getId(),
-                transaction.getAccountDestiny().getAccountNumber(),
+                formatAccountNumber(transaction.getAccountDestiny().getAccountNumber()),
                 transaction.getAccountDestiny().getClient().getName(),
                 transaction.getAmount(),
                 transaction.getType(),
@@ -61,12 +61,11 @@ public class TransactionMapper {
                 transaction.getAccountDestiny() != null
                         ? transaction.getAccountDestiny().getClient().getName()
                         : null,
-                transaction.getAccountDestiny() != null
-                        ? transaction.getAccountDestiny().getAccountNumber()
-                        : transaction.getDestinyDocument(),
+                transaction.getDestinyDocument(),
                 transaction.getAmount(),
                 transaction.getType(),
-                transaction.getCreatedAt()
+                transaction.getCreatedAt(),
+                transaction.getDescription()
         );
     }
 
@@ -84,5 +83,13 @@ public class TransactionMapper {
                 transactionStatementFormatter.getCounterpartName(transaction, isOrigin),
                 transaction.getCreatedAt()
         );
+    }
+
+    private String formatAccountNumber(String number) {
+        if (number == null || number.length() < 2) {
+            return number;
+        }
+        int splitIndex = number.length() - 1;
+        return number.substring(0, splitIndex) + "-" + number.substring(splitIndex);
     }
 }

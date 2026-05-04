@@ -62,14 +62,13 @@ public class TransactionFactory {
                 .accountOrigin(originAccount)
                 .originName(originAccount.getClient().getName())
                 .amount(amount)
+                .destinyDocument(pixKey)
                 .type(TransactionType.PIX)
                 .description(normalizeDescription(description));
 
         if (destinyAccount != null) {
             builder.accountDestiny(destinyAccount)
                     .destinyName(destinyAccount.getClient().getName());
-        } else {
-            builder.destinyDocument(pixKey);
         }
 
         return builder.build();
