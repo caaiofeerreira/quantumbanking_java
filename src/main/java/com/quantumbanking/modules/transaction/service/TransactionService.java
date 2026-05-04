@@ -10,7 +10,6 @@ import com.quantumbanking.modules.account.repository.PixKeyRepository;
 import com.quantumbanking.modules.shared.domain.user.User;
 import com.quantumbanking.modules.shared.service.UserService;
 import com.quantumbanking.modules.transaction.domain.Transaction;
-import com.quantumbanking.modules.transaction.domain.TransactionType;
 import com.quantumbanking.modules.transaction.dto.*;
 import com.quantumbanking.modules.transaction.factory.TransactionFactory;
 import com.quantumbanking.modules.transaction.mapper.TransactionMapper;
