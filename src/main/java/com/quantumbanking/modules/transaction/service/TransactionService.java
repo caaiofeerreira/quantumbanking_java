@@ -1,12 +1,14 @@
 package com.quantumbanking.modules.transaction.service;
 
 import com.quantumbanking.infra.event.TransactionCompletedEvent;
+import com.quantumbanking.infra.exception.AgencyNotFoundException;
 import com.quantumbanking.infra.exception.TransactionNotAuthorizedException;
 import com.quantumbanking.modules.account.domain.Account;
-import com.quantumbanking.modules.account.domain.AccountStatus;
 import com.quantumbanking.modules.account.domain.PixKey;
 import com.quantumbanking.modules.account.repository.AccountRepository;
 import com.quantumbanking.modules.account.repository.PixKeyRepository;
+import com.quantumbanking.modules.bank.domain.agency.Agency;
+import com.quantumbanking.modules.bank.repository.AgencyRepository;
 import com.quantumbanking.modules.shared.domain.user.User;
 import com.quantumbanking.modules.shared.service.UserService;
 import com.quantumbanking.modules.transaction.domain.Transaction;
@@ -14,8 +16,8 @@ import com.quantumbanking.modules.transaction.dto.*;
 import com.quantumbanking.modules.transaction.factory.TransactionFactory;
 import com.quantumbanking.modules.transaction.mapper.TransactionMapper;
 import com.quantumbanking.modules.transaction.repository.TransactionRepository;
+import com.quantumbanking.modules.transaction.service.validation.TransactionValidator;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,27 +33,24 @@ public class TransactionService {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final PixKeyRepository pixKeyRepository;
-
-    private final TransactionFactory transactionFactory;
+    private final AgencyRepository agencyRepository;
 
     private final TransactionMapper transactionMapper;
+
+    private final TransactionFactory transactionFactory;
 
     private final ApplicationEventPublisher applicationEventPublisher;
 
     private final UserService userService;
 
-    @Value("${bank.code}")
-    private String bankCode;
+    private final TransactionValidator transactionValidator;
 
     @Transactional
     public DepositResponseDTO executeDeposit(User user, DepositRequestDTO requestDTO) {
 
-        Account account = userService
-                .getAuthenticatedUserAccount(user.getId());
+        Account account = userService.getAuthenticatedUserAccount(user.getId());
 
-        if (account.getStatus() != AccountStatus.ACTIVE) {
-            throw new TransactionNotAuthorizedException("Conta não está ativa.");
-        }
+        transactionValidator.validateDeposit(account);
 
         Set<Long> usersToInvalidate = Set.of(user.getId());
 
@@ -75,12 +74,9 @@ public class TransactionService {
     @Transactional
     public WithdrawResponseDTO executeWithdraw(User user, WithdrawRequestDTO requestDTO) {
 
-        Account account = userService
-                .getAuthenticatedUserAccount(user.getId());
+        Account account = userService.getAuthenticatedUserAccount(user.getId());
 
-        if (account.getStatus() != AccountStatus.ACTIVE) {
-            throw new TransactionNotAuthorizedException("Conta não está ativa.");
-        }
+        transactionValidator.validateWithdraw(account);
 
         Set<Long> usersToInvalidate = Set.of(user.getId());
 
@@ -104,23 +100,15 @@ public class TransactionService {
     @Transactional
     public InternalTransactionResponseDTO executeInternalTransaction(User user, InternalTransactionRequestDTO requestDTO) {
 
-        Account originAccount = userService
-                .getAuthenticatedUserAccount(user.getId());
-
-        if (originAccount.getStatus() != AccountStatus.ACTIVE) {
-            throw new TransactionNotAuthorizedException("Conta não está ativa.");
-        }
+        Account originAccount = userService.getAuthenticatedUserAccount(user.getId());
 
         Account destinyAccount = accountRepository.findByAccountNumber(requestDTO.accountNumber())
                 .orElseThrow(() -> new TransactionNotAuthorizedException("Conta de destino não encontrada."));
 
-        if (destinyAccount.getStatus() != AccountStatus.ACTIVE) {
-            throw new TransactionNotAuthorizedException("Conta de destino não está ativa.");
-        }
+        Agency agency = agencyRepository.findByAgencyNumber(requestDTO.agencyNumber())
+                .orElseThrow(() -> new AgencyNotFoundException("Agência não encontrada."));
 
-        if (originAccount.getId().equals(destinyAccount.getId())) {
-            throw new TransactionNotAuthorizedException("Não é possível transferir para a própria conta.");
-        }
+        transactionValidator.validateInternal(originAccount, destinyAccount, agency);
 
         Set<Long> usersToInvalidate = new HashSet<>();
         usersToInvalidate.add(user.getId());
@@ -150,17 +138,9 @@ public class TransactionService {
     @Transactional
     public ExternalTransactionResponseDTO executeExternalTransaction(User user, ExternalTransactionRequestDTO requestDTO) {
 
-        Account account = userService
-                .getAuthenticatedUserAccount(user.getId());
+        Account account = userService.getAuthenticatedUserAccount(user.getId());
 
-        if (account.getStatus() != AccountStatus.ACTIVE) {
-            throw new TransactionNotAuthorizedException("Conta não está ativa.");
-        }
-
-        if (account.getAccountNumber().equals(requestDTO.destinyAccount())
-                && requestDTO.bankCode().equals(bankCode)) {
-            throw new TransactionNotAuthorizedException("Não é possível transferir para a própria conta.");
-        }
+        transactionValidator.validateExternal(account, requestDTO.destinyAccount(), requestDTO.bankCode());
 
         Set<Long> usersToInvalidate = Set.of(user.getId());
 
@@ -194,9 +174,7 @@ public class TransactionService {
         Optional<PixKey> pixKey = pixKeyRepository.findByKey(requestDTO.key());
         Account destinyAccount = pixKey.map(PixKey::getAccount).orElse(null);
 
-        if (destinyAccount != null && originAccount.getId().equals(destinyAccount.getId())) {
-            throw new TransactionNotAuthorizedException("Não é possível fazer Pix para a própria conta.");
-        }
+        transactionValidator.validatePix(originAccount, destinyAccount);
 
         Transaction transaction = transactionFactory
                 .createPix(

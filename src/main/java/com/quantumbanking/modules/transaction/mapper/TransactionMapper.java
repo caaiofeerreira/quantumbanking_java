@@ -45,7 +45,7 @@ public class TransactionMapper {
         return new ExternalTransactionResponseDTO(
                 transaction.getId(),
                 transaction.getDestinyName(),
-                transaction.getDestinyAccount(),
+                formatAccountNumber(transaction.getDestinyAccount()),
                 transaction.getDestinyAgency(),
                 transaction.getBankCode(),
                 transaction.getDestinyDocument(),
@@ -70,10 +70,9 @@ public class TransactionMapper {
     }
 
     public TransactionStatementDTO toStatementResponse(Transaction transaction, Account account) {
-        Long accountId = account.getId();
 
+        Long accountId = account.getId();
         boolean isOrigin = transaction.isSentBy(accountId);
-        boolean isDestiny = transaction.isReceivedBy(accountId);
 
         return new TransactionStatementDTO(
                 transaction.getId(),
