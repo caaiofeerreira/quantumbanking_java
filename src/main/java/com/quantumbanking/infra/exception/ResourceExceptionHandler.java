@@ -18,7 +18,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ResourceExceptionHandler {
 
-    private ResponseEntity<ErrorResponse> buildResponse(HttpStatus status, String message, String path) {
+    private ResponseEntity<ErrorResponse> buildResponse(
+            HttpStatus status, String message, String path
+    ) {
         ErrorResponse error = new ErrorResponse(
                 status.value(),
                 message,
@@ -48,31 +50,19 @@ public class ResourceExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
         log.warn("Tentativa de login inválido: {}", ex.getMessage());
-        return buildResponse(HttpStatus.UNAUTHORIZED, "Cpf ou senha inválidos.", getPath());
-    }
-
-    @ExceptionHandler(ValidateException.class)
-    public ResponseEntity<ErrorResponse> handleValidateException(ValidateException ex) {
-        log.warn("Erro de validação: {}", ex.getMessage());
-        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
-    }
-
-    @ExceptionHandler(TransactionNotAuthorizedException.class)
-    public ResponseEntity<ErrorResponse> handleTransactionNotAuthorizedException(TransactionNotAuthorizedException ex) {
-        log.warn("Erro de transação: {}", ex.getMessage());
-        return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), getPath());
-    }
-
-    @ExceptionHandler(AccountNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleAccountNotFoundException(AccountNotFoundException ex) {
-        log.warn("Conta não encontrada: {}", ex.getMessage());
-        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), getPath());
+        return buildResponse(HttpStatus.UNAUTHORIZED, "CPF ou senha inválidos.", getPath());
     }
 
     @ExceptionHandler(UnauthorizedAccessException.class)
     public ResponseEntity<ErrorResponse> handleUnauthorizedException(UnauthorizedAccessException ex) {
         log.warn("Acesso não autorizado: {}", ex.getMessage());
         return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(AccountNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleAccountNotFoundException(AccountNotFoundException ex) {
+        log.warn("Conta não encontrada: {}", ex.getMessage());
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), getPath());
     }
 
     @ExceptionHandler(ManagerNotFoundException.class)
@@ -84,6 +74,38 @@ public class ResourceExceptionHandler {
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex) {
         log.warn("Falha na busca de usuário: {}", ex.getMessage());
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(ValidateException.class)
+    public ResponseEntity<ErrorResponse> handleValidateException(ValidateException ex) {
+        log.warn("Erro de validação: {}", ex.getMessage());
+        return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(TransactionNotAuthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleTransactionNotAuthorizedException(TransactionNotAuthorizedException ex) {
+        log.warn("Erro de transação: {}", ex.getMessage());
+        return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
+        log.error("Erro inesperado na aplicação", ex);
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                "Ocorreu um erro interno inesperado.",
+                getPath());
+    }
+
+    @ExceptionHandler(AgencyAccountMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleAgencyAccountMismatchException(AgencyAccountMismatchException ex) {
+        log.warn("Falha na validação de transação: {}", ex.getMessage());
+        return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(AgencyNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleAgencyNotFoundException(AgencyNotFoundException ex) {
+        log.warn("Falha na localização de recurso: {}", ex.getMessage());
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), getPath());
     }
 }
