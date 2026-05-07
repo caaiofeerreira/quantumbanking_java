@@ -12,7 +12,7 @@ public class TransactionFactory {
 
     public Transaction createDeposit(Account account, BigDecimal amount, String description) {
         return Transaction.builder()
-                .accountDestiny(account)
+                .destinyAccount(account)
                 .amount(amount)
                 .type(TransactionType.DEPOSIT)
                 .description(normalizeDescription(description))
@@ -21,7 +21,7 @@ public class TransactionFactory {
 
     public Transaction createWithdrawal(Account account, BigDecimal amount, String description) {
         return Transaction.builder()
-                .accountOrigin(account)
+                .originAccount(account)
                 .amount(amount)
                 .type(TransactionType.WITHDRAWAL)
                 .description(normalizeDescription(description))
@@ -30,9 +30,9 @@ public class TransactionFactory {
 
     public Transaction createInternalTransfer(Account originAccount, Account destinyAccount, String agencyNumber, BigDecimal amount, String description) {
         return Transaction.builder()
-                .accountOrigin(originAccount)
+                .originAccount(originAccount)
                 .originName(originAccount.getClient().getName())
-                .accountDestiny(destinyAccount)
+                .destinyAccount(destinyAccount)
                 .destinyName(destinyAccount.getClient().getName())
                 .destinyAgency(agencyNumber)
                 .amount(amount)
@@ -41,12 +41,12 @@ public class TransactionFactory {
                 .build();
     }
 
-    public Transaction createExternalTransfer(Account originAccount, String destinyAccount, String destinyName, String destinyAgency,
+    public Transaction createExternalTransfer(Account originAccount, String destinyAccountNumber, String destinyName, String destinyAgency,
                                               String bankCode, String destinyDocument, BigDecimal amount, String description) {
         return Transaction.builder()
-                .accountOrigin(originAccount)
+                .originAccount(originAccount)
                 .originName(originAccount.getClient().getName())
-                .destinyAccount(destinyAccount)
+                .destinyAccountNumber(destinyAccountNumber)
                 .destinyName(destinyName)
                 .destinyAgency(destinyAgency)
                 .bankCode(bankCode)
@@ -59,7 +59,7 @@ public class TransactionFactory {
 
     public Transaction createPix(Account originAccount, BigDecimal amount, String description, String pixKey, Account destinyAccount) {
         var builder = Transaction.builder()
-                .accountOrigin(originAccount)
+                .originAccount(originAccount)
                 .originName(originAccount.getClient().getName())
                 .amount(amount)
                 .destinyDocument(pixKey)
@@ -67,7 +67,7 @@ public class TransactionFactory {
                 .description(normalizeDescription(description));
 
         if (destinyAccount != null) {
-            builder.accountDestiny(destinyAccount)
+            builder.destinyAccount(destinyAccount)
                     .destinyName(destinyAccount.getClient().getName());
         }
 

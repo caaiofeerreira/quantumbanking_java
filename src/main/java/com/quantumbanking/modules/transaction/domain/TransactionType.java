@@ -41,7 +41,7 @@ public enum TransactionType {
 
     public String getCounterpartName(Transaction t, boolean isOrigin) {
         return isOrigin
-                ? (t.getAccountDestiny() != null ? t.getAccountDestiny().getClient().getName() : t.getDestinyName())
-                : (t.getAccountOrigin() != null ? t.getAccountOrigin().getClient().getName() : "Origem Externa");
+                ? (t.getDestinyAccount() != null ? t.getDestinyAccount().getClient().getName() : t.getDestinyName())
+                : (t.getOriginAccount() != null ? t.getOriginAccount().getClient().getName() : "Origem Externa");
     }
 }

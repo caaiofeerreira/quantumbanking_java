@@ -11,7 +11,7 @@ import java.util.UUID;
 public interface TransactionRepository extends JpaRepository<Transaction, UUID> {
 
     @Query("SELECT t FROM Transaction t WHERE " +
-            "(t.accountOrigin.id = :accountId OR t.accountDestiny.id = :accountId) " +
+            "(t.originAccount.id = :accountId OR t.destinyAccount.id = :accountId) " +
             "AND MONTH(t.createdAt) = :month " +
             "AND YEAR(t.createdAt) = :year " +
             "ORDER BY t.createdAt DESC")

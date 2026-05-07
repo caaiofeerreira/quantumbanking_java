@@ -24,17 +24,17 @@ public class Transaction {
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_origin_id")
-    private Account accountOrigin;
+    @JoinColumn(name = "origin_account_id")
+    private Account originAccount;
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_destiny_id")
-    private Account accountDestiny;
+    @JoinColumn(name = "destiny_account_id")
+    private Account destinyAccount;
 
     private String originName;
     private String destinyName;
-    private String destinyAccount;
+    private String destinyAccountNumber;
     private String destinyAgency;
     private String bankCode;
     private String destinyDocument;
@@ -54,11 +54,11 @@ public class Transaction {
     }
 
     public boolean isSentBy(Long accountId) {
-        return this.accountOrigin != null && this.accountOrigin.getId().equals(accountId);
+        return this.originAccount != null && this.originAccount.getId().equals(accountId);
     }
 
     public boolean isReceivedBy(Long accountId) {
-        return this.accountDestiny != null && this.accountDestiny.getId().equals(accountId);
+        return this.destinyAccount != null && this.destinyAccount.getId().equals(accountId);
     }
 
 }

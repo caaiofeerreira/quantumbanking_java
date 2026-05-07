@@ -34,8 +34,8 @@ public class TransactionMapper {
     public InternalTransactionResponseDTO toInternalResponse(Transaction transaction) {
         return new InternalTransactionResponseDTO(
                 transaction.getId(),
-                formatAccountNumber(transaction.getAccountDestiny().getAccountNumber()),
-                transaction.getAccountDestiny().getClient().getName(),
+                formatAccountNumber(transaction.getDestinyAccount().getAccountNumber()),
+                transaction.getDestinyAccount().getClient().getName(),
                 transaction.getAmount(),
                 transaction.getType(),
                 transaction.getDestinyAgency());
@@ -45,7 +45,7 @@ public class TransactionMapper {
         return new ExternalTransactionResponseDTO(
                 transaction.getId(),
                 transaction.getDestinyName(),
-                formatAccountNumber(transaction.getDestinyAccount()),
+                formatAccountNumber(transaction.getDestinyAccountNumber()),
                 transaction.getDestinyAgency(),
                 transaction.getBankCode(),
                 transaction.getDestinyDocument(),
@@ -58,8 +58,8 @@ public class TransactionMapper {
     public PixTransactionResponseDTO toPixResponse(Transaction transaction) {
         return new PixTransactionResponseDTO(
                 transaction.getId(),
-                transaction.getAccountDestiny() != null
-                        ? transaction.getAccountDestiny().getClient().getName()
+                transaction.getDestinyAccount() != null
+                        ? transaction.getDestinyAccount().getClient().getName()
                         : null,
                 transaction.getDestinyDocument(),
                 transaction.getAmount(),
