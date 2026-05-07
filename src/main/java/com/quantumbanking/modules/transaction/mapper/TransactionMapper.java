@@ -16,55 +16,56 @@ public class TransactionMapper {
     public DepositResponseDTO toDepositResponse(Transaction transaction) {
         return new DepositResponseDTO(
                 transaction.getId(),
-                transaction.getAmount(),
+                transaction.getCreatedAt(),
                 transaction.getType(),
-                transaction.getCreatedAt()
+                transaction.getAmount()
         );
     }
 
     public WithdrawResponseDTO toWithdrawResponse(Transaction transaction) {
         return new WithdrawResponseDTO(
                 transaction.getId(),
-                transaction.getAmount(),
+                transaction.getCreatedAt(),
                 transaction.getType(),
-                transaction.getCreatedAt()
+                transaction.getAmount()
         );
     }
 
     public InternalTransactionResponseDTO toInternalResponse(Transaction transaction) {
         return new InternalTransactionResponseDTO(
                 transaction.getId(),
-                formatAccountNumber(transaction.getDestinyAccount().getAccountNumber()),
-                transaction.getDestinyAccount().getClient().getName(),
-                transaction.getAmount(),
+                transaction.getCreatedAt(),
                 transaction.getType(),
-                transaction.getDestinyAgency());
+                transaction.getAmount(),
+                transaction.getDestinyAccount().getClient().getName(),
+                transaction.getDestinyAgency(),
+                formatAccountNumber(transaction.getDestinyAccount().getAccountNumber()));
     }
 
     public ExternalTransactionResponseDTO toExternalResponse(Transaction transaction) {
         return new ExternalTransactionResponseDTO(
                 transaction.getId(),
+                transaction.getCreatedAt(),
+                transaction.getType(),
+                transaction.getAmount(),
                 transaction.getDestinyName(),
                 formatAccountNumber(transaction.getDestinyAccountNumber()),
                 transaction.getDestinyAgency(),
                 transaction.getBankCode(),
-                transaction.getDestinyDocument(),
-                transaction.getAmount(),
-                transaction.getType(),
-                transaction.getCreatedAt()
+                transaction.getDestinyDocument()
         );
     }
 
     public PixTransactionResponseDTO toPixResponse(Transaction transaction) {
         return new PixTransactionResponseDTO(
                 transaction.getId(),
+                transaction.getCreatedAt(),
+                transaction.getType(),
+                transaction.getAmount(),
                 transaction.getDestinyAccount() != null
                         ? transaction.getDestinyAccount().getClient().getName()
                         : null,
                 transaction.getDestinyDocument(),
-                transaction.getAmount(),
-                transaction.getType(),
-                transaction.getCreatedAt(),
                 transaction.getDescription()
         );
     }
@@ -76,11 +77,11 @@ public class TransactionMapper {
 
         return new TransactionStatementDTO(
                 transaction.getId(),
+                transaction.getCreatedAt(),
                 transaction.getType(),
                 isOrigin ? transaction.getAmount().negate() : transaction.getAmount(),
                 transactionStatementFormatter.getDisplayDescription(transaction, isOrigin),
-                transactionStatementFormatter.getCounterpartName(transaction, isOrigin),
-                transaction.getCreatedAt()
+                transactionStatementFormatter.getCounterpartName(transaction, isOrigin)
         );
     }
 
