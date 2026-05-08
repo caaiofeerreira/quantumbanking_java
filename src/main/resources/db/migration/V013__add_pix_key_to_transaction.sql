@@ -1,0 +1,1 @@
+ALTER TABLE tb_transaction ADD COLUMN pix_key VARCHAR(255);

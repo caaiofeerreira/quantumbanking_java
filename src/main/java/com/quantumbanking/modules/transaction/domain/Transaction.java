@@ -38,6 +38,7 @@ public class Transaction {
     private String destinyAgency;
     private String bankCode;
     private String destinyDocument;
+    private String pixKey;
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
