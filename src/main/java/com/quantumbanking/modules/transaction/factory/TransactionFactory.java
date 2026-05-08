@@ -62,7 +62,7 @@ public class TransactionFactory {
                 .originAccount(originAccount)
                 .originName(originAccount.getClient().getName())
                 .amount(amount)
-                .destinyDocument(pixKey)
+                .pixKey(pixKey)
                 .type(TransactionType.PIX)
                 .description(normalizeDescription(description));
 

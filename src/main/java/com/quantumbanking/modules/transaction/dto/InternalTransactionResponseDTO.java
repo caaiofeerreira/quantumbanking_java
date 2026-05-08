@@ -12,7 +12,6 @@ public record InternalTransactionResponseDTO(UUID id,
                                              LocalDateTime createdAt,
                                              TransactionType type,
                                              BigDecimal amount,
-                                             String destinyName,
-                                             String agencyNumber,
-                                             String destinyAccountNumber) {
+                                             AccountInfoDTO originAccount,
+                                             AccountInfoDTO destinyAccount) {
 }

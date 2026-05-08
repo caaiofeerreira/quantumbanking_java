@@ -7,6 +7,8 @@ import com.quantumbanking.modules.transaction.formater.TransactionStatementForma
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
+
 @Component
 @RequiredArgsConstructor
 public class TransactionMapper {
@@ -37,9 +39,9 @@ public class TransactionMapper {
                 transaction.getCreatedAt(),
                 transaction.getType(),
                 transaction.getAmount(),
-                transaction.getDestinyAccount().getClient().getName(),
-                transaction.getDestinyAgency(),
-                formatAccountNumber(transaction.getDestinyAccount().getAccountNumber()));
+                originInfo(transaction.getOriginAccount()),
+                destinyInfo(transaction)
+                );
     }
 
     public ExternalTransactionResponseDTO toExternalResponse(Transaction transaction) {
@@ -48,11 +50,8 @@ public class TransactionMapper {
                 transaction.getCreatedAt(),
                 transaction.getType(),
                 transaction.getAmount(),
-                transaction.getDestinyName(),
-                formatAccountNumber(transaction.getDestinyAccountNumber()),
-                transaction.getDestinyAgency(),
-                transaction.getBankCode(),
-                transaction.getDestinyDocument()
+                originInfo(transaction.getOriginAccount()),
+                destinyInfo(transaction)
         );
     }
 
@@ -62,11 +61,10 @@ public class TransactionMapper {
                 transaction.getCreatedAt(),
                 transaction.getType(),
                 transaction.getAmount(),
-                transaction.getDestinyAccount() != null
-                        ? transaction.getDestinyAccount().getClient().getName()
-                        : null,
-                transaction.getDestinyDocument(),
-                transaction.getDescription()
+                transaction.getPixKey(),
+                transaction.getDescription(),
+                originInfo(transaction.getOriginAccount()),
+                destinyInfo(transaction)
         );
     }
 
@@ -82,6 +80,35 @@ public class TransactionMapper {
                 isOrigin ? transaction.getAmount().negate() : transaction.getAmount(),
                 transactionStatementFormatter.getDisplayDescription(transaction, isOrigin),
                 transactionStatementFormatter.getCounterpartName(transaction, isOrigin)
+        );
+    }
+
+    private AccountInfoDTO originInfo(Account originAccount) {
+        return new AccountInfoDTO(
+                originAccount.getClient().getName(),
+                originAccount.getClient().getCpf(),
+                originAccount.getAgency().getBank().getName(),
+                originAccount.getAgency().getAgencyNumber(),
+                formatAccountNumber(originAccount.getAccountNumber())
+        );
+    }
+
+    private AccountInfoDTO destinyInfo(Transaction transaction) {
+        if (transaction.getDestinyAccount() != null) {
+            return new AccountInfoDTO(
+                    transaction.getDestinyAccount().getClient().getName(),
+                    transaction.getDestinyAccount().getClient().getCpf(),
+                    transaction.getDestinyAccount().getAgency().getBank().getName(),
+                    transaction.getDestinyAccount().getAgency().getAgencyNumber(),
+                    formatAccountNumber(transaction.getDestinyAccount().getAccountNumber())
+            );
+        }
+        return new AccountInfoDTO(
+                defaultIfEmpty(transaction.getDestinyName(), "Titular não identificado"),
+                defaultIfEmpty(transaction.getDestinyDocument(), "Documento não informado"),
+                defaultIfEmpty(transaction.getBankCode(), "Instituição Externa"),
+                defaultIfEmpty(transaction.getDestinyAgency(), "---"),
+                formatAccountNumber(transaction.getDestinyAccountNumber())
         );
     }
 

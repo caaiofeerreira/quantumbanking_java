@@ -1,4 +1,8 @@
 package com.quantumbanking.modules.transaction.dto;
 
-public record AccountInfoDTO() {
+public record AccountInfoDTO(String name,
+                             String document,
+                             String bank,
+                             String agency,
+                             String accountNumber) {
 }

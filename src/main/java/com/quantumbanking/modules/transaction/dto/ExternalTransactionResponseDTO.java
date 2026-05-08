@@ -12,9 +12,6 @@ public record ExternalTransactionResponseDTO(UUID id,
                                              LocalDateTime createdAt,
                                              TransactionType type,
                                              BigDecimal amount,
-                                             String name,
-                                             String destinyAccount,
-                                             String destinyAgency,
-                                             String bankCode,
-                                             String destinyDocument) {
+                                             AccountInfoDTO originAccount,
+                                             AccountInfoDTO destinyAccount) {
 }

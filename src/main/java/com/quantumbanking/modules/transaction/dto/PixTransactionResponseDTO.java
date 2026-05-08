@@ -12,8 +12,9 @@ public record PixTransactionResponseDTO(UUID id,
                                         LocalDateTime createdAt,
                                         TransactionType type,
                                         BigDecimal amount,
-                                        String destinyName,
                                         String pixKey,
-                                        String description) {
+                                        String description,
+                                        AccountInfoDTO originAccount,
+                                        AccountInfoDTO destinyAccount) {
 
 }
