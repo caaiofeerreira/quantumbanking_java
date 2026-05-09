@@ -13,6 +13,12 @@ public class TransactionFactory {
     public Transaction createDeposit(Account account, BigDecimal amount, String description) {
         return Transaction.builder()
                 .destinyAccount(account)
+                .destinyName(account.getClient().getName())
+                .destinyAccountNumber(account.getAccountNumber())
+                .destinyAgency(account.getAgency().getAgencyNumber())
+                .destinyBankCode(account.getAgency().getBank().getBankCode())
+                .destinyDocument(account.getClient().getCpf())
+
                 .amount(amount)
                 .type(TransactionType.DEPOSIT)
                 .description(normalizeDescription(description))
@@ -22,20 +28,36 @@ public class TransactionFactory {
     public Transaction createWithdrawal(Account account, BigDecimal amount, String description) {
         return Transaction.builder()
                 .originAccount(account)
+                .originName(account.getClient().getName())
+                .originAccountNumber(account.getAccountNumber())
+                .originAgency(account.getAgency().getAgencyNumber())
+                .originBankCode(account.getAgency().getBank().getBankCode())
+                .originDocument(account.getClient().getCpf())
+
                 .amount(amount)
                 .type(TransactionType.WITHDRAWAL)
                 .description(normalizeDescription(description))
                 .build();
     }
 
-    public Transaction createInternalTransfer(Account originAccount, Account destinyAccount, String agencyNumber, BigDecimal amount, String description) {
+    public Transaction createInternalTransfer(Account originAccount, Account destinyAccount, String destinyAgencyNumber, BigDecimal amount, String description) {
         return Transaction.builder()
                 .originAccount(originAccount)
                 .originName(originAccount.getClient().getName())
+                .originAccountNumber(originAccount.getAccountNumber())
+                .originAgency(originAccount.getAgency().getAgencyNumber())
+                .originBankCode(originAccount.getAgency().getBank().getBankCode())
+                .originDocument(originAccount.getClient().getCpf())
+
                 .destinyAccount(destinyAccount)
                 .destinyName(destinyAccount.getClient().getName())
-                .destinyAgency(agencyNumber)
+                .destinyAgency(destinyAgencyNumber)
+                .destinyAccountNumber(destinyAccount.getAccountNumber())
+                .destinyBankCode(destinyAccount.getAgency().getBank().getBankCode())
+                .destinyDocument(destinyAccount.getClient().getCpf())
+
                 .amount(amount)
+                .destinyBankCode(destinyAccount.getAgency().getBank().getBankCode())
                 .type(TransactionType.INTERNAL_TRANSFER)
                 .description(normalizeDescription(description))
                 .build();
@@ -46,11 +68,17 @@ public class TransactionFactory {
         return Transaction.builder()
                 .originAccount(originAccount)
                 .originName(originAccount.getClient().getName())
+                .originAccountNumber(originAccount.getAccountNumber())
+                .originAgency(originAccount.getAgency().getAgencyNumber())
+                .originBankCode(originAccount.getAgency().getBank().getBankCode())
+                .originDocument(originAccount.getClient().getCpf())
+
                 .destinyAccountNumber(destinyAccountNumber)
                 .destinyName(destinyName)
                 .destinyAgency(destinyAgency)
-                .bankCode(bankCode)
+                .destinyBankCode(bankCode)
                 .destinyDocument(destinyDocument)
+
                 .amount(amount)
                 .type(TransactionType.EXTERNAL_TRANSFER)
                 .description(normalizeDescription(description))
@@ -61,6 +89,11 @@ public class TransactionFactory {
         var builder = Transaction.builder()
                 .originAccount(originAccount)
                 .originName(originAccount.getClient().getName())
+                .originAccountNumber(originAccount.getAccountNumber())
+                .originAgency(originAccount.getAgency().getAgencyNumber())
+                .originBankCode(originAccount.getAgency().getBank().getBankCode())
+                .originDocument(originAccount.getClient().getCpf())
+
                 .amount(amount)
                 .pixKey(pixKey)
                 .type(TransactionType.PIX)
@@ -68,7 +101,11 @@ public class TransactionFactory {
 
         if (destinyAccount != null) {
             builder.destinyAccount(destinyAccount)
-                    .destinyName(destinyAccount.getClient().getName());
+                    .destinyName(destinyAccount.getClient().getName())
+                    .destinyAccountNumber(destinyAccount.getAccountNumber())
+                    .destinyAgency(destinyAccount.getAgency().getAgencyNumber())
+                    .destinyBankCode(destinyAccount.getAgency().getBank().getBankCode())
+                    .destinyDocument(destinyAccount.getClient().getCpf());
         }
 
         return builder.build();

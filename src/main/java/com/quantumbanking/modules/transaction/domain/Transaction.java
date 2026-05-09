@@ -33,11 +33,17 @@ public class Transaction {
     private Account destinyAccount;
 
     private String originName;
+    private String originAccountNumber;
+    private String originAgency;
+    private String originBankCode;
+    private String originDocument;
+
     private String destinyName;
     private String destinyAccountNumber;
     private String destinyAgency;
-    private String bankCode;
+    private String destinyBankCode;
     private String destinyDocument;
+
     private String pixKey;
     private BigDecimal amount;
 

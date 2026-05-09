@@ -1,0 +1,1 @@
+ALTER TABLE tb_transaction RENAME COLUMN bank_code TO destiny_bank_code;

@@ -41,7 +41,7 @@ public class TransactionMapper {
                 transaction.getAmount(),
                 originInfo(transaction.getOriginAccount()),
                 destinyInfo(transaction)
-                );
+        );
     }
 
     public ExternalTransactionResponseDTO toExternalResponse(Transaction transaction) {
@@ -106,7 +106,7 @@ public class TransactionMapper {
         return new AccountInfoDTO(
                 defaultIfEmpty(transaction.getDestinyName(), "Titular não identificado"),
                 defaultIfEmpty(transaction.getDestinyDocument(), "Documento não informado"),
-                defaultIfEmpty(transaction.getBankCode(), "Instituição Externa"),
+                defaultIfEmpty(transaction.getDestinyBankCode(), "Instituição Externa"),
                 defaultIfEmpty(transaction.getDestinyAgency(), "---"),
                 formatAccountNumber(transaction.getDestinyAccountNumber())
         );
