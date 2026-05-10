@@ -1,6 +1,8 @@
 package com.quantumbanking.modules.client.service;
 
-import com.quantumbanking.infra.exception.ValidateException;
+import com.quantumbanking.infra.exception.CpfAlreadyRegisteredException;
+import com.quantumbanking.infra.exception.IncompleteCompanyDataException;
+import com.quantumbanking.infra.exception.ResourceNotFoundException;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.factory.AccountFactory;
 import com.quantumbanking.modules.account.repository.AccountRepository;
@@ -40,17 +42,17 @@ public class ClientService {
     public ClientResponseDTO registerClient(ClientRegistrationDTO requestDTO) {
 
         if (userRepository.existsByCpf(requestDTO.cpf())) {
-            throw new ValidateException("CPF já cadastrado.");
+            throw new CpfAlreadyRegisteredException("Este CPF já está vinculado a outro usuário.");
         }
 
         if (requestDTO.clientType() == ClientType.JURIDICA && requestDTO.company() == null) {
-            throw new ValidateException("Dados da empresa são obrigatórios para pessoa jurídica.");
+            throw new IncompleteCompanyDataException("Dados da empresa são obrigatórios para pessoa jurídica.");
         }
 
         Agency agency = agencyRepository.findByAgencyNumber(requestDTO.agencyNumber())
                 .orElseThrow(() -> {
                     String agencies = String.join(", ", agencyRepository.findAllAgencyNumbersAndCity());
-                    return new ValidateException("Agência não encontrada. Disponíveis: " + agencies);
+                    return new ResourceNotFoundException("Agência não encontrada. Disponíveis: " + agencies);
                 });
 
         String encryptedPassword = passwordEncoder.encode(requestDTO.password());

@@ -1,6 +1,6 @@
 package com.quantumbanking.modules.account.factory;
 
-import com.quantumbanking.infra.exception.ValidateException;
+import com.quantumbanking.infra.exception.IncompatibleAccountTypeException;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.domain.AccountStatus;
 import com.quantumbanking.modules.account.domain.AccountType;
@@ -23,7 +23,7 @@ public class AccountFactory {
     public Account createDefaultAccount(ClientType clientType, AccountType accountType, Agency agency, Client client) {
 
         if (clientType == ClientType.FISICA && accountType == AccountType.JURIDICA) {
-            throw new ValidateException("Pessoa física não pode ter conta jurídica.");
+            throw new IncompatibleAccountTypeException("Pessoa física não pode ter conta jurídica.");
         }
 
         return Account.builder()

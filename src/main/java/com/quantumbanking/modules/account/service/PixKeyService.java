@@ -1,7 +1,9 @@
 package com.quantumbanking.modules.account.service;
 
+import com.quantumbanking.infra.exception.PixKeyAlreadyExistsException;
+import com.quantumbanking.infra.exception.PixKeyLimitException;
+import com.quantumbanking.infra.exception.ResourceNotFoundException;
 import com.quantumbanking.infra.exception.UnauthorizedAccessException;
-import com.quantumbanking.infra.exception.ValidateException;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.domain.PixKey;
 import com.quantumbanking.modules.account.dto.PixKeyRequestDTO;
@@ -34,11 +36,11 @@ public class PixKeyService {
                 .getAuthenticatedUserAccount(user.getId());
 
         if (pixRepository.countByAccountId(account.getId()) >= 5) {
-            throw new ValidateException("Limite de 5 chaves Pix atingido.");
+            throw new PixKeyLimitException("Limite de 5 chaves Pix atingido.");
         }
 
         if (pixRepository.existsByKey(requestDTO.key())) {
-            throw new ValidateException("Chave Pix já cadastrada.");
+            throw new PixKeyAlreadyExistsException("Chave Pix já cadastrada.");
         }
 
         PixKey pixKey = new PixKey(
@@ -66,7 +68,7 @@ public class PixKeyService {
     public void removePixKey(User user, UUID pixKeyId) {
 
         PixKey pixKey = pixRepository.findById(pixKeyId)
-                .orElseThrow(() -> new ValidateException("Chave Pix não encontrada."));
+                .orElseThrow(() -> new ResourceNotFoundException("Chave Pix não encontrada."));
 
         if (!pixKey.getAccount().getClient().getId().equals(user.getId())) {
             throw new UnauthorizedAccessException("Você não tem permissão para deletar essa chave.");

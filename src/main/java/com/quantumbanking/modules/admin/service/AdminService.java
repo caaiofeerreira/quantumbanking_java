@@ -1,6 +1,8 @@
 package com.quantumbanking.modules.admin.service;
 
-import com.quantumbanking.infra.exception.ValidateException;
+import com.quantumbanking.infra.exception.AgencyAlreadyExistsException;
+import com.quantumbanking.infra.exception.CpfAlreadyRegisteredException;
+import com.quantumbanking.infra.exception.ResourceNotFoundException;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.bank.domain.bank.Bank;
 import com.quantumbanking.modules.bank.domain.manager.Manager;
@@ -37,10 +39,10 @@ public class AdminService {
     public AgencyResponseDTO registerAgency(AgencyRegistrationDTO dto) {
 
         Bank bank = bankRepository.findByBankCode(dto.bankCode())
-                .orElseThrow(() -> new ValidateException("Banco não encontrado."));
+                .orElseThrow(() ->  new ResourceNotFoundException("Banco com código " + dto.bankCode() + " não encontrado."));
 
         if (agencyRepository.existsByAgencyNumber(dto.agencyNumber())) {
-            throw new ValidateException("Agência já cadastrada.");
+            throw new AgencyAlreadyExistsException("A agência número " + dto.agencyNumber() + " já está cadastrada.");
         }
 
         Agency agency = new Agency(dto, bank);
@@ -53,13 +55,13 @@ public class AdminService {
     public ManagerResponseDTO registerManager(ManagerRegistrationDTO dto) {
 
         if (userRepository.existsByCpf(dto.cpf())) {
-            throw new ValidateException("CPF já cadastrado.");
+            throw new CpfAlreadyRegisteredException("Já existe um usuário cadastrado com o CPF: " + dto.cpf());
         }
 
         Agency agency = agencyRepository.findByAgencyNumber(dto.agencyNumber())
                 .orElseThrow(() -> {
                     String agencies = String.join(", ", agencyRepository.findAllAgencyNumbersAndCity());
-                    return new ValidateException("Agência não encontrada. Disponíveis: " + agencies);
+                    return new ResourceNotFoundException("Agência não encontrada. Disponíveis: " + agencies);
                 });
 
         String encryptedPassword = passwordEncoder.encode(dto.password());

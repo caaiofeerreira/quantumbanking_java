@@ -50,7 +50,7 @@ public class TransactionService {
 
         Account account = userService.getAuthenticatedUserAccount(user.getId());
 
-        transactionValidator.validateDeposit(account);
+        transactionValidator.validateDeposit(account, requestDTO.amount());
 
         Set<Long> usersToInvalidate = Set.of(user.getId());
 
@@ -76,7 +76,7 @@ public class TransactionService {
 
         Account account = userService.getAuthenticatedUserAccount(user.getId());
 
-        transactionValidator.validateWithdraw(account);
+        transactionValidator.validateWithdraw(account, requestDTO.amount());
 
         Set<Long> usersToInvalidate = Set.of(user.getId());
 

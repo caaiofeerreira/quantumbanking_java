@@ -1,7 +1,7 @@
 package com.quantumbanking.modules.account.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.quantumbanking.infra.exception.ValidateException;
+import com.quantumbanking.infra.exception.InvalidPixKeyTypeException;
 
 public enum PixKeyType {
     CPF,
@@ -16,7 +16,7 @@ public enum PixKeyType {
         try {
             return PixKeyType.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new ValidateException("Tipo de chave Pix invalido: " + value);
+            throw new InvalidPixKeyTypeException("Tipo de chave Pix invalido: " + value);
         }
     }
 }

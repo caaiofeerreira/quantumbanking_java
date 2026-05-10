@@ -1,23 +1,25 @@
 package com.quantumbanking.modules.transaction.service.validation;
 
-import com.quantumbanking.infra.exception.AgencyAccountMismatchException;
-import com.quantumbanking.infra.exception.TransactionNotAuthorizedException;
-import com.quantumbanking.infra.exception.ValidateException;
+import com.quantumbanking.infra.exception.*;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.domain.AccountStatus;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+
 @Component
 public class TransactionValidator {
+
+    private static final BigDecimal MIN_VALUE = new BigDecimal("0.01");
 
     @Value("${bank.code}")
     private String bankCode;
 
     private void isAccountActive(Account account) {
         if (account.getStatus() != AccountStatus.ACTIVE) {
-            throw new ValidateException("A conta " + account.getId() + " não está ativa.");
+            throw new AccountStatusException("A conta " + account.getId() + " não está ativa.");
         }
     }
 
@@ -32,12 +34,25 @@ public class TransactionValidator {
         }
     }
 
-    public void validateDeposit(Account account) {
-        isAccountActive(account);
+    private void ensureMinimumAmount(BigDecimal amount) {
+
+        if (amount == null) {
+            throw new InvalidTransactionValueException("O valor da transação é obrigatório e não pode ser nulo.");
+        }
+
+        if (amount.compareTo(MIN_VALUE) < 0) {
+            throw new MinimumAmountException("O valor mínimo para esta operação é de R$ 0,01");
+        }
     }
 
-    public void validateWithdraw(Account account) {
+    public void validateDeposit(Account account, BigDecimal amount) {
         isAccountActive(account);
+        ensureMinimumAmount(amount);
+    }
+
+    public void validateWithdraw(Account account, BigDecimal amount) {
+        isAccountActive(account);
+        ensureMinimumAmount(amount);
     }
 
     public void validateInternal(Account originAccount, Account destinyAccount, Agency agency) {
