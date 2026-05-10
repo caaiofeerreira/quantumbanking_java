@@ -77,12 +77,6 @@ public class ResourceExceptionHandler {
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), getPath());
     }
 
-    @ExceptionHandler(ValidateException.class)
-    public ResponseEntity<ErrorResponse> handleValidateException(ValidateException ex) {
-        log.warn("Erro de validação: {}", ex.getMessage());
-        return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), getPath());
-    }
-
     @ExceptionHandler(TransactionNotAuthorizedException.class)
     public ResponseEntity<ErrorResponse> handleTransactionNotAuthorizedException(TransactionNotAuthorizedException ex) {
         log.warn("Erro de transação: {}", ex.getMessage());
@@ -107,5 +101,77 @@ public class ResourceExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAgencyNotFoundException(AgencyNotFoundException ex) {
         log.warn("Falha na localização de recurso: {}", ex.getMessage());
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(MinimumAmountException.class)
+    public ResponseEntity<ErrorResponse> handleMinimumAmountException(MinimumAmountException ex) {
+        log.warn("Tentativa de transação negada por valor mínimo: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(InsufficientBalanceException.class)
+    public ResponseEntity<ErrorResponse> handleInsufficientBalanceException(InsufficientBalanceException ex) {
+        log.warn("Falha no processamento: Saldo insuficiente. Contexto: {}", ex.getMessage());
+        return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(AccountStatusException.class)
+    public ResponseEntity<ErrorResponse> handleAccountStatusException(AccountStatusException ex) {
+        log.error("Transação bloqueada: A conta não possui status para operar. Detalhes: {}", ex.getMessage());
+        return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(PixKeyLimitException.class)
+    public ResponseEntity<ErrorResponse> handlePixKeyLimitException(PixKeyLimitException ex) {
+        log.warn("Limite de chaves atingido: {}", ex.getMessage());
+        return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(PixKeyAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handlePixKeyAlreadyExistsException(PixKeyAlreadyExistsException ex) {
+        log.warn("Tentativa de duplicidade de chave Pix: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        log.warn("Recurso não encontrado: {}", ex.getMessage());
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(InvalidPixKeyTypeException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidPixKeyTypeException(InvalidPixKeyTypeException ex) {
+        log.warn("Solicitação de chave Pix inválida: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(AgencyAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleAgencyAlreadyExistsException(AgencyAlreadyExistsException ex) {
+        log.warn("Tentativa de cadastro de agência duplicada: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(CpfAlreadyRegisteredException.class)
+    public ResponseEntity<ErrorResponse> handleCpfAlreadyRegisteredException(CpfAlreadyRegisteredException ex) {
+        log.warn("Conflito de CPF no cadastro de gerente: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(IncompleteCompanyDataException.class)
+    public ResponseEntity<ErrorResponse> handleIncompleteCompanyDataException(IncompleteCompanyDataException ex) {
+        log.warn("Falha no cadastro de cliente PJ: Dados da empresa ausentes. {}", ex.getMessage());
+        return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(InvalidTransactionValueException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidTransactionValueException(InvalidTransactionValueException ex) {
+        log.warn("Tentativa de transação com valor inválido ou nulo: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(IncompatibleAccountTypeException.class)
+    public ResponseEntity<ErrorResponse> handleIncompatibleAccountTypeException(IncompatibleAccountTypeException ex) {
+        log.warn("Tipo de conta incompatível com o cliente: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
     }
 }
