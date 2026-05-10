@@ -5,7 +5,6 @@ import com.quantumbanking.modules.client.dto.ClientResponseDTO;
 import com.quantumbanking.modules.client.service.ClientService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,7 +20,6 @@ public class ClientController {
 
     @PostMapping("/register")
     public ResponseEntity<ClientResponseDTO> register(@RequestBody @Valid ClientRegistrationDTO dto) {
-        ClientResponseDTO response = clientService.registerClient(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(201).body(clientService.registerClient(dto));
     }
 }

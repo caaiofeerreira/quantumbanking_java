@@ -5,7 +5,6 @@ import com.quantumbanking.modules.transaction.dto.*;
 import com.quantumbanking.modules.transaction.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,40 +22,30 @@ public class TransactionController {
     @PostMapping("/deposit")
     public ResponseEntity<DepositResponseDTO> deposit(@AuthenticationPrincipal User user,
                                                       @RequestBody @Valid DepositRequestDTO requestDTO) {
-
-        DepositResponseDTO responseDTO = transactionService.executeDeposit(user, requestDTO);
-        return ResponseEntity.ok(responseDTO);
+        return ResponseEntity.ok(transactionService.executeDeposit(user, requestDTO));
     }
 
     @PostMapping("/withdraw")
     public ResponseEntity<WithdrawResponseDTO> withdraw(@AuthenticationPrincipal User user,
                                                         @RequestBody @Valid WithdrawRequestDTO requestDTO) {
-
-        WithdrawResponseDTO responseDTO = transactionService.executeWithdraw(user, requestDTO);
-        return ResponseEntity.ok(responseDTO);
+        return ResponseEntity.ok(transactionService.executeWithdraw(user, requestDTO));
     }
 
     @PostMapping("/transaction/internal")
     public ResponseEntity<InternalTransactionResponseDTO> internalTransaction(@AuthenticationPrincipal User user,
                                                                               @RequestBody @Valid InternalTransactionRequestDTO requestDTO) {
-
-        InternalTransactionResponseDTO response = transactionService.executeInternalTransaction(user, requestDTO);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(transactionService.executeInternalTransaction(user, requestDTO));
     }
 
     @PostMapping("/transaction/external")
     public ResponseEntity<ExternalTransactionResponseDTO> externalTransaction(@AuthenticationPrincipal User user,
                                                                               @RequestBody @Valid ExternalTransactionRequestDTO requestDTO) {
-
-        ExternalTransactionResponseDTO response = transactionService.executeExternalTransaction(user, requestDTO);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(transactionService.executeExternalTransaction(user, requestDTO));
     }
 
     @PostMapping("/transaction/pix")
     public ResponseEntity<PixTransactionResponseDTO> pix(@AuthenticationPrincipal User user,
                                                          @RequestBody @Valid PixTransactionRequestDTO requestDTO) {
-
-        PixTransactionResponseDTO response = transactionService.executePixTransaction(user, requestDTO);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(transactionService.executePixTransaction(user, requestDTO));
     }
 }

@@ -7,7 +7,6 @@ import com.quantumbanking.modules.bank.dto.ManagerRegistrationDTO;
 import com.quantumbanking.modules.bank.dto.ManagerResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,15 +22,12 @@ public class AdminController {
 
     @PostMapping("/agency/register")
     public ResponseEntity<AgencyResponseDTO> registerAgency(@RequestBody @Valid AgencyRegistrationDTO dto) {
+        return ResponseEntity.status(201).body(adminService.registerAgency(dto));
 
-        AgencyResponseDTO response = adminService.registerAgency(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/manager/register")
     public ResponseEntity<ManagerResponseDTO> registerManager(@RequestBody @Valid ManagerRegistrationDTO dto) {
-
-        ManagerResponseDTO response = adminService.registerManager(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(201).body(adminService.registerManager(dto));
     }
 }

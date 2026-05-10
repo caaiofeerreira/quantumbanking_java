@@ -36,9 +36,7 @@ public class AccountController {
     public ResponseEntity<StatementResponseDTO> statement(@AuthenticationPrincipal User user,
                                                           @RequestParam Integer month,
                                                           @RequestParam Integer year) {
-
-        StatementResponseDTO responseDTO = accountService.getStatement(user, month, year);
-        return ResponseEntity.ok(responseDTO);
+        return ResponseEntity.ok(accountService.getStatement(user, month, year));
 
     }
 }

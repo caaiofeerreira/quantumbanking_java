@@ -20,9 +20,7 @@ public class ManagerController {
     private final ManagerService managerService;
 
     @GetMapping("/accounts")
-    public ResponseEntity<List<AgencyAccountManagementDTO>> list(@AuthenticationPrincipal User user) {
-
-        List<AgencyAccountManagementDTO> accounts = managerService.listAgencyAccounts(user);
-        return ResponseEntity.ok(accounts);
+    public ResponseEntity<List<AgencyAccountManagementDTO>> getAgencyAccounts(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(managerService.getAccountsByAgency(user));
     }
 }

@@ -6,7 +6,6 @@ import com.quantumbanking.modules.account.service.PixKeyService;
 import com.quantumbanking.modules.shared.domain.user.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -24,14 +23,11 @@ public class PixKeyController {
     @PostMapping("/register")
     public ResponseEntity<PixKeyResponseDTO> register(@AuthenticationPrincipal User user,
                                                       @RequestBody @Valid PixKeyRequestDTO requestDTO) {
-
-        PixKeyResponseDTO response = pixKeyService.registerPixKey(user, requestDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(201).body(pixKeyService.registerPixKey(user, requestDTO));
     }
 
     @GetMapping("/keys")
     public ResponseEntity<List<PixKeyResponseDTO>> list(@AuthenticationPrincipal User user) {
-
         return ResponseEntity.ok(pixKeyService.listPixKey(user));
     }
 

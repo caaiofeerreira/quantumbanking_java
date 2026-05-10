@@ -1,6 +1,5 @@
 package com.quantumbanking.modules.bank.service;
 
-import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.repository.AccountRepository;
 import com.quantumbanking.modules.bank.domain.manager.Manager;
 import com.quantumbanking.modules.bank.dto.AgencyAccountManagementDTO;
@@ -24,15 +23,11 @@ public class ManagerService {
     private final UserService userService;
 
     @Transactional(readOnly = true)
-    public List<AgencyAccountManagementDTO> listAgencyAccounts(User user) {
+    public List<AgencyAccountManagementDTO> getAccountsByAgency(User user) {
 
         Manager manager = userService.getAuthenticatedUserManager(user.getId());
 
-        Long agencyId = manager.getAgency().getId();
-
-        List<Account> accounts = accountRepository.findByAgencyId(agencyId);
-
-        return accounts
+        return accountRepository.findByAgencyId(manager.getAgency().getId())
                 .stream()
                 .map(agencyMapper::toAccountManagementDTO)
                 .toList();
