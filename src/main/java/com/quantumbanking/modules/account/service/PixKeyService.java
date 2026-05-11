@@ -11,7 +11,6 @@ import com.quantumbanking.modules.account.dto.PixKeyResponseDTO;
 import com.quantumbanking.modules.account.mapper.PixKeyMapper;
 import com.quantumbanking.modules.account.repository.PixKeyRepository;
 import com.quantumbanking.modules.shared.domain.user.User;
-import com.quantumbanking.modules.shared.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,12 +26,12 @@ public class PixKeyService {
 
     private final PixKeyMapper pixKeyMapper;
 
-    private final UserService userService;
+    private final AccountService accountService;
 
     @Transactional
     public PixKeyResponseDTO registerPixKey(User user, PixKeyRequestDTO requestDTO) {
 
-        Account account = userService
+        Account account = accountService
                 .getAuthenticatedUserAccount(user.getId());
 
         if (pixRepository.countByAccountId(account.getId()) >= 5) {
@@ -55,7 +54,7 @@ public class PixKeyService {
 
     public List<PixKeyResponseDTO> listPixKey(User user) {
 
-        Account account = userService
+        Account account = accountService
                 .getAuthenticatedUserAccount(user.getId());
 
         return account.getPixKeys()

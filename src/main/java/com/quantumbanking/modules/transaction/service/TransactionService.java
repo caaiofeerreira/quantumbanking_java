@@ -7,10 +7,10 @@ import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.domain.PixKey;
 import com.quantumbanking.modules.account.repository.AccountRepository;
 import com.quantumbanking.modules.account.repository.PixKeyRepository;
+import com.quantumbanking.modules.account.service.AccountService;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.bank.repository.AgencyRepository;
 import com.quantumbanking.modules.shared.domain.user.User;
-import com.quantumbanking.modules.shared.service.UserService;
 import com.quantumbanking.modules.transaction.domain.Transaction;
 import com.quantumbanking.modules.transaction.dto.*;
 import com.quantumbanking.modules.transaction.factory.TransactionFactory;
@@ -30,6 +30,8 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class TransactionService {
 
+    private final AccountService accountService;
+
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final PixKeyRepository pixKeyRepository;
@@ -41,14 +43,12 @@ public class TransactionService {
 
     private final ApplicationEventPublisher applicationEventPublisher;
 
-    private final UserService userService;
-
     private final TransactionValidator transactionValidator;
 
     @Transactional
     public DepositResponseDTO executeDeposit(User user, DepositRequestDTO requestDTO) {
 
-        Account account = userService.getAuthenticatedUserAccount(user.getId());
+        Account account = accountService.getAccountForUpdate(user.getId());
 
         transactionValidator.validateDeposit(account, requestDTO.amount());
 
@@ -74,7 +74,7 @@ public class TransactionService {
     @Transactional
     public WithdrawResponseDTO executeWithdraw(User user, WithdrawRequestDTO requestDTO) {
 
-        Account account = userService.getAuthenticatedUserAccount(user.getId());
+        Account account = accountService.getAccountForUpdate(user.getId());
 
         transactionValidator.validateWithdraw(account, requestDTO.amount());
 
@@ -100,7 +100,7 @@ public class TransactionService {
     @Transactional
     public InternalTransactionResponseDTO executeInternalTransaction(User user, InternalTransactionRequestDTO requestDTO) {
 
-        Account originAccount = userService.getAuthenticatedUserAccount(user.getId());
+        Account originAccount = accountService.getAccountForUpdate(user.getId());
 
         Account destinyAccount = accountRepository.findByAccountNumber(requestDTO.accountNumber())
                 .orElseThrow(() -> new TransactionNotAuthorizedException("Conta de destino não encontrada."));
@@ -138,7 +138,7 @@ public class TransactionService {
     @Transactional
     public ExternalTransactionResponseDTO executeExternalTransaction(User user, ExternalTransactionRequestDTO requestDTO) {
 
-        Account account = userService.getAuthenticatedUserAccount(user.getId());
+        Account account = accountService.getAccountForUpdate(user.getId());
 
         transactionValidator.validateExternal(account, requestDTO.destinyAccount(), requestDTO.bankCode());
 
@@ -169,7 +169,7 @@ public class TransactionService {
     @Transactional
     public PixTransactionResponseDTO executePixTransaction(User user, PixTransactionRequestDTO requestDTO) {
 
-        Account originAccount = userService.getAuthenticatedUserAccount(user.getId());
+        Account originAccount = accountService.getAccountForUpdate(user.getId());
 
         Optional<PixKey> pixKey = pixKeyRepository.findByKey(requestDTO.key());
         Account destinyAccount = pixKey.map(PixKey::getAccount).orElse(null);

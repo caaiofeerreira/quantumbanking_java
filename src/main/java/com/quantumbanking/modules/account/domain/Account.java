@@ -1,7 +1,6 @@
 package com.quantumbanking.modules.account.domain;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.quantumbanking.infra.exception.TransactionNotAuthorizedException;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.client.domain.Client;
@@ -11,8 +10,6 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 @Entity(name = "Account")
 @Table(name = "tb_account")
@@ -21,7 +18,7 @@ import java.util.concurrent.locks.ReentrantLock;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
-public class Account implements AccountOperations{
+public class Account {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -53,40 +50,23 @@ public class Account implements AccountOperations{
     @OneToMany(mappedBy = "account", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<PixKey> pixKeys = new ArrayList<>();
 
-    @JsonIgnore
-    @Transient
-    private final Lock lock = new ReentrantLock();
-
-    @Override
     public void debit(BigDecimal amount) {
-
-        lock.lock();
-        try {
-            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new TransactionNotAuthorizedException("O valor deve ser positivo");
-            }
-            if (amount.compareTo(balance) > 0) {
-                throw new TransactionNotAuthorizedException("Saldo insuficiente");
-            }
-            this.balance = this.balance.subtract(amount);
-
-        } finally {
-            lock.unlock();
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new TransactionNotAuthorizedException("O valor do débito deve ser positivo");
         }
+
+        if (amount.compareTo(this.balance) > 0) {
+            throw new TransactionNotAuthorizedException("Saldo insuficiente para realizar a operação");
+        }
+
+        this.balance = this.balance.subtract(amount);
     }
 
-    @Override
     public void credit(BigDecimal amount) {
-
-        lock.lock();
-        try {
-            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new TransactionNotAuthorizedException("O valor deve ser positivo");
-            }
-            this.balance = this.balance.add(amount);
-
-        } finally {
-            lock.unlock();
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new TransactionNotAuthorizedException("O valor do crédito deve ser positivo");
         }
+
+        this.balance = this.balance.add(amount);
     }
 }

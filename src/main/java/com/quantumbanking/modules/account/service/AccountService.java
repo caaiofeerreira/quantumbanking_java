@@ -1,12 +1,14 @@
 package com.quantumbanking.modules.account.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.quantumbanking.infra.exception.AccountNotFoundException;
 import com.quantumbanking.infra.exception.TransactionNotAuthorizedException;
+import com.quantumbanking.infra.exception.UserNotFoundException;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.domain.AccountStatus;
 import com.quantumbanking.modules.account.dto.StatementResponseDTO;
+import com.quantumbanking.modules.account.repository.AccountRepository;
 import com.quantumbanking.modules.shared.domain.user.User;
-import com.quantumbanking.modules.shared.service.UserService;
 import com.quantumbanking.modules.transaction.domain.Transaction;
 import com.quantumbanking.modules.transaction.mapper.TransactionMapper;
 import com.quantumbanking.modules.transaction.repository.TransactionRepository;
@@ -27,20 +29,31 @@ import java.util.List;
 public class AccountService {
 
     private final TransactionRepository transactionRepository;
+    private final AccountRepository accountRepository;
 
     private final ObjectMapper objectMapper;
     private final TransactionMapper transactionMapper;
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-    private final UserService userService;
+    public Account getAuthenticatedUserAccount(Long userId) {
+
+        return accountRepository.findByUserId(userId)
+                .orElseThrow(() -> new UserNotFoundException("Conta não encontrada."));
+    }
+
+
+    public Account getAccountForUpdate(Long userId) {
+        return accountRepository.findByUserIdWithLock(userId)
+                .orElseThrow(() -> new AccountNotFoundException("Conta não encontrada."));
+    }
+
 
     @Transactional(readOnly = true)
     @Cacheable(value = "balance", key = "#user.id")
     public BigDecimal getBalance(User user) {
 
-        Account account = userService
-                .getAuthenticatedUserAccount(user.getId());
+        Account account = getAuthenticatedUserAccount(user.getId());
         return account.getBalance();
     }
 
@@ -52,8 +65,7 @@ public class AccountService {
         StatementResponseDTO cached = getFromCache(cacheKey);
         if (cached != null) return cached;
 
-        Account account = userService
-                .getAuthenticatedUserAccount(user.getId());
+        Account account = getAuthenticatedUserAccount(user.getId());
 
         if (account.getStatus() != AccountStatus.ACTIVE) {
             throw new TransactionNotAuthorizedException("Conta não está ativa.");

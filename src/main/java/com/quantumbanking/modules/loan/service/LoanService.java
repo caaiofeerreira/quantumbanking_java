@@ -1,13 +1,13 @@
 package com.quantumbanking.modules.loan.service;
 
 import com.quantumbanking.modules.account.domain.Account;
+import com.quantumbanking.modules.account.service.AccountService;
 import com.quantumbanking.modules.loan.domain.Loan;
 import com.quantumbanking.modules.loan.dto.LoanRequestDTO;
 import com.quantumbanking.modules.loan.dto.LoanResponseDTO;
 import com.quantumbanking.modules.loan.mapper.LoanMapper;
 import com.quantumbanking.modules.loan.repository.LoanRepository;
 import com.quantumbanking.modules.shared.domain.user.User;
-import com.quantumbanking.modules.shared.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -25,7 +25,7 @@ public class LoanService {
 
     private final LoanCalculator loanCalculator;
 
-    private final UserService userService;
+    private final AccountService accountService;
 
     @Value("${loan.interest-rate}")
     private BigDecimal interestRate;
@@ -33,7 +33,7 @@ public class LoanService {
     @Transactional
     public LoanResponseDTO processLoan(User user, LoanRequestDTO requestDTO) {
 
-        Account account = userService.getAuthenticatedUserAccount(user.getId());
+        Account account = accountService.getAuthenticatedUserAccount(user.getId());
 
         BigDecimal installmentAmount = loanCalculator.calculateInstallmentAmount(
                 requestDTO.amount(),

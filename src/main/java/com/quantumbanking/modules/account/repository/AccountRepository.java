@@ -1,7 +1,9 @@
 package com.quantumbanking.modules.account.repository;
 
 import com.quantumbanking.modules.account.domain.Account;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -20,4 +22,8 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     @Query("SELECT a FROM Account a WHERE a.client.id = :userId")
     Optional<Account> findByUserId(@Param("userId") Long userId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT a FROM Account a WHERE a.client.id = :userId")
+    Optional<Account> findByUserIdWithLock(@Param("userId") Long userId);
 }
