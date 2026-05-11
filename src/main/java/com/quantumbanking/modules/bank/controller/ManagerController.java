@@ -2,6 +2,7 @@ package com.quantumbanking.modules.bank.controller;
 
 import com.quantumbanking.modules.bank.dto.AgencyAccountManagementDTO;
 import com.quantumbanking.modules.bank.service.ManagerService;
+import com.quantumbanking.modules.loan.dto.LoanResponseDTO;
 import com.quantumbanking.modules.shared.domain.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +15,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/manager")
+@RequestMapping("/api/manager/my-agency")
 public class ManagerController {
 
     private final ManagerService managerService;
@@ -22,5 +23,10 @@ public class ManagerController {
     @GetMapping("/accounts")
     public ResponseEntity<List<AgencyAccountManagementDTO>> getAgencyAccounts(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(managerService.getAccountsByAgency(user));
+    }
+
+    @GetMapping("/loans/requested")
+    public ResponseEntity<List<LoanResponseDTO>> getRequestedLoans(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(managerService.getLoanRequestsByAgency(user));
     }
 }
