@@ -3,6 +3,7 @@ package com.quantumbanking.modules.loan.service;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.service.AccountService;
 import com.quantumbanking.modules.loan.domain.Loan;
+import com.quantumbanking.modules.loan.domain.LoanStatus;
 import com.quantumbanking.modules.loan.dto.LoanRequestDTO;
 import com.quantumbanking.modules.loan.dto.LoanResponseDTO;
 import com.quantumbanking.modules.loan.mapper.LoanMapper;
@@ -14,21 +15,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class LoanService {
 
-    private final LoanRepository loanRepository;
-
-    private final LoanMapper loanMapper;
-
-    private final LoanCalculator loanCalculator;
-
     private final AccountService accountService;
+
+    private final LoanRepository loanRepository;
+    private final LoanMapper loanMapper;
+    private final LoanCalculator loanCalculator;
 
     @Value("${loan.interest-rate}")
     private BigDecimal interestRate;
+
+    public List<Loan> getLoansByAgencyAndStatus(Long agencyId, LoanStatus status) {
+        return loanRepository.findByAgencyIdAndStatus(agencyId, status);
+    }
 
     @Transactional
     public LoanResponseDTO processLoan(User user, LoanRequestDTO requestDTO) {
@@ -61,5 +65,4 @@ public class LoanService {
 
         return loanMapper.toLoanResponseDTO(loan);
     }
-
 }

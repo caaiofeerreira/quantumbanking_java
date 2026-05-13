@@ -34,6 +34,10 @@ public class ManagerService {
                 .orElseThrow(() -> new UserNotFoundException("Gerente não encontrado."));
     }
 
+    public void save(Manager manager) {
+        managerRepository.save(manager);
+    }
+
     @Transactional(readOnly = true)
     public List<AgencyAccountManagementDTO> getAccountsByAgency(User user) {
 

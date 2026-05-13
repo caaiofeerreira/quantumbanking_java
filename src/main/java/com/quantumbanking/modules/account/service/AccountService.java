@@ -28,11 +28,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AccountService {
 
-    private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
+    private final TransactionRepository transactionRepository;
 
-    private final ObjectMapper objectMapper;
     private final TransactionMapper transactionMapper;
+    private final ObjectMapper objectMapper;
 
     private final RedisTemplate<String, Object> redisTemplate;
 
@@ -42,10 +42,22 @@ public class AccountService {
                 .orElseThrow(() -> new UserNotFoundException("Conta não encontrada."));
     }
 
-
     public Account getAccountForUpdate(Long userId) {
         return accountRepository.findByUserIdWithLock(userId)
                 .orElseThrow(() -> new AccountNotFoundException("Conta não encontrada."));
+    }
+
+    public void save(Account account) {
+        accountRepository.save(account);
+    }
+
+    public Account getAccountByNumber(String accountNumber) {
+        return accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new AccountNotFoundException("Conta não encontrada."));
+    }
+
+    public List<Account> getAccountsByAgencyId(Long agencyId) {
+        return accountRepository.findByAgencyId(agencyId);
     }
 
 

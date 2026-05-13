@@ -1,15 +1,12 @@
 package com.quantumbanking.modules.transaction.service;
 
 import com.quantumbanking.infra.event.TransactionCompletedEvent;
-import com.quantumbanking.infra.exception.AgencyNotFoundException;
-import com.quantumbanking.infra.exception.TransactionNotAuthorizedException;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.domain.PixKey;
-import com.quantumbanking.modules.account.repository.AccountRepository;
-import com.quantumbanking.modules.account.repository.PixKeyRepository;
 import com.quantumbanking.modules.account.service.AccountService;
+import com.quantumbanking.modules.account.service.PixKeyService;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
-import com.quantumbanking.modules.bank.repository.AgencyRepository;
+import com.quantumbanking.modules.bank.service.AgencyService;
 import com.quantumbanking.modules.shared.domain.user.User;
 import com.quantumbanking.modules.transaction.domain.Transaction;
 import com.quantumbanking.modules.transaction.dto.*;
@@ -23,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -31,19 +29,15 @@ import java.util.Set;
 public class TransactionService {
 
     private final AccountService accountService;
+    private final PixKeyService pixKeyService;
+    private final AgencyService agencyService;
 
-    private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
-    private final PixKeyRepository pixKeyRepository;
-    private final AgencyRepository agencyRepository;
-
     private final TransactionMapper transactionMapper;
-
     private final TransactionFactory transactionFactory;
+    private final TransactionValidator transactionValidator;
 
     private final ApplicationEventPublisher applicationEventPublisher;
-
-    private final TransactionValidator transactionValidator;
 
     @Transactional
     public DepositResponseDTO executeDeposit(User user, DepositRequestDTO requestDTO) {
@@ -63,7 +57,7 @@ public class TransactionService {
 
         account.credit(requestDTO.amount());
 
-        accountRepository.save(account);
+        accountService.save(account);
         transactionRepository.save(transaction);
 
         applicationEventPublisher.publishEvent(new TransactionCompletedEvent(usersToInvalidate));
@@ -89,7 +83,7 @@ public class TransactionService {
 
         account.debit(requestDTO.amount());
 
-        accountRepository.save(account);
+        accountService.save(account);
         transactionRepository.save(transaction);
 
         applicationEventPublisher.publishEvent(new TransactionCompletedEvent(usersToInvalidate));
@@ -101,12 +95,9 @@ public class TransactionService {
     public InternalTransactionResponseDTO executeInternalTransaction(User user, InternalTransactionRequestDTO requestDTO) {
 
         Account originAccount = accountService.getAccountForUpdate(user.getId());
+        Account destinyAccount = accountService.getAccountByNumber(requestDTO.accountNumber());
 
-        Account destinyAccount = accountRepository.findByAccountNumber(requestDTO.accountNumber())
-                .orElseThrow(() -> new TransactionNotAuthorizedException("Conta de destino não encontrada."));
-
-        Agency agency = agencyRepository.findByAgencyNumber(requestDTO.agencyNumber())
-                .orElseThrow(() -> new AgencyNotFoundException("Agência não encontrada."));
+        Agency agency = agencyService.getAgencyByNumber(requestDTO.agencyNumber());
 
         transactionValidator.validateInternal(originAccount, destinyAccount, agency);
 
@@ -126,8 +117,8 @@ public class TransactionService {
         originAccount.debit(requestDTO.amount());
         destinyAccount.credit(requestDTO.amount());
 
-        accountRepository.save(originAccount);
-        accountRepository.save(destinyAccount);
+        accountService.save(originAccount);
+        accountService.save(destinyAccount);
         transactionRepository.save(transaction);
 
         applicationEventPublisher.publishEvent(new TransactionCompletedEvent(usersToInvalidate));
@@ -158,7 +149,7 @@ public class TransactionService {
 
         account.debit(requestDTO.amount());
 
-        accountRepository.save(account);
+        accountService.save(account);
         transactionRepository.save(transaction);
 
         applicationEventPublisher.publishEvent(new TransactionCompletedEvent(usersToInvalidate));
@@ -171,7 +162,7 @@ public class TransactionService {
 
         Account originAccount = accountService.getAccountForUpdate(user.getId());
 
-        Optional<PixKey> pixKey = pixKeyRepository.findByKey(requestDTO.key());
+        Optional<PixKey> pixKey = pixKeyService.findByKey(requestDTO.key());
         Account destinyAccount = pixKey.map(PixKey::getAccount).orElse(null);
 
         transactionValidator.validatePix(originAccount, destinyAccount);
@@ -192,11 +183,11 @@ public class TransactionService {
 
         if (destinyAccount != null) {
             destinyAccount.credit(requestDTO.amount());
-            accountRepository.save(destinyAccount);
+            accountService.save(destinyAccount);
             usersToInvalidate.add(destinyAccount.getClient().getId());
         }
 
-        accountRepository.save(originAccount);
+        accountService.save(originAccount);
         transactionRepository.save(transaction);
 
         applicationEventPublisher.publishEvent(new TransactionCompletedEvent(usersToInvalidate));

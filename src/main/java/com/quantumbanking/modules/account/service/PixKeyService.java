@@ -16,17 +16,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class PixKeyService {
 
-    private final PixKeyRepository pixRepository;
+    private final AccountService accountService;
 
+    private final PixKeyRepository pixKeyRepository;
     private final PixKeyMapper pixKeyMapper;
 
-    private final AccountService accountService;
+    public Optional<PixKey> findByKey(String key) {
+        return pixKeyRepository.findByKey(key);
+    }
 
     @Transactional
     public PixKeyResponseDTO registerPixKey(User user, PixKeyRequestDTO requestDTO) {
@@ -34,11 +38,11 @@ public class PixKeyService {
         Account account = accountService
                 .getAuthenticatedUserAccount(user.getId());
 
-        if (pixRepository.countByAccountId(account.getId()) >= 5) {
+        if (pixKeyRepository.countByAccountId(account.getId()) >= 5) {
             throw new PixKeyLimitException("Limite de 5 chaves Pix atingido.");
         }
 
-        if (pixRepository.existsByKey(requestDTO.key())) {
+        if (pixKeyRepository.existsByKey(requestDTO.key())) {
             throw new PixKeyAlreadyExistsException("Chave Pix já cadastrada.");
         }
 
@@ -47,7 +51,7 @@ public class PixKeyService {
                 requestDTO.type(),
                 account);
 
-        pixRepository.save(pixKey);
+        pixKeyRepository.save(pixKey);
 
         return pixKeyMapper.toPixKeyResponseDTO(pixKey);
     }
@@ -66,13 +70,13 @@ public class PixKeyService {
     @Transactional
     public void removePixKey(User user, UUID pixKeyId) {
 
-        PixKey pixKey = pixRepository.findById(pixKeyId)
+        PixKey pixKey = pixKeyRepository.findById(pixKeyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chave Pix não encontrada."));
 
         if (!pixKey.getAccount().getClient().getId().equals(user.getId())) {
             throw new UnauthorizedAccessException("Você não tem permissão para deletar essa chave.");
         }
 
-        pixRepository.delete(pixKey);
+        pixKeyRepository.delete(pixKey);
     }
 }
