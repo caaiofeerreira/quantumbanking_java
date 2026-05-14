@@ -1,7 +1,8 @@
 package com.quantumbanking.modules.bank.service;
 
 import com.quantumbanking.infra.exception.UserNotFoundException;
-import com.quantumbanking.modules.account.repository.AccountRepository;
+import com.quantumbanking.modules.account.domain.Account;
+import com.quantumbanking.modules.account.service.AccountService;
 import com.quantumbanking.modules.bank.domain.manager.Manager;
 import com.quantumbanking.modules.bank.dto.AgencyAccountManagementDTO;
 import com.quantumbanking.modules.bank.mapper.AgencyMapper;
@@ -9,7 +10,7 @@ import com.quantumbanking.modules.bank.repository.ManagerRepository;
 import com.quantumbanking.modules.loan.domain.LoanStatus;
 import com.quantumbanking.modules.loan.dto.LoanResponseDTO;
 import com.quantumbanking.modules.loan.mapper.LoanMapper;
-import com.quantumbanking.modules.loan.repository.LoanRepository;
+import com.quantumbanking.modules.loan.service.LoanService;
 import com.quantumbanking.modules.shared.domain.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,8 +23,8 @@ import java.util.List;
 public class ManagerService {
 
     private final ManagerRepository managerRepository;
-    private final AccountRepository accountRepository;
-    private final LoanRepository loanRepository;
+    private final AccountService accountService;
+    private final LoanService loanService;
 
     private final AgencyMapper agencyMapper;
     private final LoanMapper loanMapper;
@@ -43,8 +44,9 @@ public class ManagerService {
 
         Manager manager = getAuthenticatedUserManager(user.getId());
 
-        return accountRepository.findByAgencyId(manager.getAgency().getId())
-                .stream()
+        List<Account> accounts = accountService.getAccountsByAgencyId(manager.getAgency().getId());
+
+        return accounts.stream()
                 .map(agencyMapper::toAccountManagementDTO)
                 .toList();
     }
@@ -54,7 +56,7 @@ public class ManagerService {
 
         Manager manager = getAuthenticatedUserManager(user.getId());
 
-        return loanRepository.findByAgencyIdAndStatus(manager.getAgency().getId(), LoanStatus.REQUESTED)
+        return loanService.getLoansByAgencyAndStatus(manager.getAgency().getId(), LoanStatus.REQUESTED)
                 .stream()
                 .map(loanMapper::toLoanResponseDTO)
                 .toList();

@@ -108,7 +108,7 @@ public class TransactionMapper {
                 defaultIfEmpty(transaction.getDestinyDocument(), "Documento não informado"),
                 defaultIfEmpty(transaction.getDestinyBankCode(), "Instituição Externa"),
                 defaultIfEmpty(transaction.getDestinyAgency(), "---"),
-                formatAccountNumber(transaction.getDestinyAccountNumber())
+                defaultIfEmpty(formatAccountNumber(transaction.getDestinyAccountNumber()), "---")
         );
     }
 
