@@ -15,12 +15,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/account")
+@RequestMapping("/api/account/loan")
 public class LoanController {
 
     private final LoanService loanService;
 
-    @PostMapping("/loan")
+    @PostMapping()
     public ResponseEntity<LoanResponseDTO> loan(@AuthenticationPrincipal User user,
                                                 @RequestBody @Valid LoanRequestDTO requestDTO) {
         return ResponseEntity.status(201).body(loanService.processLoan(user, requestDTO));

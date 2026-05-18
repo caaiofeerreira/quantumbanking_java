@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/account")
+@RequestMapping("/api/account/transaction")
 public class TransactionController {
 
     private final TransactionService transactionService;
@@ -31,19 +31,19 @@ public class TransactionController {
         return ResponseEntity.ok(transactionService.executeWithdraw(user, requestDTO));
     }
 
-    @PostMapping("/transaction/internal")
+    @PostMapping("/internal")
     public ResponseEntity<InternalTransactionResponseDTO> internalTransaction(@AuthenticationPrincipal User user,
                                                                               @RequestBody @Valid InternalTransactionRequestDTO requestDTO) {
         return ResponseEntity.ok(transactionService.executeInternalTransaction(user, requestDTO));
     }
 
-    @PostMapping("/transaction/external")
+    @PostMapping("/external")
     public ResponseEntity<ExternalTransactionResponseDTO> externalTransaction(@AuthenticationPrincipal User user,
                                                                               @RequestBody @Valid ExternalTransactionRequestDTO requestDTO) {
         return ResponseEntity.ok(transactionService.executeExternalTransaction(user, requestDTO));
     }
 
-    @PostMapping("/transaction/pix")
+    @PostMapping("/pix")
     public ResponseEntity<PixTransactionResponseDTO> pix(@AuthenticationPrincipal User user,
                                                          @RequestBody @Valid PixTransactionRequestDTO requestDTO) {
         return ResponseEntity.ok(transactionService.executePixTransaction(user, requestDTO));

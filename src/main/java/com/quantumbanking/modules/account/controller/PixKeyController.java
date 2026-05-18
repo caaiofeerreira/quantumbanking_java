@@ -15,18 +15,18 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/account/pix")
+@RequestMapping("/api/account/pix/keys")
 public class PixKeyController {
 
     private final PixKeyService pixKeyService;
 
-    @PostMapping("/register")
+    @PostMapping()
     public ResponseEntity<PixKeyResponseDTO> register(@AuthenticationPrincipal User user,
                                                       @RequestBody @Valid PixKeyRequestDTO requestDTO) {
         return ResponseEntity.status(201).body(pixKeyService.registerPixKey(user, requestDTO));
     }
 
-    @GetMapping("/keys")
+    @GetMapping()
     public ResponseEntity<List<PixKeyResponseDTO>> list(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(pixKeyService.listPixKey(user));
     }

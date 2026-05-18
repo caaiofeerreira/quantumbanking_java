@@ -18,7 +18,7 @@ public class ClientController {
 
     private final ClientService clientService;
 
-    @PostMapping("/register")
+    @PostMapping()
     public ResponseEntity<ClientResponseDTO> register(@RequestBody @Valid ClientRegistrationDTO dto) {
         return ResponseEntity.status(201).body(clientService.registerClient(dto));
     }

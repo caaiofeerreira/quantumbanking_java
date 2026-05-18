@@ -20,13 +20,13 @@ public class AdminController {
 
     private final AdminService adminService;
 
-    @PostMapping("/agency/register")
+    @PostMapping("/agency")
     public ResponseEntity<AgencyResponseDTO> registerAgency(@RequestBody @Valid AgencyRegistrationDTO dto) {
         return ResponseEntity.status(201).body(adminService.registerAgency(dto));
 
     }
 
-    @PostMapping("/manager/register")
+    @PostMapping("/manager")
     public ResponseEntity<ManagerResponseDTO> registerManager(@RequestBody @Valid ManagerRegistrationDTO dto) {
         return ResponseEntity.status(201).body(adminService.registerManager(dto));
     }

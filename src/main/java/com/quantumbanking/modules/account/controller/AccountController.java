@@ -29,7 +29,7 @@ public class AccountController {
         NumberFormat numberFormat = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
         String formatBalance = numberFormat.format(balance);
 
-        return ResponseEntity.ok(String.format("Saldo: %s", formatBalance));
+        return ResponseEntity.ok(formatBalance);
     }
 
     @GetMapping("/statement")
