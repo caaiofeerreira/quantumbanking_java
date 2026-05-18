@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
-import java.text.NumberFormat;
-import java.util.Locale;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,13 +21,8 @@ public class AccountController {
     private final AccountService accountService;
 
     @GetMapping("/balance")
-    public ResponseEntity<String> balance(@AuthenticationPrincipal User user) {
-
-        BigDecimal balance = accountService.getBalance(user);
-        NumberFormat numberFormat = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
-        String formatBalance = numberFormat.format(balance);
-
-        return ResponseEntity.ok(formatBalance);
+    public ResponseEntity<BigDecimal> balance(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(accountService.getBalance(user.getId()));
     }
 
     @GetMapping("/statement")

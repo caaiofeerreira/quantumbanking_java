@@ -62,10 +62,10 @@ public class AccountService {
 
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "balance", key = "#user.id")
-    public BigDecimal getBalance(User user) {
+    @Cacheable(value = "balance", key = "#userId")
+    public BigDecimal getBalance(Long userId) {
 
-        Account account = getAuthenticatedUserAccount(user.getId());
+        Account account = getAuthenticatedUserAccount(userId);
         return account.getBalance();
     }
 
