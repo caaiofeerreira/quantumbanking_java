@@ -6,6 +6,7 @@ import com.quantumbanking.modules.account.domain.PixKey;
 import com.quantumbanking.modules.account.service.AccountService;
 import com.quantumbanking.modules.account.service.PixKeyService;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
+import com.quantumbanking.modules.bank.domain.bank.Bank;
 import com.quantumbanking.modules.bank.service.AgencyService;
 import com.quantumbanking.modules.shared.domain.user.User;
 import com.quantumbanking.modules.transaction.domain.Transaction;
@@ -19,8 +20,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -194,4 +195,15 @@ public class TransactionService {
 
         return transactionMapper.toPixResponse(transaction);
     }
+
+    @Transactional
+    public void executeLoan(Bank bank, Account account, BigDecimal amount, String description) {
+
+        Transaction transaction = transactionFactory.createLoan(bank, account, amount, description);
+        transactionRepository.save(transaction);
+
+        Set<Long> usersToInvalidate = Set.of(account.getClient().getId());
+        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(usersToInvalidate));
+    }
+
 }

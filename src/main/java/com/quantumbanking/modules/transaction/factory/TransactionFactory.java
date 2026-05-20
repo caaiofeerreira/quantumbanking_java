@@ -1,6 +1,7 @@
 package com.quantumbanking.modules.transaction.factory;
 
 import com.quantumbanking.modules.account.domain.Account;
+import com.quantumbanking.modules.bank.domain.bank.Bank;
 import com.quantumbanking.modules.transaction.domain.Transaction;
 import com.quantumbanking.modules.transaction.domain.TransactionType;
 import org.springframework.stereotype.Component;
@@ -109,6 +110,24 @@ public class TransactionFactory {
         }
 
         return builder.build();
+    }
+
+    public Transaction createLoan(Bank bank, Account account, BigDecimal amount, String description) {
+        return Transaction.builder()
+                .originName(bank.getName())
+                .originBankCode(bank.getBankCode())
+
+                .destinyAccount(account)
+                .destinyName(account.getClient().getName())
+                .destinyAccountNumber(account.getAccountNumber())
+                .destinyAgency(account.getAgency().getAgencyNumber())
+                .destinyBankCode(account.getAgency().getBank().getBankCode())
+                .destinyDocument(account.getClient().getCpf())
+
+                .amount(amount)
+                .type(TransactionType.LOAN)
+                .description(normalizeDescription(description))
+                .build();
     }
 
     private String normalizeDescription(String description) {

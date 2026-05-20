@@ -8,6 +8,7 @@ import com.quantumbanking.modules.bank.dto.AgencyAccountManagementDTO;
 import com.quantumbanking.modules.bank.mapper.AgencyMapper;
 import com.quantumbanking.modules.bank.repository.ManagerRepository;
 import com.quantumbanking.modules.loan.domain.LoanStatus;
+import com.quantumbanking.modules.loan.dto.LoanApprovedResponseDTO;
 import com.quantumbanking.modules.loan.dto.LoanResponseDTO;
 import com.quantumbanking.modules.loan.mapper.LoanMapper;
 import com.quantumbanking.modules.loan.service.LoanService;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -60,5 +62,19 @@ public class ManagerService {
                 .stream()
                 .map(loanMapper::toLoanResponseDTO)
                 .toList();
+    }
+
+    @Transactional
+    public LoanApprovedResponseDTO approveLoan(User user, UUID loanId) {
+
+        Manager manager = getAuthenticatedUserManager(user.getId());
+        return loanService.approveLoan(loanId, manager);
+    }
+
+    @Transactional
+    public void rejectLoan(User user, UUID loanId) {
+
+        Manager manager = getAuthenticatedUserManager(user.getId());
+        loanService.rejectLoan(loanId, manager);
     }
 }
