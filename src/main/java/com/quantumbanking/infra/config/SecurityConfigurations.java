@@ -29,7 +29,7 @@ public class SecurityConfigurations {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(req -> {
-                    req.requestMatchers("/api/client/register").permitAll();
+                    req.requestMatchers("/api/client").permitAll();
                     req.requestMatchers("/api/auth/login").permitAll();
                     req.requestMatchers("/api/account/**").hasRole("CLIENT");
                     req.requestMatchers("/api/manager/**").hasRole("MANAGER");

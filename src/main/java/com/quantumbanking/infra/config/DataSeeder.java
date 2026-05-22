@@ -1,6 +1,7 @@
 package com.quantumbanking.infra.config;
 
 import com.quantumbanking.modules.bank.domain.bank.Bank;
+import com.quantumbanking.modules.bank.domain.bank.BankAccount;
 import com.quantumbanking.modules.bank.repository.BankRepository;
 import com.quantumbanking.modules.shared.domain.user.User;
 import com.quantumbanking.modules.shared.domain.user.UserRole;
@@ -11,6 +12,8 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
 
 @Component
 @RequiredArgsConstructor
@@ -47,6 +50,7 @@ public class DataSeeder implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
+
         if (!userRepository.existsByCpf(adminCpf)) {
             User admin = new User(
                     adminName,
@@ -58,17 +62,21 @@ public class DataSeeder implements ApplicationRunner {
                     null
             );
             userRepository.save(admin);
-            System.out.println("Admin criado com sucesso!");
         }
 
-        Bank bank = null;
         if (!bankRepository.existsByBankCode(bankCode)) {
-            bank = new Bank(bankName, bankCode, ispb);
+            BankAccount bankAccount = BankAccount.builder()
+                    .balance(BigDecimal.ZERO)
+                    .build();
+
+            Bank bank = Bank.builder()
+                    .name(bankName)
+                    .bankCode(bankCode)
+                    .ispb(ispb)
+                    .account(bankAccount)
+                    .build();
+
             bankRepository.save(bank);
-            System.out.println("Banco criado com sucesso!");
-        } else {
-            bank = bankRepository.findByBankCode(bankCode)
-                    .orElseThrow(() -> new RuntimeException("Banco não encontrado."));
         }
     }
 }

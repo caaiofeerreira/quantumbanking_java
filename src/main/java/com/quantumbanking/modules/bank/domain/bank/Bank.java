@@ -6,6 +6,7 @@ import lombok.*;
 @Entity(name = "Bank")
 @Table(name = "tb_bank")
 @Getter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
@@ -24,9 +25,7 @@ public class Bank {
     @Column(name = "ispb", length = 8, unique = true)
     private String ispb;
 
-    public Bank(String name, String bankCode, String ispb) {
-        this.name= name;
-        this.bankCode = bankCode;
-        this.ispb = ispb;
-    }
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "bank_account_id")
+    private BankAccount account;
 }
