@@ -39,6 +39,9 @@ public class DataSeeder implements ApplicationRunner {
     @Value("${bank.code}")
     private String bankCode;
 
+    @Value("${bank.ispb}")
+    private String ispb;
+
     @Value("${bank.name}")
     private String bankName;
 
@@ -60,7 +63,7 @@ public class DataSeeder implements ApplicationRunner {
 
         Bank bank = null;
         if (!bankRepository.existsByBankCode(bankCode)) {
-            bank = new Bank(bankName, bankCode);
+            bank = new Bank(bankName, bankCode, ispb);
             bankRepository.save(bank);
             System.out.println("Banco criado com sucesso!");
         } else {

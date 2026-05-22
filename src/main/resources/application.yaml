@@ -8,7 +8,6 @@ spring:
         format_sql: true
   flyway:
     baseline-on-migrate: true
-    baseline-version: "010"
 
 server:
   error:
@@ -23,8 +22,9 @@ loan:
   interest-rate: 2.5
 
 bank:
-  code: ${ADMIN_BANK_CODE:001}
-  name: ${ADMIN_BANK_NAME:Quantum Banking S.A.}
+  code: ${BANK_CODE:001}
+  name: ${BANK_NAME:Quantum Banking S.A.}
+  ispb: ${BANK_ISPB:00000010}
 
 admin:
   cpf: ${ADMIN_CPF:000.000.000-00}
