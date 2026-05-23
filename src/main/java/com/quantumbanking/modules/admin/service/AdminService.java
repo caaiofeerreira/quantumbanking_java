@@ -18,6 +18,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class AdminService {
@@ -45,6 +47,17 @@ public class AdminService {
         return agencyMapper.toAgencyResponseDTO(agency);
     }
 
+    @Transactional(readOnly = true)
+    public List<AgencyResponseDTO> getAllAgencies() {
+
+        List<Agency> agencies = agencyService.getAllAgencies();
+
+        return agencies
+                .stream()
+                .map(agencyMapper::toAgencyResponseDTO)
+                .toList();
+    }
+
     @Transactional
     public ManagerResponseDTO registerManager(ManagerRegistrationDTO dto) {
 
@@ -58,5 +71,16 @@ public class AdminService {
         managerService.save(manager);
 
         return managerMapper.toManagerResponseDTO(manager);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ManagerResponseDTO> getAllManagers() {
+
+        List<Manager> managers = managerService.getAllManagers();
+
+        return managers
+                .stream()
+                .map(managerMapper::toManagerResponseDTO)
+                .toList();
     }
 }

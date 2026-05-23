@@ -37,6 +37,10 @@ public class ManagerService {
                 .orElseThrow(() -> new UserNotFoundException("Gerente não encontrado."));
     }
 
+    public List<Manager> getAllManagers() {
+        return managerRepository.findAll();
+    }
+
     public void save(Manager manager) {
         managerRepository.save(manager);
     }

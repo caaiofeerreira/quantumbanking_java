@@ -7,6 +7,8 @@ import com.quantumbanking.modules.bank.repository.AgencyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class AgencyService {
@@ -22,6 +24,10 @@ public class AgencyService {
         if (agencyRepository.existsByAgencyNumber(agencyNumber)) {
             throw new AgencyAlreadyExistsException("A agência número " + agencyNumber + " já está cadastrada.");
         }
+    }
+
+    public List<Agency> getAllAgencies() {
+        return agencyRepository.findAll();
     }
 
     public void save(Agency agency) {
