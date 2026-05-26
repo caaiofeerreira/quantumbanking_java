@@ -17,7 +17,7 @@ public class TransactionFactory {
                 .destinyName(account.getClient().getName())
                 .destinyAccountNumber(account.getAccountNumber())
                 .destinyAgency(account.getAgency().getAgencyNumber())
-                .destinyBankCode(account.getAgency().getBank().getBankCode())
+                .destinyBankCode(account.getAgency().getBank().getCompe())
                 .destinyDocument(account.getClient().getCpf())
 
                 .amount(amount)
@@ -32,7 +32,7 @@ public class TransactionFactory {
                 .originName(account.getClient().getName())
                 .originAccountNumber(account.getAccountNumber())
                 .originAgency(account.getAgency().getAgencyNumber())
-                .originBankCode(account.getAgency().getBank().getBankCode())
+                .originBankCode(account.getAgency().getBank().getCompe())
                 .originDocument(account.getClient().getCpf())
 
                 .amount(amount)
@@ -47,18 +47,18 @@ public class TransactionFactory {
                 .originName(originAccount.getClient().getName())
                 .originAccountNumber(originAccount.getAccountNumber())
                 .originAgency(originAccount.getAgency().getAgencyNumber())
-                .originBankCode(originAccount.getAgency().getBank().getBankCode())
+                .originBankCode(originAccount.getAgency().getBank().getCompe())
                 .originDocument(originAccount.getClient().getCpf())
 
                 .destinyAccount(destinyAccount)
                 .destinyName(destinyAccount.getClient().getName())
                 .destinyAgency(destinyAgencyNumber)
                 .destinyAccountNumber(destinyAccount.getAccountNumber())
-                .destinyBankCode(destinyAccount.getAgency().getBank().getBankCode())
+                .destinyBankCode(destinyAccount.getAgency().getBank().getCompe())
                 .destinyDocument(destinyAccount.getClient().getCpf())
 
                 .amount(amount)
-                .destinyBankCode(destinyAccount.getAgency().getBank().getBankCode())
+                .destinyBankCode(destinyAccount.getAgency().getBank().getCompe())
                 .type(TransactionType.INTERNAL_TRANSFER)
                 .description(normalizeDescription(description))
                 .build();
@@ -71,7 +71,7 @@ public class TransactionFactory {
                 .originName(originAccount.getClient().getName())
                 .originAccountNumber(originAccount.getAccountNumber())
                 .originAgency(originAccount.getAgency().getAgencyNumber())
-                .originBankCode(originAccount.getAgency().getBank().getBankCode())
+                .originBankCode(originAccount.getAgency().getBank().getCompe())
                 .originDocument(originAccount.getClient().getCpf())
 
                 .destinyAccountNumber(destinyAccountNumber)
@@ -92,7 +92,7 @@ public class TransactionFactory {
                 .originName(originAccount.getClient().getName())
                 .originAccountNumber(originAccount.getAccountNumber())
                 .originAgency(originAccount.getAgency().getAgencyNumber())
-                .originBankCode(originAccount.getAgency().getBank().getBankCode())
+                .originBankCode(originAccount.getAgency().getBank().getCompe())
                 .originDocument(originAccount.getClient().getCpf())
 
                 .amount(amount)
@@ -105,7 +105,7 @@ public class TransactionFactory {
                     .destinyName(destinyAccount.getClient().getName())
                     .destinyAccountNumber(destinyAccount.getAccountNumber())
                     .destinyAgency(destinyAccount.getAgency().getAgencyNumber())
-                    .destinyBankCode(destinyAccount.getAgency().getBank().getBankCode())
+                    .destinyBankCode(destinyAccount.getAgency().getBank().getCompe())
                     .destinyDocument(destinyAccount.getClient().getCpf());
         }
 
@@ -115,13 +115,13 @@ public class TransactionFactory {
     public Transaction createLoan(Bank bank, Account account, BigDecimal amount, String description) {
         return Transaction.builder()
                 .originName(bank.getName())
-                .originBankCode(bank.getBankCode())
+                .originBankCode(bank.getCompe())
 
                 .destinyAccount(account)
                 .destinyName(account.getClient().getName())
                 .destinyAccountNumber(account.getAccountNumber())
                 .destinyAgency(account.getAgency().getAgencyNumber())
-                .destinyBankCode(account.getAgency().getBank().getBankCode())
+                .destinyBankCode(account.getAgency().getBank().getCompe())
                 .destinyDocument(account.getClient().getCpf())
 
                 .amount(amount)

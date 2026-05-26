@@ -39,14 +39,18 @@ public class DataSeeder implements ApplicationRunner {
     @Value("${admin.email}")
     private String adminEmail;
 
-    @Value("${bank.code}")
-    private String bankCode;
+    @Value("${bank.compe}")
+    private String compe;
+
+    @Value("${bank.name}")
+    private String bankName;
 
     @Value("${bank.ispb}")
     private String ispb;
 
-    @Value("${bank.name}")
-    private String bankName;
+    @Value("${bank.cnpj}")
+    private String cnpj;
+
 
     @Override
     public void run(ApplicationArguments args) {
@@ -64,16 +68,17 @@ public class DataSeeder implements ApplicationRunner {
             userRepository.save(admin);
         }
 
-        if (!bankRepository.existsByBankCode(bankCode)) {
+        if (!bankRepository.existsByCompe(compe)) {
             BankAccount bankAccount = BankAccount.builder()
                     .balance(BigDecimal.ZERO)
                     .build();
 
             Bank bank = Bank.builder()
                     .name(bankName)
-                    .bankCode(bankCode)
+                    .compe(compe)
                     .ispb(ispb)
                     .account(bankAccount)
+                    .cnpj(cnpj)
                     .build();
 
             bankRepository.save(bank);

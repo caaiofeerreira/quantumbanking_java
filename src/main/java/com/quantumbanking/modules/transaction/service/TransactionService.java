@@ -132,7 +132,7 @@ public class TransactionService {
 
         Account account = accountService.getAccountForUpdate(user.getId());
 
-        transactionValidator.validateExternal(account, requestDTO.destinyAccount(), requestDTO.bankCode());
+        transactionValidator.validateExternal(account, requestDTO.destinyAccount(), requestDTO.compe());
 
         Set<Long> usersToInvalidate = Set.of(user.getId());
 
@@ -142,7 +142,7 @@ public class TransactionService {
                         requestDTO.destinyAccount(),
                         requestDTO.destinyName(),
                         requestDTO.destinyAgency(),
-                        requestDTO.bankCode(),
+                        requestDTO.compe(),
                         requestDTO.destinyDocument(),
                         requestDTO.amount(),
                         requestDTO.description()

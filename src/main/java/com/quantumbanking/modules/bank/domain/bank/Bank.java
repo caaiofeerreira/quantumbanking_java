@@ -19,11 +19,14 @@ public class Bank {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "bank_code", length = 3, unique = true, nullable = false)
-    private String bankCode;
+    @Column(name = "compe", length = 3, unique = true, nullable = false)
+    private String compe;
 
     @Column(name = "ispb", length = 8, unique = true)
     private String ispb;
+
+    @Column(name = "cnpj", length = 14, unique = true)
+    private String cnpj;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "bank_account_id")

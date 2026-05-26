@@ -14,8 +14,8 @@ public class TransactionValidator {
 
     private static final BigDecimal MIN_VALUE = new BigDecimal("0.01");
 
-    @Value("${bank.code}")
-    private String bankCode;
+    @Value("${bank.compe}")
+    private String compe;
 
     private void isAccountActive(Account account) {
         if (account.getStatus() != AccountStatus.ACTIVE) {
@@ -66,7 +66,7 @@ public class TransactionValidator {
 
     public void validateExternal(Account account, String accountDestiny, String bankingCode) {
         if (account.getAccountNumber().equals(accountDestiny)
-                && bankingCode.equals(bankCode)) {
+                && bankingCode.equals(compe)) {
             throw new TransactionNotAuthorizedException("Não é possível transferir para a própria conta.");
         }
     }

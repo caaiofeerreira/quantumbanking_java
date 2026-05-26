@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 public record ExternalTransactionRequestDTO(@NotBlank String destinyName,
                                             @NotBlank String destinyAccount,
                                             @NotBlank String destinyAgency,
-                                            @NotBlank String bankCode,
+                                            @NotBlank String compe,
                                             @NotBlank String destinyDocument,
                                             @NotNull @Positive BigDecimal amount,
                                             String description) {

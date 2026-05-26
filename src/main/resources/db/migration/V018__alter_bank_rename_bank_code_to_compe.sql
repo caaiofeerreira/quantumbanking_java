@@ -1,0 +1,1 @@
+ALTER TABLE tb_bank RENAME COLUMN bank_code TO compe;

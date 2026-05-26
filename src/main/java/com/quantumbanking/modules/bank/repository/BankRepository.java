@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public interface BankRepository extends JpaRepository<Bank, Long> {
 
-    boolean existsByBankCode(String bankCode);
+    boolean existsByCompe(String bankCode);
 
-    Optional<Bank> findByBankCode(String bankCode);
+    Optional<Bank> findByCompe(String compe);
 }

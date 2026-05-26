@@ -12,8 +12,8 @@ public class BankService {
 
     private final BankRepository bankRepository;
 
-    public Bank getBankByCode(String bankCode) {
-        return bankRepository.findByBankCode(bankCode)
-                .orElseThrow(() ->  new ResourceNotFoundException("Banco com código " + bankCode + " não encontrado."));
+    public Bank getBankByCode(String compe) {
+        return bankRepository.findByCompe(compe)
+                .orElseThrow(() ->  new ResourceNotFoundException("Banco com código " + compe + " não encontrado."));
     }
 }
