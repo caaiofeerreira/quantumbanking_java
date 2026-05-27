@@ -13,12 +13,12 @@ public class TransactionFactory {
 
     public Transaction createDeposit(Account account, BigDecimal amount, String description) {
         return Transaction.builder()
-                .destinyAccount(account)
-                .destinyName(account.getClient().getName())
-                .destinyAccountNumber(account.getAccountNumber())
-                .destinyAgency(account.getAgency().getAgencyNumber())
-                .destinyBankCode(account.getAgency().getBank().getCompe())
-                .destinyDocument(account.getClient().getCpf())
+                .destinationAccount(account)
+                .destinationName(account.getClient().getName())
+                .destinationAccountNumber(account.getAccountNumber())
+                .destinationAgency(account.getAgency().getAgencyNumber())
+                .destinationBankCompe(account.getAgency().getBank().getCompe())
+                .destinationDocument(account.getClient().getCpf())
 
                 .amount(amount)
                 .type(TransactionType.DEPOSIT)
@@ -32,7 +32,7 @@ public class TransactionFactory {
                 .originName(account.getClient().getName())
                 .originAccountNumber(account.getAccountNumber())
                 .originAgency(account.getAgency().getAgencyNumber())
-                .originBankCode(account.getAgency().getBank().getCompe())
+                .originBankCompe(account.getAgency().getBank().getCompe())
                 .originDocument(account.getClient().getCpf())
 
                 .amount(amount)
@@ -41,44 +41,44 @@ public class TransactionFactory {
                 .build();
     }
 
-    public Transaction createInternalTransfer(Account originAccount, Account destinyAccount, String destinyAgencyNumber, BigDecimal amount, String description) {
+    public Transaction createInternalTransfer(Account originAccount, Account destinationAccount, String destinationAgencyNumber, BigDecimal amount, String description) {
         return Transaction.builder()
                 .originAccount(originAccount)
                 .originName(originAccount.getClient().getName())
                 .originAccountNumber(originAccount.getAccountNumber())
                 .originAgency(originAccount.getAgency().getAgencyNumber())
-                .originBankCode(originAccount.getAgency().getBank().getCompe())
+                .originBankCompe(originAccount.getAgency().getBank().getCompe())
                 .originDocument(originAccount.getClient().getCpf())
 
-                .destinyAccount(destinyAccount)
-                .destinyName(destinyAccount.getClient().getName())
-                .destinyAgency(destinyAgencyNumber)
-                .destinyAccountNumber(destinyAccount.getAccountNumber())
-                .destinyBankCode(destinyAccount.getAgency().getBank().getCompe())
-                .destinyDocument(destinyAccount.getClient().getCpf())
+                .destinationAccount(destinationAccount)
+                .destinationName(destinationAccount.getClient().getName())
+                .destinationAgency(destinationAgencyNumber)
+                .destinationAccountNumber(destinationAccount.getAccountNumber())
+                .destinationBankCompe(destinationAccount.getAgency().getBank().getCompe())
+                .destinationDocument(destinationAccount.getClient().getCpf())
+
 
                 .amount(amount)
-                .destinyBankCode(destinyAccount.getAgency().getBank().getCompe())
                 .type(TransactionType.INTERNAL_TRANSFER)
                 .description(normalizeDescription(description))
                 .build();
     }
 
-    public Transaction createExternalTransfer(Account originAccount, String destinyAccountNumber, String destinyName, String destinyAgency,
-                                              String bankCode, String destinyDocument, BigDecimal amount, String description) {
+    public Transaction createExternalTransfer(Account originAccount, String destinationAccountNumber, String destinationName, String destinationAgency,
+                                              String compe, String destinationDocument, BigDecimal amount, String description) {
         return Transaction.builder()
                 .originAccount(originAccount)
                 .originName(originAccount.getClient().getName())
                 .originAccountNumber(originAccount.getAccountNumber())
                 .originAgency(originAccount.getAgency().getAgencyNumber())
-                .originBankCode(originAccount.getAgency().getBank().getCompe())
+                .originBankCompe(originAccount.getAgency().getBank().getCompe())
                 .originDocument(originAccount.getClient().getCpf())
 
-                .destinyAccountNumber(destinyAccountNumber)
-                .destinyName(destinyName)
-                .destinyAgency(destinyAgency)
-                .destinyBankCode(bankCode)
-                .destinyDocument(destinyDocument)
+                .destinationAccountNumber(destinationAccountNumber)
+                .destinationName(destinationName)
+                .destinationAgency(destinationAgency)
+                .destinationBankCompe(compe)
+                .destinationDocument(destinationDocument)
 
                 .amount(amount)
                 .type(TransactionType.EXTERNAL_TRANSFER)
@@ -86,13 +86,13 @@ public class TransactionFactory {
                 .build();
     }
 
-    public Transaction createPix(Account originAccount, BigDecimal amount, String description, String pixKey, Account destinyAccount) {
+    public Transaction createPix(Account originAccount, Account destinationAccount, BigDecimal amount, String description, String pixKey) {
         var builder = Transaction.builder()
                 .originAccount(originAccount)
                 .originName(originAccount.getClient().getName())
                 .originAccountNumber(originAccount.getAccountNumber())
                 .originAgency(originAccount.getAgency().getAgencyNumber())
-                .originBankCode(originAccount.getAgency().getBank().getCompe())
+                .originBankCompe(originAccount.getAgency().getBank().getCompe())
                 .originDocument(originAccount.getClient().getCpf())
 
                 .amount(amount)
@@ -100,13 +100,13 @@ public class TransactionFactory {
                 .type(TransactionType.PIX)
                 .description(normalizeDescription(description));
 
-        if (destinyAccount != null) {
-            builder.destinyAccount(destinyAccount)
-                    .destinyName(destinyAccount.getClient().getName())
-                    .destinyAccountNumber(destinyAccount.getAccountNumber())
-                    .destinyAgency(destinyAccount.getAgency().getAgencyNumber())
-                    .destinyBankCode(destinyAccount.getAgency().getBank().getCompe())
-                    .destinyDocument(destinyAccount.getClient().getCpf());
+        if (destinationAccount != null) {
+            builder.destinationAccount(destinationAccount)
+                    .destinationName(destinationAccount.getClient().getName())
+                    .destinationAccountNumber(destinationAccount.getAccountNumber())
+                    .destinationAgency(destinationAccount.getAgency().getAgencyNumber())
+                    .destinationBankCompe(destinationAccount.getAgency().getBank().getCompe())
+                    .destinationDocument(destinationAccount.getClient().getCpf());
         }
 
         return builder.build();
@@ -115,14 +115,14 @@ public class TransactionFactory {
     public Transaction createLoan(Bank bank, Account account, BigDecimal amount, String description) {
         return Transaction.builder()
                 .originName(bank.getName())
-                .originBankCode(bank.getCompe())
+                .originBankCompe(bank.getCompe())
 
-                .destinyAccount(account)
-                .destinyName(account.getClient().getName())
-                .destinyAccountNumber(account.getAccountNumber())
-                .destinyAgency(account.getAgency().getAgencyNumber())
-                .destinyBankCode(account.getAgency().getBank().getCompe())
-                .destinyDocument(account.getClient().getCpf())
+                .destinationAccount(account)
+                .destinationName(account.getClient().getName())
+                .destinationAccountNumber(account.getAccountNumber())
+                .destinationAgency(account.getAgency().getAgencyNumber())
+                .destinationBankCompe(account.getAgency().getBank().getCompe())
+                .destinationDocument(account.getClient().getCpf())
 
                 .amount(amount)
                 .type(TransactionType.LOAN)

@@ -6,11 +6,11 @@ import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 
-public record ExternalTransactionRequestDTO(@NotBlank String destinyName,
-                                            @NotBlank String destinyAccount,
-                                            @NotBlank String destinyAgency,
+public record ExternalTransactionRequestDTO(@NotBlank String destinationName,
+                                            @NotBlank String destinationAccount,
+                                            @NotBlank String destinationAgency,
                                             @NotBlank String compe,
-                                            @NotBlank String destinyDocument,
+                                            @NotBlank String destinationDocument,
                                             @NotNull @Positive BigDecimal amount,
                                             String description) {
 

@@ -13,5 +13,5 @@ public record ExternalTransactionResponseDTO(UUID id,
                                              TransactionType type,
                                              BigDecimal amount,
                                              AccountInfoDTO originAccount,
-                                             AccountInfoDTO destinyAccount) {
+                                             AccountInfoDTO destinationAccount) {
 }

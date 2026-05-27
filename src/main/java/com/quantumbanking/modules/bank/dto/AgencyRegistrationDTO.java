@@ -9,5 +9,5 @@ public record AgencyRegistrationDTO(@NotBlank String agencyName,
                                     @NotBlank String agencyNumber,
                                     @NotBlank String phone,
                                     @NotNull @Valid Address address,
-                                    @NotBlank String bankCode) {
+                                    @NotBlank String compe) {
 }

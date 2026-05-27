@@ -96,30 +96,30 @@ public class TransactionService {
     public InternalTransactionResponseDTO executeInternalTransaction(User user, InternalTransactionRequestDTO requestDTO) {
 
         Account originAccount = accountService.getAccountForUpdate(user.getId());
-        Account destinyAccount = accountService.getAccountByNumber(requestDTO.accountNumber());
+        Account destinationAccount = accountService.getAccountByNumber(requestDTO.accountNumber());
 
         Agency agency = agencyService.getAgencyByNumber(requestDTO.agencyNumber());
 
-        transactionValidator.validateInternal(originAccount, destinyAccount, agency);
+        transactionValidator.validateInternal(originAccount, destinationAccount, agency);
 
         Set<Long> usersToInvalidate = new HashSet<>();
         usersToInvalidate.add(user.getId());
-        usersToInvalidate.add(destinyAccount.getClient().getId());
+        usersToInvalidate.add(destinationAccount.getClient().getId());
 
         Transaction transaction = transactionFactory
                 .createInternalTransfer(
                         originAccount,
-                        destinyAccount,
+                        destinationAccount,
                         requestDTO.agencyNumber(),
                         requestDTO.amount(),
                         requestDTO.description()
                 );
 
         originAccount.debit(requestDTO.amount());
-        destinyAccount.credit(requestDTO.amount());
+        destinationAccount.credit(requestDTO.amount());
 
         accountService.save(originAccount);
-        accountService.save(destinyAccount);
+        accountService.save(destinationAccount);
         transactionRepository.save(transaction);
 
         applicationEventPublisher.publishEvent(new TransactionCompletedEvent(usersToInvalidate));
@@ -132,18 +132,18 @@ public class TransactionService {
 
         Account account = accountService.getAccountForUpdate(user.getId());
 
-        transactionValidator.validateExternal(account, requestDTO.destinyAccount(), requestDTO.compe());
+        transactionValidator.validateExternal(account, requestDTO.destinationAccount(), requestDTO.compe());
 
         Set<Long> usersToInvalidate = Set.of(user.getId());
 
         Transaction transaction = transactionFactory
                 .createExternalTransfer(
                         account,
-                        requestDTO.destinyAccount(),
-                        requestDTO.destinyName(),
-                        requestDTO.destinyAgency(),
+                        requestDTO.destinationAccount(),
+                        requestDTO.destinationName(),
+                        requestDTO.destinationAgency(),
                         requestDTO.compe(),
-                        requestDTO.destinyDocument(),
+                        requestDTO.destinationDocument(),
                         requestDTO.amount(),
                         requestDTO.description()
                 );
@@ -164,17 +164,17 @@ public class TransactionService {
         Account originAccount = accountService.getAccountForUpdate(user.getId());
 
         Optional<PixKey> pixKey = pixKeyService.findByKey(requestDTO.key());
-        Account destinyAccount = pixKey.map(PixKey::getAccount).orElse(null);
+        Account destinationAccount = pixKey.map(PixKey::getAccount).orElse(null);
 
-        transactionValidator.validatePix(originAccount, destinyAccount);
+        transactionValidator.validatePix(originAccount, destinationAccount);
 
         Transaction transaction = transactionFactory
                 .createPix(
                         originAccount,
+                        destinationAccount,
                         requestDTO.amount(),
                         requestDTO.description(),
-                        requestDTO.key(),
-                        destinyAccount
+                        requestDTO.key()
                 );
 
         originAccount.debit(requestDTO.amount());
@@ -182,10 +182,10 @@ public class TransactionService {
         Set<Long> usersToInvalidate = new HashSet<>();
         usersToInvalidate.add(user.getId());
 
-        if (destinyAccount != null) {
-            destinyAccount.credit(requestDTO.amount());
-            accountService.save(destinyAccount);
-            usersToInvalidate.add(destinyAccount.getClient().getId());
+        if (destinationAccount != null) {
+            destinationAccount.credit(requestDTO.amount());
+            accountService.save(destinationAccount);
+            usersToInvalidate.add(destinationAccount.getClient().getId());
         }
 
         accountService.save(originAccount);

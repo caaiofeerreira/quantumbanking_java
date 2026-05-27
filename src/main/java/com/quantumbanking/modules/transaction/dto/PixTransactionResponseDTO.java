@@ -15,6 +15,6 @@ public record PixTransactionResponseDTO(UUID id,
                                         String pixKey,
                                         String description,
                                         AccountInfoDTO originAccount,
-                                        AccountInfoDTO destinyAccount) {
+                                        AccountInfoDTO destinationAccount) {
 
 }

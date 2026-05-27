@@ -23,13 +23,13 @@ public class TransactionValidator {
         }
     }
 
-    private void isNotSameAccount(Account originAccount, Account destinyAccount) {
+    private void isNotSameAccount(Account originAccount, Account destinationAccount) {
 
-        if (originAccount == null || destinyAccount == null) {
+        if (originAccount == null || destinationAccount == null) {
             return;
         }
 
-        if (originAccount.getId().equals(destinyAccount.getId())) {
+        if (originAccount.getId().equals(destinationAccount.getId())) {
             throw new TransactionNotAuthorizedException("Não é possível enviar dinheiro para si mesmo.");
         }
     }
@@ -55,28 +55,28 @@ public class TransactionValidator {
         ensureMinimumAmount(amount);
     }
 
-    public void validateInternal(Account originAccount, Account destinyAccount, Agency agency) {
-        isNotSameAccount(originAccount, destinyAccount);
+    public void validateInternal(Account originAccount, Account destinationAccount, Agency agency) {
+        isNotSameAccount(originAccount, destinationAccount);
 
-        if (!destinyAccount.getAgency().equals(agency)) {
+        if (!destinationAccount.getAgency().equals(agency)) {
             throw new AgencyAccountMismatchException("A agência informada não coincide com a conta de destino.");
         }
 
     }
 
-    public void validateExternal(Account account, String accountDestiny, String bankingCode) {
-        if (account.getAccountNumber().equals(accountDestiny)
+    public void validateExternal(Account account, String destinationAccount, String bankingCode) {
+        if (account.getAccountNumber().equals(destinationAccount)
                 && bankingCode.equals(compe)) {
             throw new TransactionNotAuthorizedException("Não é possível transferir para a própria conta.");
         }
     }
 
-    public void validatePix(Account originAccount, Account destinyAccount) {
+    public void validatePix(Account originAccount, Account destinationAccount) {
         isAccountActive(originAccount);
 
-        if (destinyAccount != null) {
-            isAccountActive(destinyAccount);
-            isNotSameAccount(originAccount, destinyAccount);
+        if (destinationAccount != null) {
+            isAccountActive(destinationAccount);
+            isNotSameAccount(originAccount, destinationAccount);
         }
     }
 }

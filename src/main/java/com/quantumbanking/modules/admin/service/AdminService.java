@@ -37,7 +37,7 @@ public class AdminService {
     @Transactional
     public AgencyResponseDTO registerAgency(AgencyRegistrationDTO dto) {
 
-        Bank bank = bankService.getBankByCode(dto.bankCode());
+        Bank bank = bankService.getBankByCode(dto.compe());
 
         agencyService.validateAgencyNotRegistered(dto.agencyNumber());
 

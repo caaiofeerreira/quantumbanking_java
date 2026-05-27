@@ -40,7 +40,7 @@ public class TransactionMapper {
                 transaction.getType(),
                 transaction.getAmount(),
                 originInfo(transaction.getOriginAccount()),
-                destinyInfo(transaction)
+                destinationInfo(transaction)
         );
     }
 
@@ -51,7 +51,7 @@ public class TransactionMapper {
                 transaction.getType(),
                 transaction.getAmount(),
                 originInfo(transaction.getOriginAccount()),
-                destinyInfo(transaction)
+                destinationInfo(transaction)
         );
     }
 
@@ -64,7 +64,7 @@ public class TransactionMapper {
                 transaction.getPixKey(),
                 transaction.getDescription(),
                 originInfo(transaction.getOriginAccount()),
-                destinyInfo(transaction)
+                destinationInfo(transaction)
         );
     }
 
@@ -93,22 +93,22 @@ public class TransactionMapper {
         );
     }
 
-    private AccountInfoDTO destinyInfo(Transaction transaction) {
-        if (transaction.getDestinyAccount() != null) {
+    private AccountInfoDTO destinationInfo(Transaction transaction) {
+        if (transaction.getDestinationAccount() != null) {
             return new AccountInfoDTO(
-                    transaction.getDestinyAccount().getClient().getName(),
-                    transaction.getDestinyAccount().getClient().getCpf(),
-                    transaction.getDestinyAccount().getAgency().getBank().getName(),
-                    transaction.getDestinyAccount().getAgency().getAgencyNumber(),
-                    formatAccountNumber(transaction.getDestinyAccount().getAccountNumber())
+                    transaction.getDestinationAccount().getClient().getName(),
+                    transaction.getDestinationAccount().getClient().getCpf(),
+                    transaction.getDestinationAccount().getAgency().getBank().getName(),
+                    transaction.getDestinationAccount().getAgency().getAgencyNumber(),
+                    formatAccountNumber(transaction.getDestinationAccount().getAccountNumber())
             );
         }
         return new AccountInfoDTO(
-                defaultIfEmpty(transaction.getDestinyName(), "Titular não identificado"),
-                defaultIfEmpty(transaction.getDestinyDocument(), "Documento não informado"),
-                defaultIfEmpty(transaction.getDestinyBankCode(), "Instituição Externa"),
-                defaultIfEmpty(transaction.getDestinyAgency(), "---"),
-                defaultIfEmpty(formatAccountNumber(transaction.getDestinyAccountNumber()), "---")
+                defaultIfEmpty(transaction.getDestinationName(), "Titular não identificado"),
+                defaultIfEmpty(transaction.getDestinationDocument(), "Documento não informado"),
+                defaultIfEmpty(transaction.getDestinationBankCompe(), "Instituição Externa"),
+                defaultIfEmpty(transaction.getDestinationAgency(), "---"),
+                defaultIfEmpty(formatAccountNumber(transaction.getDestinationAccountNumber()), "---")
         );
     }
 

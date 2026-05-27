@@ -59,9 +59,9 @@ public enum TransactionType {
 
     public String getCounterpartName(Transaction t, boolean isOrigin) {
         if (isOrigin) {
-            return (t.getDestinyAccount() != null)
-                    ? t.getDestinyAccount().getClient().getName()
-                    : (t.getDestinyName() != null ? t.getDestinyName() : "Destinatário não identificado");
+            return (t.getDestinationAccount() != null)
+                    ? t.getDestinationAccount().getClient().getName()
+                    : (t.getDestinationName() != null ? t.getDestinationName() : "Destinatário não identificado");
         } else {
             return (t.getOriginAccount() != null)
                     ? t.getOriginAccount().getClient().getName()
