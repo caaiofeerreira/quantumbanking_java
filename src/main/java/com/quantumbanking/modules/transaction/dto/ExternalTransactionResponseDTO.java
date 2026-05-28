@@ -12,6 +12,6 @@ public record ExternalTransactionResponseDTO(UUID id,
                                              LocalDateTime createdAt,
                                              TransactionType type,
                                              BigDecimal amount,
-                                             AccountInfoDTO originAccount,
-                                             AccountInfoDTO destinationAccount) {
+                                             AccountInfoDTO destinationAccount,
+                                             AccountInfoDTO originAccount) {
 }

@@ -39,8 +39,8 @@ public class TransactionMapper {
                 transaction.getCreatedAt(),
                 transaction.getType(),
                 transaction.getAmount(),
-                originInfo(transaction.getOriginAccount()),
-                destinationInfo(transaction)
+                transferDestinationInfo(transaction),
+                transferOriginInfo(transaction.getOriginAccount())
         );
     }
 
@@ -50,8 +50,8 @@ public class TransactionMapper {
                 transaction.getCreatedAt(),
                 transaction.getType(),
                 transaction.getAmount(),
-                originInfo(transaction.getOriginAccount()),
-                destinationInfo(transaction)
+                transferDestinationInfo(transaction),
+                transferOriginInfo(transaction.getOriginAccount())
         );
     }
 
@@ -63,8 +63,8 @@ public class TransactionMapper {
                 transaction.getAmount(),
                 transaction.getPixKey(),
                 transaction.getDescription(),
-                originInfo(transaction.getOriginAccount()),
-                destinationInfo(transaction)
+                pixDestinationInfo(transaction),
+                pixOriginInfo(transaction.getOriginAccount())
         );
     }
 
@@ -83,32 +83,59 @@ public class TransactionMapper {
         );
     }
 
-    private AccountInfoDTO originInfo(Account originAccount) {
+    private AccountInfoDTO transferOriginInfo(Account originAccount) {
         return new AccountInfoDTO(
                 originAccount.getClient().getName(),
                 originAccount.getClient().getCpf(),
                 originAccount.getAgency().getBank().getName(),
                 originAccount.getAgency().getAgencyNumber(),
-                formatAccountNumber(originAccount.getAccountNumber())
+                formatAccountNumber(originAccount.getAccountNumber()),
+                originAccount.getAgency().getBank().getCompe()
         );
     }
 
-    private AccountInfoDTO destinationInfo(Transaction transaction) {
+    private AccountInfoDTO transferDestinationInfo(Transaction transaction) {
         if (transaction.getDestinationAccount() != null) {
             return new AccountInfoDTO(
                     transaction.getDestinationAccount().getClient().getName(),
                     transaction.getDestinationAccount().getClient().getCpf(),
                     transaction.getDestinationAccount().getAgency().getBank().getName(),
                     transaction.getDestinationAccount().getAgency().getAgencyNumber(),
-                    formatAccountNumber(transaction.getDestinationAccount().getAccountNumber())
+                    formatAccountNumber(transaction.getDestinationAccount().getAccountNumber()),
+                    transaction.getDestinationAccount().getAgency().getBank().getCompe()
             );
         }
         return new AccountInfoDTO(
+                transaction.getDestinationName(),
+                transaction.getDestinationDocument(),
+                transaction.getDestinationBankName(),
+                transaction.getDestinationAgency(),
+                formatAccountNumber(transaction.getDestinationAccountNumber()),
+                transaction.getDestinationBankCompe()
+        );
+    }
+
+    private PixAccountInfoDTO pixOriginInfo(Account originAccount) {
+        return new PixAccountInfoDTO(
+                originAccount.getClient().getName(),
+                originAccount.getClient().getCpf(),
+                originAccount.getAgency().getBank().getName()
+        );
+    }
+
+    private PixAccountInfoDTO pixDestinationInfo(Transaction transaction) {
+        if (transaction.getDestinationAccount() != null) {
+            return new PixAccountInfoDTO(
+                    transaction.getDestinationAccount().getClient().getName(),
+                    transaction.getDestinationAccount().getClient().getCpf(),
+                    transaction.getDestinationAccount().getAgency().getBank().getName()
+            );
+        }
+
+        return new PixAccountInfoDTO(
                 defaultIfEmpty(transaction.getDestinationName(), "Titular não identificado"),
                 defaultIfEmpty(transaction.getDestinationDocument(), "Documento não informado"),
-                defaultIfEmpty(transaction.getDestinationBankCompe(), "Instituição Externa"),
-                defaultIfEmpty(transaction.getDestinationAgency(), "---"),
-                defaultIfEmpty(formatAccountNumber(transaction.getDestinationAccountNumber()), "---")
+                defaultIfEmpty(transaction.getDestinationBankName(), "Instituição Externa")
         );
     }
 

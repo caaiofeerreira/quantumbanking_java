@@ -4,5 +4,6 @@ public record AccountInfoDTO(String name,
                              String document,
                              String bank,
                              String agency,
-                             String accountNumber) {
+                             String accountNumber,
+                             String compe) {
 }

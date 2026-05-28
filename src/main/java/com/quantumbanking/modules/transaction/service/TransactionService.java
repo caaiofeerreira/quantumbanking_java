@@ -7,7 +7,9 @@ import com.quantumbanking.modules.account.service.AccountService;
 import com.quantumbanking.modules.account.service.PixKeyService;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.bank.domain.bank.Bank;
+import com.quantumbanking.modules.bank.domain.bank.BankRegistry;
 import com.quantumbanking.modules.bank.service.AgencyService;
+import com.quantumbanking.modules.bank.service.BankRegistryService;
 import com.quantumbanking.modules.shared.domain.user.User;
 import com.quantumbanking.modules.transaction.domain.Transaction;
 import com.quantumbanking.modules.transaction.dto.*;
@@ -32,6 +34,7 @@ public class TransactionService {
     private final AccountService accountService;
     private final PixKeyService pixKeyService;
     private final AgencyService agencyService;
+    private final BankRegistryService bankRegistryService;
 
     private final TransactionRepository transactionRepository;
     private final TransactionMapper transactionMapper;
@@ -132,6 +135,8 @@ public class TransactionService {
 
         Account account = accountService.getAccountForUpdate(user.getId());
 
+        BankRegistry bankRegistry = bankRegistryService.getByCompe(requestDTO.compe());
+
         transactionValidator.validateExternal(account, requestDTO.destinationAccount(), requestDTO.compe());
 
         Set<Long> usersToInvalidate = Set.of(user.getId());
@@ -142,8 +147,9 @@ public class TransactionService {
                         requestDTO.destinationAccount(),
                         requestDTO.destinationName(),
                         requestDTO.destinationAgency(),
-                        requestDTO.compe(),
+                        bankRegistry.getCompe(),
                         requestDTO.destinationDocument(),
+                        bankRegistry.getName(),
                         requestDTO.amount(),
                         requestDTO.description()
                 );

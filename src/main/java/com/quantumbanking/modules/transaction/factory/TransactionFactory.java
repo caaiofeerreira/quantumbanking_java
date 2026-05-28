@@ -56,6 +56,7 @@ public class TransactionFactory {
                 .destinationAccountNumber(destinationAccount.getAccountNumber())
                 .destinationBankCompe(destinationAccount.getAgency().getBank().getCompe())
                 .destinationDocument(destinationAccount.getClient().getCpf())
+                .destinationBankName(destinationAccount.getAgency().getBank().getName())
 
 
                 .amount(amount)
@@ -65,7 +66,7 @@ public class TransactionFactory {
     }
 
     public Transaction createExternalTransfer(Account originAccount, String destinationAccountNumber, String destinationName, String destinationAgency,
-                                              String compe, String destinationDocument, BigDecimal amount, String description) {
+                                              String compe, String destinationDocument, String bankName, BigDecimal amount, String description) {
         return Transaction.builder()
                 .originAccount(originAccount)
                 .originName(originAccount.getClient().getName())
@@ -79,6 +80,7 @@ public class TransactionFactory {
                 .destinationAgency(destinationAgency)
                 .destinationBankCompe(compe)
                 .destinationDocument(destinationDocument)
+                .destinationBankName(bankName)
 
                 .amount(amount)
                 .type(TransactionType.EXTERNAL_TRANSFER)
@@ -106,7 +108,8 @@ public class TransactionFactory {
                     .destinationAccountNumber(destinationAccount.getAccountNumber())
                     .destinationAgency(destinationAccount.getAgency().getAgencyNumber())
                     .destinationBankCompe(destinationAccount.getAgency().getBank().getCompe())
-                    .destinationDocument(destinationAccount.getClient().getCpf());
+                    .destinationDocument(destinationAccount.getClient().getCpf())
+                    .destinationBankName(destinationAccount.getAgency().getBank().getName());
         }
 
         return builder.build();
