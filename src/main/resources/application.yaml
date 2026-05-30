@@ -18,6 +18,9 @@ api:
     token:
       secret: ${JWT_SECRET:123456}
 
+transaction:
+  duplicate-seconds: ${DUPLICATE_WINDOW_SECONDS:30}
+
 loan:
   interest-rate: 2.5
 

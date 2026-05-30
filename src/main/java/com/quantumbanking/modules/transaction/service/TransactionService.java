@@ -12,6 +12,7 @@ import com.quantumbanking.modules.bank.service.AgencyService;
 import com.quantumbanking.modules.bank.service.BankRegistryService;
 import com.quantumbanking.modules.shared.domain.user.User;
 import com.quantumbanking.modules.transaction.domain.Transaction;
+import com.quantumbanking.modules.transaction.domain.TransactionType;
 import com.quantumbanking.modules.transaction.dto.*;
 import com.quantumbanking.modules.transaction.factory.TransactionFactory;
 import com.quantumbanking.modules.transaction.mapper.TransactionMapper;
@@ -35,6 +36,7 @@ public class TransactionService {
     private final PixKeyService pixKeyService;
     private final AgencyService agencyService;
     private final BankRegistryService bankRegistryService;
+    private final DuplicateTransactionService duplicateTransactionService;
 
     private final TransactionRepository transactionRepository;
     private final TransactionMapper transactionMapper;
@@ -45,6 +47,9 @@ public class TransactionService {
 
     @Transactional
     public DepositResponseDTO executeDeposit(User user, DepositRequestDTO requestDTO) {
+
+        duplicateTransactionService
+                .checkAndRegister(user.getId(), TransactionType.DEPOSIT, requestDTO.amount(), "self");
 
         Account account = accountService.getAccountForUpdate(user.getId());
 
@@ -72,6 +77,9 @@ public class TransactionService {
     @Transactional
     public WithdrawResponseDTO executeWithdraw(User user, WithdrawRequestDTO requestDTO) {
 
+        duplicateTransactionService
+                .checkAndRegister(user.getId(), TransactionType.WITHDRAWAL, requestDTO.amount(), "self");
+
         Account account = accountService.getAccountForUpdate(user.getId());
 
         transactionValidator.validateWithdraw(account, requestDTO.amount());
@@ -97,6 +105,9 @@ public class TransactionService {
 
     @Transactional
     public InternalTransactionResponseDTO executeInternalTransaction(User user, InternalTransactionRequestDTO requestDTO) {
+
+        duplicateTransactionService
+                .checkAndRegister(user.getId(), TransactionType.INTERNAL_TRANSFER, requestDTO.amount(), requestDTO.accountNumber());
 
         Account originAccount = accountService.getAccountForUpdate(user.getId());
         Account destinationAccount = accountService.getAccountByNumber(requestDTO.accountNumber());
@@ -133,6 +144,9 @@ public class TransactionService {
     @Transactional
     public ExternalTransactionResponseDTO executeExternalTransaction(User user, ExternalTransactionRequestDTO requestDTO) {
 
+        duplicateTransactionService
+                .checkAndRegister(user.getId(), TransactionType.EXTERNAL_TRANSFER, requestDTO.amount(), requestDTO.destinationAccount());
+
         Account account = accountService.getAccountForUpdate(user.getId());
 
         BankRegistry bankRegistry = bankRegistryService.getByCompe(requestDTO.compe());
@@ -166,6 +180,9 @@ public class TransactionService {
 
     @Transactional
     public PixTransactionResponseDTO executePixTransaction(User user, PixTransactionRequestDTO requestDTO) {
+
+        duplicateTransactionService
+                .checkAndRegister(user.getId(), TransactionType.PIX, requestDTO.amount(), requestDTO.key());
 
         Account originAccount = accountService.getAccountForUpdate(user.getId());
 

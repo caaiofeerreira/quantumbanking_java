@@ -174,4 +174,10 @@ public class ResourceExceptionHandler {
         log.warn("Tipo de conta incompatível com o cliente: {}", ex.getMessage());
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
     }
+
+    @ExceptionHandler(DuplicateTransactionException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateTransactionException(DuplicateTransactionException ex) {
+        log.warn("Tentativa de transação duplicada detectada: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), getPath());
+    }
 }

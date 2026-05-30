@@ -109,6 +109,11 @@
 			<artifactId>flyway-mysql</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+		</dependency>
+
 	</dependencies>
 
 	<build>
