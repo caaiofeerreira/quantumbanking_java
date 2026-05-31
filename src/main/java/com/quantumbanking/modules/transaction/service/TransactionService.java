@@ -48,12 +48,19 @@ public class TransactionService {
     @Transactional
     public DepositResponseDTO executeDeposit(User user, DepositRequestDTO requestDTO) {
 
-        duplicateTransactionService
-                .checkAndRegister(user.getId(), TransactionType.DEPOSIT, requestDTO.amount(), "self");
-
         Account account = accountService.getAccountForUpdate(user.getId());
 
-        transactionValidator.validateDeposit(account, requestDTO.amount());
+        transactionValidator.validateDeposit(
+                account,
+                requestDTO.amount()
+        );
+
+        duplicateTransactionService.checkAndRegister(
+                user.getId(),
+                TransactionType.DEPOSIT,
+                requestDTO.amount(),
+                "self"
+        );
 
         Set<Long> usersToInvalidate = Set.of(user.getId());
 
@@ -77,12 +84,19 @@ public class TransactionService {
     @Transactional
     public WithdrawResponseDTO executeWithdraw(User user, WithdrawRequestDTO requestDTO) {
 
-        duplicateTransactionService
-                .checkAndRegister(user.getId(), TransactionType.WITHDRAWAL, requestDTO.amount(), "self");
-
         Account account = accountService.getAccountForUpdate(user.getId());
 
-        transactionValidator.validateWithdraw(account, requestDTO.amount());
+        transactionValidator.validateWithdraw(
+                account,
+                requestDTO.amount()
+        );
+
+        duplicateTransactionService.checkAndRegister(
+                user.getId(),
+                TransactionType.WITHDRAWAL,
+                requestDTO.amount(),
+                "self"
+        );
 
         Set<Long> usersToInvalidate = Set.of(user.getId());
 
@@ -106,15 +120,23 @@ public class TransactionService {
     @Transactional
     public InternalTransactionResponseDTO executeInternalTransaction(User user, InternalTransactionRequestDTO requestDTO) {
 
-        duplicateTransactionService
-                .checkAndRegister(user.getId(), TransactionType.INTERNAL_TRANSFER, requestDTO.amount(), requestDTO.accountNumber());
-
         Account originAccount = accountService.getAccountForUpdate(user.getId());
         Account destinationAccount = accountService.getAccountByNumber(requestDTO.accountNumber());
 
         Agency agency = agencyService.getAgencyByNumber(requestDTO.agencyNumber());
 
-        transactionValidator.validateInternal(originAccount, destinationAccount, agency);
+        transactionValidator.validateInternal(
+                originAccount,
+                destinationAccount,
+                agency
+        );
+
+        duplicateTransactionService.checkAndRegister(
+                user.getId(),
+                TransactionType.INTERNAL_TRANSFER,
+                requestDTO.amount(),
+                requestDTO.accountNumber()
+        );
 
         Set<Long> usersToInvalidate = new HashSet<>();
         usersToInvalidate.add(user.getId());
@@ -144,14 +166,22 @@ public class TransactionService {
     @Transactional
     public ExternalTransactionResponseDTO executeExternalTransaction(User user, ExternalTransactionRequestDTO requestDTO) {
 
-        duplicateTransactionService
-                .checkAndRegister(user.getId(), TransactionType.EXTERNAL_TRANSFER, requestDTO.amount(), requestDTO.destinationAccount());
-
         Account account = accountService.getAccountForUpdate(user.getId());
 
         BankRegistry bankRegistry = bankRegistryService.getByCompe(requestDTO.compe());
 
-        transactionValidator.validateExternal(account, requestDTO.destinationAccount(), requestDTO.compe());
+        transactionValidator.validateExternal(
+                account,
+                requestDTO.destinationAccount(),
+                requestDTO.compe()
+        );
+
+        duplicateTransactionService.checkAndRegister(
+                user.getId(),
+                TransactionType.EXTERNAL_TRANSFER,
+                requestDTO.amount(),
+                requestDTO.destinationAccount()
+        );
 
         Set<Long> usersToInvalidate = Set.of(user.getId());
 
@@ -181,15 +211,22 @@ public class TransactionService {
     @Transactional
     public PixTransactionResponseDTO executePixTransaction(User user, PixTransactionRequestDTO requestDTO) {
 
-        duplicateTransactionService
-                .checkAndRegister(user.getId(), TransactionType.PIX, requestDTO.amount(), requestDTO.key());
-
         Account originAccount = accountService.getAccountForUpdate(user.getId());
 
         Optional<PixKey> pixKey = pixKeyService.findByKey(requestDTO.key());
         Account destinationAccount = pixKey.map(PixKey::getAccount).orElse(null);
 
-        transactionValidator.validatePix(originAccount, destinationAccount);
+        transactionValidator.validatePix(
+                originAccount,
+                destinationAccount
+        );
+
+        duplicateTransactionService.checkAndRegister(
+                user.getId(),
+                TransactionType.PIX,
+                requestDTO.amount(),
+                requestDTO.key()
+        );
 
         Transaction transaction = transactionFactory
                 .createPix(
