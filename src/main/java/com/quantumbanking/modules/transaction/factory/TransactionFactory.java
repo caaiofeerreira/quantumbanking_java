@@ -41,6 +41,20 @@ public class TransactionFactory {
                 .build();
     }
 
+    public Transaction createFee(Account account, BigDecimal amount) {
+        return Transaction.builder()
+                .originAccount(account)
+                .originName(account.getClient().getName())
+                .originAccountNumber(account.getAccountNumber())
+                .originAgency(account.getAgency().getAgencyNumber())
+                .originBankCompe(account.getAgency().getBank().getCompe())
+                .originDocument(account.getClient().getCpf())
+                .amount(amount)
+                .type(TransactionType.FEE)
+                .description("Tarifa por excesso de saques no mês")
+                .build();
+    }
+
     public Transaction createInternalTransfer(Account originAccount, Account destinationAccount, String destinationAgencyNumber, BigDecimal amount, String description) {
         return Transaction.builder()
                 .originAccount(originAccount)

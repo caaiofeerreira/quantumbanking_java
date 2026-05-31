@@ -53,6 +53,16 @@ public enum TransactionType {
         public String getCounterpartName(Transaction t, boolean isOrigin) {
             return "Quantum Banking";
         }
+    },
+
+    FEE {
+        @Override
+        public String getDisplayName(boolean isOrigin) { return "Tarifa de Saque"; }
+
+        @Override
+        public String getCounterpartName(Transaction t, boolean isOrigin) {
+            return "Quantum Banking";
+        }
     };
 
     public abstract String getDisplayName(boolean isOrigin);

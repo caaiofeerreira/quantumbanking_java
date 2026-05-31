@@ -10,7 +10,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity(name = "Transaction")
-@Table(name = "tb_transaction")
+@Table(name = "tb_transaction", indexes = {
+        @Index(name = "idx_transaction_withdrawal", columnList = "origin_account_id, type, created_at")
+})
 @Getter
 @Builder
 @NoArgsConstructor

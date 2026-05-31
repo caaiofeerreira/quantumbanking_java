@@ -10,6 +10,7 @@ import com.quantumbanking.modules.bank.domain.bank.Bank;
 import com.quantumbanking.modules.bank.domain.bank.BankRegistry;
 import com.quantumbanking.modules.bank.service.AgencyService;
 import com.quantumbanking.modules.bank.service.BankRegistryService;
+import com.quantumbanking.modules.bank.service.BankService;
 import com.quantumbanking.modules.shared.domain.user.User;
 import com.quantumbanking.modules.transaction.domain.Transaction;
 import com.quantumbanking.modules.transaction.domain.TransactionType;
@@ -24,6 +25,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -37,6 +40,7 @@ public class TransactionService {
     private final AgencyService agencyService;
     private final BankRegistryService bankRegistryService;
     private final DuplicateTransactionService duplicateTransactionService;
+    private final BankService bankService;
 
     private final TransactionRepository transactionRepository;
     private final TransactionMapper transactionMapper;
@@ -85,6 +89,19 @@ public class TransactionService {
     public WithdrawResponseDTO executeWithdraw(User user, WithdrawRequestDTO requestDTO) {
 
         Account account = accountService.getAccountForUpdate(user.getId());
+        Set<Long> usersToInvalidate = Set.of(user.getId());
+
+        LocalDateTime start = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+        LocalDateTime end = start.plusMonths(1);
+
+        long withdrawalsThisMonth = transactionRepository
+                .countByOriginAccountAndTypeAndPeriod(
+                        account.getId(),
+                        TransactionType.WITHDRAWAL,
+                        start,
+                        end);
+        int freeWithdrawals = account.getType().getFreeWithdrawals();
+        boolean shouldChargeFee = withdrawalsThisMonth >= freeWithdrawals;
 
         transactionValidator.validateWithdraw(
                 account,
@@ -98,7 +115,24 @@ public class TransactionService {
                 "self"
         );
 
-        Set<Long> usersToInvalidate = Set.of(user.getId());
+        FeeDetailDTO fee;
+
+        if (shouldChargeFee) {
+
+            BigDecimal feeAmount = account.getType().getFeeAmount();
+            Transaction feeTransaction = transactionFactory.createFee(account,feeAmount);
+            account.debit(feeAmount);
+            bankService.creditFee(feeAmount);
+            transactionRepository.save(feeTransaction);
+
+            fee = new FeeDetailDTO(true, feeAmount,
+                    "Limite mensal de saques gratuitos atingido (%d/%d utilizados)"
+                            .formatted(withdrawalsThisMonth + 1, freeWithdrawals));
+        } else {
+            fee = new FeeDetailDTO(false, BigDecimal.ZERO,
+                    "Dentro do limite mensal de saques gratuitos (%d/%d utilizados)"
+                            .formatted(withdrawalsThisMonth + 1, freeWithdrawals));
+        }
 
         Transaction transaction = transactionFactory
                 .createWithdrawal(
@@ -114,7 +148,7 @@ public class TransactionService {
 
         applicationEventPublisher.publishEvent(new TransactionCompletedEvent(usersToInvalidate));
 
-        return transactionMapper.toWithdrawResponse(transaction);
+        return transactionMapper.toWithdrawResponse(transaction, fee);
     }
 
     @Transactional

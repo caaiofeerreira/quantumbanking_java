@@ -11,5 +11,6 @@ public record WithdrawResponseDTO(UUID id,
                                   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss")
                                   LocalDateTime createdAt,
                                   TransactionType type,
-                                  BigDecimal amount) {
+                                  BigDecimal amount,
+                                  FeeDetailDTO fee) {
 }

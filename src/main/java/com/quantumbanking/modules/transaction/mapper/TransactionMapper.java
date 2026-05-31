@@ -24,12 +24,13 @@ public class TransactionMapper {
         );
     }
 
-    public WithdrawResponseDTO toWithdrawResponse(Transaction transaction) {
+    public WithdrawResponseDTO toWithdrawResponse(Transaction transaction, FeeDetailDTO fee) {
         return new WithdrawResponseDTO(
                 transaction.getId(),
                 transaction.getCreatedAt(),
                 transaction.getType(),
-                transaction.getAmount()
+                transaction.getAmount(),
+                fee
         );
     }
 
