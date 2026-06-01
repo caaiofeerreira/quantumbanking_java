@@ -20,6 +20,7 @@ import com.quantumbanking.modules.transaction.mapper.TransactionMapper;
 import com.quantumbanking.modules.transaction.repository.TransactionRepository;
 import com.quantumbanking.modules.transaction.service.validation.TransactionValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -48,6 +51,9 @@ public class TransactionService {
     private final TransactionValidator transactionValidator;
 
     private final ApplicationEventPublisher applicationEventPublisher;
+
+    @Value("${transaction.timezone}")
+    private String timezone;
 
     @Transactional
     public DepositResponseDTO executeDeposit(User user, DepositRequestDTO requestDTO) {
@@ -247,12 +253,16 @@ public class TransactionService {
 
         Account originAccount = accountService.getAccountForUpdate(user.getId());
 
+        LocalTime transactionTime = LocalDateTime.now(ZoneId.of(timezone)).toLocalTime();
+
         Optional<PixKey> pixKey = pixKeyService.findByKey(requestDTO.key());
         Account destinationAccount = pixKey.map(PixKey::getAccount).orElse(null);
 
         transactionValidator.validatePix(
                 originAccount,
-                destinationAccount
+                destinationAccount,
+                requestDTO.amount(),
+                transactionTime
         );
 
         duplicateTransactionService.checkAndRegister(
