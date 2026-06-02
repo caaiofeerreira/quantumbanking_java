@@ -19,7 +19,9 @@ import java.io.IOException;
 public class SecurityFilter extends OncePerRequestFilter {
 
     private final UserRepository userRepository;
+
     private final TokenService tokenService;
+    private final TokenRedisService tokenRedisService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -29,14 +31,19 @@ public class SecurityFilter extends OncePerRequestFilter {
 
         if (tokenJWT != null) {
             try {
-
                 var cpf = tokenService.getSubject(tokenJWT);
                 var user = userRepository.findByCpf(cpf)
                         .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
 
-                var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                if (!tokenRedisService.checkActiveToken(user.getId(), tokenJWT)) {
+                    SecurityContextHolder.clearContext();
+                    filterChain.doFilter(request, response);
+                    return;
+                }
 
+                var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+
             } catch (Exception e) {
                 SecurityContextHolder.clearContext();
             }

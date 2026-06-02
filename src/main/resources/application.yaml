@@ -17,6 +17,7 @@ api:
   security:
     token:
       secret: ${JWT_SECRET:123456}
+      expiration: ${JWT_EXPIRATION:15}
 
 bank:
   name: ${BANK_NAME:Quantum Banking S.A.}

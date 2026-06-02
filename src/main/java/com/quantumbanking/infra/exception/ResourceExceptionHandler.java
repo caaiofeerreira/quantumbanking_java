@@ -180,4 +180,10 @@ public class ResourceExceptionHandler {
         log.warn("Tentativa de transação duplicada detectada: {}", ex.getMessage());
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), getPath());
     }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCredentialsException(InvalidCredentialsException ex) {
+        log.warn("Tentativa de autenticação com credenciais inválidas: {}", ex.getMessage());
+        return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), getPath());
+    }
 }

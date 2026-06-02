@@ -1,7 +1,6 @@
 package com.quantumbanking.infra.security;
 
 import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
@@ -11,14 +10,15 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 
 @Service
 public class TokenService {
 
     @Value("${api.security.token.secret}")
     private String secret;
+
+    @Value("${api.security.token.expiration}")
+    private long expiration;
 
     public String generateToken(User user) {
         try {
@@ -47,7 +47,6 @@ public class TokenService {
     }
 
     private Instant dataExpiration() {
-        return Instant.now().plus(Duration.ofMinutes(15));
+        return Instant.now().plus(Duration.ofMinutes(expiration));
     }
-
 }
