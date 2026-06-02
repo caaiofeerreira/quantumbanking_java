@@ -11,7 +11,7 @@ public record ExternalTransactionRequestDTO(@NotBlank String destinationName,
                                             @NotBlank String destinationAgency,
                                             @NotBlank String compe,
                                             @NotBlank String destinationDocument,
-                                            @NotNull @Positive BigDecimal amount,
+                                            @NotNull BigDecimal amount,
                                             String description) {
 
 }

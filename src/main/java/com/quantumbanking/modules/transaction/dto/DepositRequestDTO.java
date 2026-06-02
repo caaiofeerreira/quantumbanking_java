@@ -5,6 +5,6 @@ import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 
-public record DepositRequestDTO(@NotNull @Positive BigDecimal amount,
+public record DepositRequestDTO(@NotNull BigDecimal amount,
                                 String description) {
 }

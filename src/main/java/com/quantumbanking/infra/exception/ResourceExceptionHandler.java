@@ -186,4 +186,10 @@ public class ResourceExceptionHandler {
         log.warn("Tentativa de autenticação com credenciais inválidas: {}", ex.getMessage());
         return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), getPath());
     }
+
+    @ExceptionHandler(MaximumAmountException.class)
+    public ResponseEntity<ErrorResponse> handleMaximumAmountException(MaximumAmountException ex) {
+        log.warn("Valor acima do limite máximo permitido: {}", ex.getMessage());
+        return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), getPath());
+    }
 }

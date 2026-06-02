@@ -14,7 +14,7 @@ import java.time.LocalTime;
 @Component
 public class TransactionValidator {
 
-    private static final BigDecimal MIN_VALUE = new BigDecimal("0.01");
+    private static final BigDecimal MIN_TRANSACTION_VALUE = new BigDecimal("0.01");
     private static final LocalTime NIGHTTIME_START = LocalTime.of(18, 0);
     private static final LocalTime NIGHTTIME_END   = LocalTime.of(6, 0);
 
@@ -23,6 +23,9 @@ public class TransactionValidator {
 
     @Value("${transaction.nighttime-limit}")
     private BigDecimal nighttimeLimit;
+
+    @Value("${transaction.max-atm-amount}")
+    private BigDecimal maxAtmAmount;
 
 
     private void checkAccountActive(Account account) {
@@ -43,14 +46,25 @@ public class TransactionValidator {
         }
     }
 
-    private void checkMinimumAmount(BigDecimal amount) {
+    private void checkMinimumTransactionAmount(BigDecimal amount) {
 
         if (amount == null) {
             throw new InvalidTransactionValueException("O valor da transação é obrigatório e não pode ser nulo.");
         }
 
-        if (amount.compareTo(MIN_VALUE) < 0) {
+        if (amount.compareTo(MIN_TRANSACTION_VALUE) < 0) {
             throw new MinimumAmountException("O valor mínimo para esta operação é de R$ 0,01");
+        }
+    }
+
+    private void checkATMMaximumAmount(BigDecimal amount) {
+
+        if (amount == null) {
+            throw new InvalidTransactionValueException("O valor é obrigatório e não pode ser nulo.");
+        }
+
+        if (amount.compareTo(maxAtmAmount) > 0) {
+            throw new MaximumAmountException("O valor máximo para saque/depósito é de R$ 5.000,00.");
         }
     }
 
@@ -74,17 +88,18 @@ public class TransactionValidator {
 
     public void validateDeposit(Account account, BigDecimal amount) {
         checkAccountActive(account);
-        checkMinimumAmount(amount);
+        checkATMMaximumAmount(amount);
     }
 
     public void validateWithdraw(Account account, BigDecimal amount) {
         checkAccountActive(account);
-        checkMinimumAmount(amount);
+        checkATMMaximumAmount(amount);
     }
 
-    public void validateInternal(Account originAccount, Account destinationAccount, Agency agency) {
+    public void validateInternal(Account originAccount, Account destinationAccount, Agency agency, BigDecimal amount) {
         checkDifferentAccounts(originAccount, destinationAccount);
         checkAccountType(originAccount);
+        checkMinimumTransactionAmount(amount);
 
         if (!destinationAccount.getAgency().equals(agency)) {
             throw new AgencyAccountMismatchException("A agência informada não coincide com a conta de destino.");
@@ -92,8 +107,9 @@ public class TransactionValidator {
 
     }
 
-    public void validateExternal(Account account, String destinationAccount, String bankingCode) {
+    public void validateExternal(Account account, String destinationAccount, String bankingCode, BigDecimal amount) {
         checkAccountType(account);
+        checkMinimumTransactionAmount(amount);
 
         if (account.getAccountNumber().equals(destinationAccount)
                 && bankingCode.equals(compe)) {
@@ -104,6 +120,7 @@ public class TransactionValidator {
     public void validatePix(Account originAccount, Account destinationAccount, BigDecimal amount, LocalTime time) {
         checkAccountActive(originAccount);
         checkPixAuthorized(amount, time);
+        checkMinimumTransactionAmount(amount);
 
         if (destinationAccount != null) {
             checkAccountActive(destinationAccount);

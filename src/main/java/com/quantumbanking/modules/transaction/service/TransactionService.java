@@ -168,7 +168,8 @@ public class TransactionService {
         transactionValidator.validateInternal(
                 originAccount,
                 destinationAccount,
-                agency
+                agency,
+                requestDTO.amount()
         );
 
         duplicateTransactionService.checkAndRegister(
@@ -213,7 +214,8 @@ public class TransactionService {
         transactionValidator.validateExternal(
                 account,
                 requestDTO.destinationAccount(),
-                requestDTO.compe()
+                requestDTO.compe(),
+                requestDTO.amount()
         );
 
         duplicateTransactionService.checkAndRegister(

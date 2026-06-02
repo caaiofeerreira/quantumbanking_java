@@ -5,6 +5,6 @@ import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 
-public record WithdrawRequestDTO(@NotNull @Positive BigDecimal amount,
+public record WithdrawRequestDTO(@NotNull BigDecimal amount,
                                  String description) {
 }
