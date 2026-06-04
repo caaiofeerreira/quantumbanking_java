@@ -2,6 +2,7 @@ package com.quantumbanking.modules.bank.mapper;
 
 import com.quantumbanking.modules.bank.domain.manager.Manager;
 import com.quantumbanking.modules.bank.dto.ManagerResponseDTO;
+import com.quantumbanking.modules.shared.util.DataMaskingUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -15,7 +16,7 @@ public class ManagerMapper {
         return new ManagerResponseDTO(
                 manager.getId(),
                 manager.getName(),
-                manager.getCpf(),
+                DataMaskingUtils.maskCpf(manager.getCpf()),
                 manager.getEmail(),
                 manager.getPhone(),
                 manager.getStatus(),

@@ -1,6 +1,8 @@
 package com.quantumbanking.modules.transaction.mapper;
 
 import com.quantumbanking.modules.account.domain.Account;
+import com.quantumbanking.modules.shared.util.DataMaskingUtils;
+import com.quantumbanking.modules.shared.util.FormattingUtils;
 import com.quantumbanking.modules.transaction.domain.Transaction;
 import com.quantumbanking.modules.transaction.dto.*;
 import com.quantumbanking.modules.transaction.formater.TransactionStatementFormatter;
@@ -87,10 +89,10 @@ public class TransactionMapper {
     private AccountInfoDTO transferOriginInfo(Account originAccount) {
         return new AccountInfoDTO(
                 originAccount.getClient().getName(),
-                originAccount.getClient().getCpf(),
+                DataMaskingUtils.maskCpf(originAccount.getClient().getCpf()),
                 originAccount.getAgency().getBank().getName(),
                 originAccount.getAgency().getAgencyNumber(),
-                formatAccountNumber(originAccount.getAccountNumber()),
+                FormattingUtils.formatAccountNumber(originAccount.getAccountNumber()),
                 originAccount.getAgency().getBank().getCompe()
         );
     }
@@ -99,19 +101,19 @@ public class TransactionMapper {
         if (transaction.getDestinationAccount() != null) {
             return new AccountInfoDTO(
                     transaction.getDestinationAccount().getClient().getName(),
-                    transaction.getDestinationAccount().getClient().getCpf(),
+                    DataMaskingUtils.maskCpf(transaction.getDestinationAccount().getClient().getCpf()),
                     transaction.getDestinationAccount().getAgency().getBank().getName(),
                     transaction.getDestinationAccount().getAgency().getAgencyNumber(),
-                    formatAccountNumber(transaction.getDestinationAccount().getAccountNumber()),
+                    FormattingUtils.formatAccountNumber(transaction.getDestinationAccount().getAccountNumber()),
                     transaction.getDestinationAccount().getAgency().getBank().getCompe()
             );
         }
         return new AccountInfoDTO(
                 transaction.getDestinationName(),
-                transaction.getDestinationDocument(),
+                DataMaskingUtils.maskCpf(transaction.getDestinationDocument()),
                 transaction.getDestinationBankName(),
                 transaction.getDestinationAgency(),
-                formatAccountNumber(transaction.getDestinationAccountNumber()),
+                FormattingUtils.formatAccountNumber(transaction.getDestinationAccountNumber()),
                 transaction.getDestinationBankCompe()
         );
     }
@@ -119,7 +121,7 @@ public class TransactionMapper {
     private PixAccountInfoDTO pixOriginInfo(Account originAccount) {
         return new PixAccountInfoDTO(
                 originAccount.getClient().getName(),
-                originAccount.getClient().getCpf(),
+                DataMaskingUtils.maskCpf(originAccount.getClient().getCpf()),
                 originAccount.getAgency().getBank().getName()
         );
     }
@@ -128,7 +130,7 @@ public class TransactionMapper {
         if (transaction.getDestinationAccount() != null) {
             return new PixAccountInfoDTO(
                     transaction.getDestinationAccount().getClient().getName(),
-                    transaction.getDestinationAccount().getClient().getCpf(),
+                    DataMaskingUtils.maskCpf(transaction.getDestinationAccount().getClient().getCpf()),
                     transaction.getDestinationAccount().getAgency().getBank().getName()
             );
         }
@@ -138,13 +140,5 @@ public class TransactionMapper {
                 defaultIfEmpty(transaction.getDestinationDocument(), "Documento não informado"),
                 defaultIfEmpty(transaction.getDestinationBankName(), "Instituição Externa")
         );
-    }
-
-    private String formatAccountNumber(String number) {
-        if (number == null || number.length() < 2) {
-            return number;
-        }
-        int splitIndex = number.length() - 1;
-        return number.substring(0, splitIndex) + "-" + number.substring(splitIndex);
     }
 }
