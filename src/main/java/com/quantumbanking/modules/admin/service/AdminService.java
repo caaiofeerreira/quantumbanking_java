@@ -3,10 +3,7 @@ package com.quantumbanking.modules.admin.service;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.bank.domain.bank.Bank;
 import com.quantumbanking.modules.bank.domain.manager.Manager;
-import com.quantumbanking.modules.bank.dto.AgencyRegistrationDTO;
-import com.quantumbanking.modules.bank.dto.AgencyResponseDTO;
-import com.quantumbanking.modules.bank.dto.ManagerRegistrationDTO;
-import com.quantumbanking.modules.bank.dto.ManagerResponseDTO;
+import com.quantumbanking.modules.bank.dto.*;
 import com.quantumbanking.modules.bank.factory.ManagerFactory;
 import com.quantumbanking.modules.bank.mapper.AgencyMapper;
 import com.quantumbanking.modules.bank.mapper.ManagerMapper;
@@ -28,7 +25,6 @@ public class AdminService {
     private final AgencyService agencyService;
     private final BankService bankService;
     private final ManagerService managerService;
-    private final UserValidator userValidator;
 
     private final AgencyMapper agencyMapper;
     private final ManagerMapper managerMapper;
@@ -36,6 +32,8 @@ public class AdminService {
     private final ManagerFactory managerFactory;
 
     private final PasswordEncoder passwordEncoder;
+
+    private final UserValidator userValidator;
 
     @Transactional
     public AgencyResponseDTO registerAgency(AgencyRegistrationDTO dto) {
@@ -90,6 +88,16 @@ public class AdminService {
         return managers
                 .stream()
                 .map(managerMapper::toManagerResponseDTO)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ManagerBasicViewDTO> getManagersByAgencyNumber(String agencyNumber) {
+
+        List<Manager> managers = managerService.getAllManagersByAgencyNumber(agencyNumber);
+
+        return managers.stream()
+                .map(managerMapper::toManagerBasicViewDTO)
                 .toList();
     }
 }

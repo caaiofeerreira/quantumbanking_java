@@ -1,6 +1,7 @@
 package com.quantumbanking.modules.bank.mapper;
 
 import com.quantumbanking.modules.bank.domain.manager.Manager;
+import com.quantumbanking.modules.bank.dto.ManagerBasicViewDTO;
 import com.quantumbanking.modules.bank.dto.ManagerResponseDTO;
 import com.quantumbanking.modules.shared.util.DataMaskingUtils;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,17 @@ public class ManagerMapper {
                 manager.getPhone(),
                 manager.getStatus(),
                 agencyMapper.toAgencyResponseDTO(manager.getAgency())
+        );
+    }
+
+    public ManagerBasicViewDTO toManagerBasicViewDTO(Manager manager) {
+        return new ManagerBasicViewDTO(
+                manager.getId(),
+                manager.getName(),
+                DataMaskingUtils.maskCpf(manager.getCpf()),
+                manager.getEmail(),
+                manager.getPhone(),
+                manager.getStatus()
         );
     }
 }

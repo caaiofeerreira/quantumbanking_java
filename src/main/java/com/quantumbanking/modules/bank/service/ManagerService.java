@@ -10,7 +10,6 @@ import com.quantumbanking.modules.bank.repository.ManagerRepository;
 import com.quantumbanking.modules.loan.domain.LoanStatus;
 import com.quantumbanking.modules.loan.dto.LoanApprovedResponseDTO;
 import com.quantumbanking.modules.loan.dto.LoanManagerViewDTO;
-import com.quantumbanking.modules.loan.dto.LoanResponseDTO;
 import com.quantumbanking.modules.loan.mapper.LoanMapper;
 import com.quantumbanking.modules.loan.service.LoanService;
 import com.quantumbanking.modules.shared.domain.user.User;
@@ -40,6 +39,10 @@ public class ManagerService {
 
     public List<Manager> getAllManagers() {
         return managerRepository.findAll();
+    }
+
+    public List<Manager> getAllManagersByAgencyNumber(String agencyNumber) {
+        return managerRepository.findAllByAgency_AgencyNumber(agencyNumber);
     }
 
     public void save(Manager manager) {

@@ -1,10 +1,7 @@
 package com.quantumbanking.modules.admin.controller;
 
 import com.quantumbanking.modules.admin.service.AdminService;
-import com.quantumbanking.modules.bank.dto.AgencyRegistrationDTO;
-import com.quantumbanking.modules.bank.dto.AgencyResponseDTO;
-import com.quantumbanking.modules.bank.dto.ManagerRegistrationDTO;
-import com.quantumbanking.modules.bank.dto.ManagerResponseDTO;
+import com.quantumbanking.modules.bank.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -37,5 +34,10 @@ public class AdminController {
     @GetMapping("/managers")
     public ResponseEntity<List<ManagerResponseDTO>> getAllManagers() {
         return ResponseEntity.ok(adminService.getAllManagers());
+    }
+
+    @GetMapping("/agency/{agencyNumber}/managers")
+    public ResponseEntity<List<ManagerBasicViewDTO>> getManagersByAgency(@PathVariable String agencyNumber) {
+        return ResponseEntity.ok(adminService.getManagersByAgencyNumber(agencyNumber));
     }
 }
