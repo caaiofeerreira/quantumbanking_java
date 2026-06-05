@@ -10,6 +10,7 @@ import com.quantumbanking.modules.bank.mapper.ManagerMapper;
 import com.quantumbanking.modules.bank.service.AgencyService;
 import com.quantumbanking.modules.bank.service.BankService;
 import com.quantumbanking.modules.bank.service.ManagerService;
+import com.quantumbanking.modules.bank.service.validation.AgencyValidator;
 import com.quantumbanking.modules.shared.service.validation.UserValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,13 +35,14 @@ public class AdminService {
     private final PasswordEncoder passwordEncoder;
 
     private final UserValidator userValidator;
+    private final AgencyValidator agencyValidator;
 
     @Transactional
     public AgencyResponseDTO registerAgency(AgencyRegistrationDTO dto) {
 
         Bank bank = bankService.getBankByCode(dto.compe());
 
-        agencyService.validateAgencyNotRegistered(dto.agencyNumber());
+        agencyValidator.checkAgencyNotRegistered(dto.agencyNumber());
 
         Agency agency = new Agency(dto, bank);
         agencyService.save(agency);
@@ -94,9 +96,12 @@ public class AdminService {
     @Transactional(readOnly = true)
     public List<ManagerBasicViewDTO> getManagersByAgencyNumber(String agencyNumber) {
 
+        agencyValidator.checkAgencyExists(agencyNumber);
+
         List<Manager> managers = managerService.getAllManagersByAgencyNumber(agencyNumber);
 
-        return managers.stream()
+        return managers
+                .stream()
                 .map(managerMapper::toManagerBasicViewDTO)
                 .toList();
     }

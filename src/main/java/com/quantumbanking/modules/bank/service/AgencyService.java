@@ -1,6 +1,5 @@
 package com.quantumbanking.modules.bank.service;
 
-import com.quantumbanking.infra.exception.AgencyAlreadyExistsException;
 import com.quantumbanking.infra.exception.AgencyNotFoundException;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.bank.repository.AgencyRepository;
@@ -18,12 +17,6 @@ public class AgencyService {
     public Agency getAgencyByNumber(String agencyNumber) {
         return agencyRepository.findByAgencyNumber(agencyNumber)
                 .orElseThrow(() -> new AgencyNotFoundException("Agência não encontrada."));
-    }
-
-    public void validateAgencyNotRegistered(String agencyNumber) {
-        if (agencyRepository.existsByAgencyNumber(agencyNumber)) {
-            throw new AgencyAlreadyExistsException("A agência número " + agencyNumber + " já está cadastrada.");
-        }
     }
 
     public List<Agency> getAllAgencies() {
