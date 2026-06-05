@@ -9,6 +9,7 @@ import com.quantumbanking.modules.bank.mapper.AgencyMapper;
 import com.quantumbanking.modules.bank.repository.ManagerRepository;
 import com.quantumbanking.modules.loan.domain.LoanStatus;
 import com.quantumbanking.modules.loan.dto.LoanApprovedResponseDTO;
+import com.quantumbanking.modules.loan.dto.LoanManagerViewDTO;
 import com.quantumbanking.modules.loan.dto.LoanResponseDTO;
 import com.quantumbanking.modules.loan.mapper.LoanMapper;
 import com.quantumbanking.modules.loan.service.LoanService;
@@ -58,13 +59,13 @@ public class ManagerService {
     }
 
     @Transactional(readOnly = true)
-    public List<LoanResponseDTO> getLoanRequestsByAgency(User user) {
+    public List<LoanManagerViewDTO> getLoanRequestsByAgency(User user) {
 
         Manager manager = getAuthenticatedUserManager(user.getId());
 
         return loanService.getLoansByAgencyAndStatus(manager.getAgency().getId(), LoanStatus.REQUESTED)
                 .stream()
-                .map(loanMapper::toLoanResponseDTO)
+                .map(loanMapper::toLoanManagerViewDTO)
                 .toList();
     }
 

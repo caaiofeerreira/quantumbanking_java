@@ -3,6 +3,7 @@ package com.quantumbanking.modules.bank.controller;
 import com.quantumbanking.modules.bank.dto.AgencyAccountManagementDTO;
 import com.quantumbanking.modules.bank.service.ManagerService;
 import com.quantumbanking.modules.loan.dto.LoanApprovedResponseDTO;
+import com.quantumbanking.modules.loan.dto.LoanManagerViewDTO;
 import com.quantumbanking.modules.loan.dto.LoanResponseDTO;
 import com.quantumbanking.modules.shared.domain.user.User;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,7 @@ public class ManagerController {
     }
 
     @GetMapping("/loans/requested")
-    public ResponseEntity<List<LoanResponseDTO>> getRequestedLoans(@AuthenticationPrincipal User user) {
+    public ResponseEntity<List<LoanManagerViewDTO>> getRequestedLoans(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(managerService.getLoanRequestsByAgency(user));
     }
 

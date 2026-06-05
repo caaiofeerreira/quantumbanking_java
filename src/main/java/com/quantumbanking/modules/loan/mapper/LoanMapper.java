@@ -36,19 +36,21 @@ public class LoanMapper {
         );
     }
 
-    public LoanManagerViewDTO toLoanManagerView(Loan loan) {
+    public LoanManagerViewDTO toLoanManagerViewDTO(Loan loan) {
         return new LoanManagerViewDTO(
+                loan.getAccount().getClient().getName(),
+                loan.getAccount().getAccountNumber(),
+                loan.getAccount().getBalance(),
+                loan.getAccount().getType(),
                 loan.getId(),
                 loan.getAmount(),
                 loan.getInterestRate(),
                 loan.getInstallments(),
+                loan.getInstallmentAmount(),
+                loan.getTotalAmount(),
                 loan.getDescription(),
                 loan.getCreatedAt(),
-                loan.getStatus(),
-                loan.getAccount().getClient().getName(),
-                loan.getAccount().getClient().getCpf(),
-                loan.getAccount().getAccountNumber(),
-                loan.getAccount().getBalance()
+                loan.getStatus()
         );
     }
 }
