@@ -7,12 +7,13 @@ import com.quantumbanking.modules.bank.dto.AgencyRegistrationDTO;
 import com.quantumbanking.modules.bank.dto.AgencyResponseDTO;
 import com.quantumbanking.modules.bank.dto.ManagerRegistrationDTO;
 import com.quantumbanking.modules.bank.dto.ManagerResponseDTO;
+import com.quantumbanking.modules.bank.factory.ManagerFactory;
 import com.quantumbanking.modules.bank.mapper.AgencyMapper;
 import com.quantumbanking.modules.bank.mapper.ManagerMapper;
 import com.quantumbanking.modules.bank.service.AgencyService;
 import com.quantumbanking.modules.bank.service.BankService;
 import com.quantumbanking.modules.bank.service.ManagerService;
-import com.quantumbanking.modules.shared.service.UserService;
+import com.quantumbanking.modules.shared.service.validation.UserValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,10 +28,12 @@ public class AdminService {
     private final AgencyService agencyService;
     private final BankService bankService;
     private final ManagerService managerService;
-    private final UserService userService;
+    private final UserValidator userValidator;
 
     private final AgencyMapper agencyMapper;
     private final ManagerMapper managerMapper;
+
+    private final ManagerFactory managerFactory;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -61,13 +64,19 @@ public class AdminService {
     @Transactional
     public ManagerResponseDTO registerManager(ManagerRegistrationDTO dto) {
 
-        userService.validateCpfNotRegistered(dto.cpf());
-
-        Agency agency = agencyService.getAgencyByNumber(dto.agencyNumber());
+        userValidator.validateCpfNotRegistered(dto.cpf());
+        String normalizedPhone = userValidator.checkPhone(dto.phone());
 
         String encryptedPassword = passwordEncoder.encode(dto.password());
 
-        Manager manager = new Manager(dto, encryptedPassword, agency);
+        Agency agency = agencyService.getAgencyByNumber(dto.agencyNumber());
+
+        Manager manager = managerFactory.createManager(
+                dto,
+                normalizedPhone,
+                encryptedPassword,
+                agency
+        );
         managerService.save(manager);
 
         return managerMapper.toManagerResponseDTO(manager);

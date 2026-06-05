@@ -3,17 +3,18 @@ package com.quantumbanking.modules.client.domain;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.client.dto.ClientRegistrationDTO;
+import com.quantumbanking.modules.shared.domain.address.Address;
 import com.quantumbanking.modules.shared.domain.user.User;
 import com.quantumbanking.modules.shared.domain.user.UserRole;
 import jakarta.persistence.*;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity(name = "Client")
 @Table(name = "tb_client")
+@Builder
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class Client extends User {
 
@@ -25,17 +26,10 @@ public class Client extends User {
     @OneToOne(mappedBy = "client", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private Account account;
 
-    public Client(ClientRegistrationDTO dto, String encryptedPassword) {
-        super(
-                dto.name(),
-                dto.cpf(),
-                dto.phone(),
-                dto.email(),
-                encryptedPassword,
-                UserRole.CLIENT,
-                dto.address()
-        );
-        this.type = dto.clientType();
+    public Client(String name, String cpf, String phone, String email,
+                  String password, Address address, ClientType clientType) {
+        super(name, cpf, phone, email, password, UserRole.CLIENT, address);
+        this.type = clientType;
     }
 
 }

@@ -192,4 +192,10 @@ public class ResourceExceptionHandler {
         log.warn("Valor acima do limite máximo permitido: {}", ex.getMessage());
         return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), getPath());
     }
+
+    @ExceptionHandler(InvalidPhoneException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidPhoneException(InvalidPhoneException ex) {
+        log.warn("Tentativa de cadastro com telefone inválido: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
+    }
 }
