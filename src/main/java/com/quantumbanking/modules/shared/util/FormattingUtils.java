@@ -12,4 +12,20 @@ public final class FormattingUtils {
         int splitIndex = number.length() - 1;
         return number.substring(0, splitIndex) + "-" + number.substring(splitIndex);
     }
+
+    public static String formatPhone(String phone) {
+        if (phone == null) return null;
+
+        String digits = phone.replaceAll("\\D", "");
+
+        if (digits.startsWith("55")) {
+            digits = digits.substring(2);
+        }
+
+        return "(%s) %s-%s".formatted(
+                digits.substring(0, 2),
+                digits.substring(2, 7),
+                digits.substring(7)
+        );
+    }
 }

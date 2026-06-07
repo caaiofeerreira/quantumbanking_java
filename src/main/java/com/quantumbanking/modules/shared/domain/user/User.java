@@ -5,7 +5,6 @@ import com.quantumbanking.modules.shared.domain.address.Address;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -29,13 +28,11 @@ public class User implements UserDetails {
     protected String name;
 
     @Column(name = "cpf", unique = true, nullable = false)
-    protected String cpf;
+    private String cpf;
 
-    @Setter
     @Column(name = "phone")
     protected String phone;
 
-    @Setter
     @Column(name = "email")
     protected String email;
 
@@ -45,7 +42,6 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
-    @Setter
     @Embedded
     protected Address address;
 
@@ -70,6 +66,18 @@ public class User implements UserDetails {
         this.role = role;
         this.address = address;
         this.status = UserStatus.ACTIVE;
+    }
+
+    public void updatePhone(String phone) {
+        this.phone = phone;
+    }
+
+    public void updateEmail(String email) {
+        this.email = email;
+    }
+
+    public void updateAddress(Address address) {
+        this.address = address;
     }
 
     @Override

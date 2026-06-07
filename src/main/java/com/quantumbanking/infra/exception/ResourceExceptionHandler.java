@@ -198,4 +198,16 @@ public class ResourceExceptionHandler {
         log.warn("Tentativa de cadastro com telefone inválido: {}", ex.getMessage());
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
     }
+
+    @ExceptionHandler(InvalidEmailException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidEmailException(InvalidEmailException ex) {
+        log.warn("Tentativa de cadastro com email inválido: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(InvalidCepException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCepException(InvalidCepException ex) {
+        log.warn("CEP inválido ou não encontrado: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
+    }
 }

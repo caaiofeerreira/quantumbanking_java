@@ -64,8 +64,8 @@ public class AdminService {
     @Transactional
     public ManagerResponseDTO registerManager(ManagerRegistrationDTO dto) {
 
-        userValidator.validateCpfNotRegistered(dto.cpf());
-        String normalizedPhone = userValidator.checkPhone(dto.phone());
+        userValidator.checkCpf(dto.cpf());
+        String normalizedPhone = userValidator.normalizePhone(dto.phone());
 
         String encryptedPassword = passwordEncoder.encode(dto.password());
 
