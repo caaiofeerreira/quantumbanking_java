@@ -3,19 +3,40 @@ package com.quantumbanking.modules.bank.factory;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.bank.domain.manager.Manager;
 import com.quantumbanking.modules.bank.dto.ManagerRegistrationDTO;
+import com.quantumbanking.modules.shared.domain.address.Address;
+import com.quantumbanking.modules.shared.service.validation.UserValidator;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class ManagerFactory {
 
-    public Manager createManager(ManagerRegistrationDTO dto, String normalizedPhone, String encryptedPassword, Agency agency) {
+    private final UserValidator userValidator;
+
+    public Manager createManager(ManagerRegistrationDTO dto, String encryptedPassword, Agency agency) {
+
+        String normalizedPhone = userValidator.normalizePhone(dto.phone());
+        String normalizedEmail = userValidator.normalizeEmail(dto.email());
+        String normalizedCep = userValidator.normalizeCep(dto.address().getZipCode());
+
+        Address normalizedAddress = new Address(
+                dto.address().getStreet(),
+                dto.address().getNumber(),
+                dto.address().getComplement(),
+                dto.address().getNeighborhood(),
+                dto.address().getCity(),
+                dto.address().getState().toUpperCase(),
+                normalizedCep
+        );
+
         return new Manager(
                 dto.name(),
                 dto.cpf(),
                 normalizedPhone,
-                dto.email(),
+                normalizedEmail,
                 encryptedPassword,
-                dto.address(),
+                normalizedAddress,
                 agency
         );
     }

@@ -65,7 +65,6 @@ public class AdminService {
     public ManagerResponseDTO registerManager(ManagerRegistrationDTO dto) {
 
         userValidator.checkCpf(dto.cpf());
-        String normalizedPhone = userValidator.normalizePhone(dto.phone());
 
         String encryptedPassword = passwordEncoder.encode(dto.password());
 
@@ -73,7 +72,6 @@ public class AdminService {
 
         Manager manager = managerFactory.createManager(
                 dto,
-                normalizedPhone,
                 encryptedPassword,
                 agency
         );
