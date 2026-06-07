@@ -56,13 +56,17 @@ public class UserValidator {
         }
     }
 
-    public void checkCep(String cep) {
+    public String normalizeCep(String cep) {
 
-        String normalizedCep = cep.replace("-", "");
+        String digits = cep.replaceAll("\\D", "");
+
+        if (!CEP_PATTERN.matcher(digits).matches()) {
+            throw new InvalidCepException("CEP inválido: " + cep);
+        }
 
         try {
             Map<String, Object> response = restTemplate.getForObject(
-                    VIA_CEP_URL, Map.class, normalizedCep
+                    VIA_CEP_URL, Map.class, digits
             );
 
             if (response == null || response.containsKey("erro")) {
@@ -72,15 +76,7 @@ public class UserValidator {
         } catch (RestClientException e) {
             throw new InvalidCepException("Erro ao consultar CEP: " + cep);
         }
-    }
 
-    public String normalizeCep(String cep) {
-
-        if (!CEP_PATTERN.matcher(cep.trim()).matches()) {
-            throw new InvalidCepException("CEP inválido: " + cep);
-        }
-
-        String digits = cep.replaceAll("\\D", "");
-        return digits.substring(0,5) + "-" + digits.substring(5);
+        return digits.substring(0, 5) + "-" + digits.substring(5);
     }
 }

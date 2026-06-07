@@ -54,8 +54,6 @@ public class ClientService {
     public ClientResponseDTO registerClient(ClientRegistrationDTO requestDTO) {
 
         userValidator.checkCpf(requestDTO.cpf());
-        String normalizedPhone = userValidator.normalizePhone(requestDTO.phone());
-        String normalizedEmail = userValidator.normalizeEmail(requestDTO.email());
 
         if (requestDTO.clientType() == ClientType.JURIDICA && requestDTO.company() == null) {
             throw new IncompleteCompanyDataException("Dados da empresa são obrigatórios para pessoa jurídica.");
@@ -65,8 +63,6 @@ public class ClientService {
 
         Client client = clientFactory.createClient(
                 requestDTO,
-                normalizedPhone,
-                normalizedEmail,
                 encryptedPassword
         );
         clientRepository.save(client);
@@ -123,7 +119,6 @@ public class ClientService {
     public void updateAddress(User user, UpdateAddressRequestDTO requestDTO) {
 
         String normalizedCep = userValidator.normalizeCep(requestDTO.zipCode());
-        userValidator.checkCep(normalizedCep);
 
         Client client = userAuthenticated(user.getId());
 
