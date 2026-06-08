@@ -12,7 +12,6 @@ import com.quantumbanking.modules.bank.service.AgencyService;
 import com.quantumbanking.modules.bank.service.BankService;
 import com.quantumbanking.modules.bank.service.ManagerService;
 import com.quantumbanking.modules.bank.service.validation.AgencyValidator;
-import com.quantumbanking.modules.shared.service.validation.UserValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -36,7 +35,6 @@ public class AdminService {
 
     private final PasswordEncoder passwordEncoder;
 
-    private final UserValidator userValidator;
     private final AgencyValidator agencyValidator;
 
     @Transactional
@@ -65,8 +63,6 @@ public class AdminService {
 
     @Transactional
     public ManagerResponseDTO registerManager(ManagerRegistrationDTO dto) {
-
-        userValidator.checkCpf(dto.cpf());
 
         String encryptedPassword = passwordEncoder.encode(dto.password());
 

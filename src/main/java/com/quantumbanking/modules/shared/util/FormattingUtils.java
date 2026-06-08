@@ -28,4 +28,8 @@ public final class FormattingUtils {
                 digits.substring(7)
         );
     }
+
+    public static String formatCpf(String cpf) {
+        return cpf.replaceAll("(\\d{3})(\\d{3})(\\d{3})(\\d{2})", "$1.$2.$3-$4");
+    }
 }

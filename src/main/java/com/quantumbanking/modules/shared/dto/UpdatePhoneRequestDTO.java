@@ -1,4 +1,4 @@
-package com.quantumbanking.modules.client.dto;
+package com.quantumbanking.modules.shared.dto;
 
 import jakarta.validation.constraints.NotBlank;
 

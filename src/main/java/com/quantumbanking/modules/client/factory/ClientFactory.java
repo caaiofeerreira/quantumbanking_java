@@ -17,6 +17,7 @@ public class ClientFactory {
 
     public Client createClient(ClientRegistrationDTO dto, String encryptedPassword) {
 
+        String normalizedCpf = userValidator.normalizeCpf(dto.cpf());
         String normalizedPhone = userValidator.normalizePhone(dto.phone());
         String normalizedEmail = userValidator.normalizeEmail(dto.email());
         String normalizedCep = cepValidator.normalizeCep(dto.address().getZipCode());
@@ -33,7 +34,7 @@ public class ClientFactory {
 
         return new Client(
                 dto.name(),
-                dto.cpf(),
+                normalizedCpf,
                 normalizedPhone,
                 normalizedEmail,
                 encryptedPassword,

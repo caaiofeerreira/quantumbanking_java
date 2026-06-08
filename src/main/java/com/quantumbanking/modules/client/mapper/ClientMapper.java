@@ -24,7 +24,7 @@ public class ClientMapper {
                 client.getName(),
                 DataMaskingUtils.maskCpf(client.getCpf()),
                 client.getEmail(),
-                client.getPhone(),
+                FormattingUtils.formatPhone(client.getPhone()),
                 client.getType(),
                 client.getStatus(),
                 accountMapper.toAccountResponseDTO(account),

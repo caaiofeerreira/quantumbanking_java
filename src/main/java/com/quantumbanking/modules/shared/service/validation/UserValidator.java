@@ -42,10 +42,13 @@ public class UserValidator {
         return email.trim().toLowerCase();
     }
 
-    public void checkCpf(String cpf) {
+    public String normalizeCpf(String cpf) {
+        String normalizedCpf = cpf.replaceAll("[^0-9]", "");
 
-        if (userRepository.existsByCpf(cpf)) {
+        if (userRepository.existsByCpf(normalizedCpf)) {
             throw new CpfAlreadyRegisteredException("Este CPF já está vinculado a outro usuário.");
         }
+
+        return normalizedCpf;
     }
 }

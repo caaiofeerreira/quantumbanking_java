@@ -1,0 +1,3 @@
+UPDATE tb_user SET cpf = REGEXP_REPLACE(cpf, '[^0-9]', '');
+
+ALTER TABLE tb_user MODIFY COLUMN cpf CHAR(11) NOT NULL;

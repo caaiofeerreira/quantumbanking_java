@@ -18,6 +18,7 @@ public class ManagerFactory {
 
     public Manager createManager(ManagerRegistrationDTO dto, String encryptedPassword, Agency agency) {
 
+        String normalizedCpf = userValidator.normalizeCpf(dto.cpf());
         String normalizedPhone = userValidator.normalizePhone(dto.phone());
         String normalizedEmail = userValidator.normalizeEmail(dto.email());
         String normalizedCep = cepValidator.normalizeCep(dto.address().getZipCode());
@@ -34,7 +35,7 @@ public class ManagerFactory {
 
         return new Manager(
                 dto.name(),
-                dto.cpf(),
+                normalizedCpf,
                 normalizedPhone,
                 normalizedEmail,
                 encryptedPassword,

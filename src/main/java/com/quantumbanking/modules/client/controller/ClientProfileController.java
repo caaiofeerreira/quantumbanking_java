@@ -1,9 +1,9 @@
 package com.quantumbanking.modules.client.controller;
 
 import com.quantumbanking.modules.client.dto.ClientProfileResponseDTO;
-import com.quantumbanking.modules.client.dto.UpdateAddressRequestDTO;
-import com.quantumbanking.modules.client.dto.UpdateEmailRequestDTO;
-import com.quantumbanking.modules.client.dto.UpdatePhoneRequestDTO;
+import com.quantumbanking.modules.shared.dto.UpdateAddressRequestDTO;
+import com.quantumbanking.modules.shared.dto.UpdateEmailRequestDTO;
+import com.quantumbanking.modules.shared.dto.UpdatePhoneRequestDTO;
 import com.quantumbanking.modules.client.service.ClientService;
 import com.quantumbanking.modules.shared.domain.user.User;
 import jakarta.validation.Valid;
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/account/profile")
-public class ProfileController {
+public class ClientProfileController {
 
     private final ClientService clientService;
 

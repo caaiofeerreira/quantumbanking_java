@@ -13,7 +13,7 @@ import com.quantumbanking.modules.client.domain.Company;
 import com.quantumbanking.modules.client.dto.ClientProfileResponseDTO;
 import com.quantumbanking.modules.client.dto.ClientRegistrationDTO;
 import com.quantumbanking.modules.client.dto.ClientResponseDTO;
-import com.quantumbanking.modules.client.dto.UpdateAddressRequestDTO;
+import com.quantumbanking.modules.shared.dto.UpdateAddressRequestDTO;
 import com.quantumbanking.modules.client.factory.ClientFactory;
 import com.quantumbanking.modules.client.mapper.ClientMapper;
 import com.quantumbanking.modules.client.repository.ClientRepository;
@@ -54,8 +54,6 @@ public class ClientService {
 
     @Transactional
     public ClientResponseDTO registerClient(ClientRegistrationDTO requestDTO) {
-
-        userValidator.checkCpf(requestDTO.cpf());
 
         if (requestDTO.clientType() == ClientType.JURIDICA && requestDTO.company() == null) {
             throw new IncompleteCompanyDataException("Dados da empresa são obrigatórios para pessoa jurídica.");

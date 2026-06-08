@@ -17,7 +17,9 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String cpf) throws UsernameNotFoundException {
 
-        return userRepository.findByCpf(cpf)
+        String normalizedCpf = cpf.replaceAll("[^0-9]", "");
+
+        return userRepository.findByCpf(normalizedCpf)
                 .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
     }
 }

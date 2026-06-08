@@ -55,10 +55,12 @@ public class DataSeeder implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
 
+        String normalizedCpf = adminCpf.replaceAll("[^0-9]", "");
+
         if (!userRepository.existsByCpf(adminCpf)) {
             User admin = new User(
                     adminName,
-                    adminCpf,
+                    normalizedCpf,
                     adminPhone,
                     adminEmail,
                     passwordEncoder.encode(adminPassword),

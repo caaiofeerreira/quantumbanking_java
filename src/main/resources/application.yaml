@@ -26,7 +26,7 @@ bank:
   cnpj: ${BANK_CNPJ:00000000000191}
 
 admin:
-  cpf: ${ADMIN_CPF:000.000.000-00}
+  cpf: ${ADMIN_CPF:00000000000}
   password: ${ADMIN_PASSWORD:root123}
   name: ${ADMIN_NAME:Admin}
   phone: ${ADMIN_PHONE:4004-0042}
