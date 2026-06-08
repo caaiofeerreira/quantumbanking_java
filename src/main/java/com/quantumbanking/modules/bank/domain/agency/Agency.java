@@ -50,11 +50,11 @@ public class Agency {
     @JoinColumn(name = "banking_id", nullable = false)
     private Bank bank;
 
-    public Agency(AgencyRegistrationDTO agencyDTO, Bank bank) {
-        this.agencyName = agencyDTO.agencyName();
-        this.agencyNumber = agencyDTO.agencyNumber();
-        this.phone = agencyDTO.phone();
-        this.address = agencyDTO.address();
+    public Agency(AgencyRegistrationDTO dto, String normalizedPhone, Address normalizedAddress, Bank bank) {
+        this.agencyName = dto.agencyName();
+        this.agencyNumber = dto.agencyNumber();
+        this.phone = normalizedPhone;
+        this.address = normalizedAddress;
         this.bank = bank;
     }
 }

@@ -1,8 +1,9 @@
 package com.quantumbanking.modules.bank.factory;
 
 import com.quantumbanking.modules.bank.domain.agency.Agency;
-import com.quantumbanking.modules.bank.domain.manager.Manager;
-import com.quantumbanking.modules.bank.dto.ManagerRegistrationDTO;
+import com.quantumbanking.modules.bank.domain.bank.Bank;
+import com.quantumbanking.modules.bank.dto.AgencyRegistrationDTO;
+import com.quantumbanking.modules.bank.service.validation.AgencyValidator;
 import com.quantumbanking.modules.shared.domain.address.Address;
 import com.quantumbanking.modules.shared.service.validation.CepValidator;
 import com.quantumbanking.modules.shared.service.validation.UserValidator;
@@ -11,15 +12,14 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class ManagerFactory {
+public class AgencyFactory {
 
-    private final UserValidator userValidator;
     private final CepValidator cepValidator;
+    private final AgencyValidator agencyValidator;
 
-    public Manager createManager(ManagerRegistrationDTO dto, String encryptedPassword, Agency agency) {
+    public Agency createAgency(AgencyRegistrationDTO dto, Bank bank) {
 
-        String normalizedPhone = userValidator.normalizePhone(dto.phone());
-        String normalizedEmail = userValidator.normalizeEmail(dto.email());
+        String normalizedPhone = agencyValidator.normalizePhone(dto.phone());
         String normalizedCep = cepValidator.normalizeCep(dto.address().getZipCode());
 
         Address normalizedAddress = new Address(
@@ -32,14 +32,6 @@ public class ManagerFactory {
                 normalizedCep
         );
 
-        return new Manager(
-                dto.name(),
-                dto.cpf(),
-                normalizedPhone,
-                normalizedEmail,
-                encryptedPassword,
-                normalizedAddress,
-                agency
-        );
+        return new Agency(dto, normalizedPhone, normalizedAddress, bank);
     }
 }

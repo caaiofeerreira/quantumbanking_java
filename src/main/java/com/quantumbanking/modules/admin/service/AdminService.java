@@ -4,6 +4,7 @@ import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.bank.domain.bank.Bank;
 import com.quantumbanking.modules.bank.domain.manager.Manager;
 import com.quantumbanking.modules.bank.dto.*;
+import com.quantumbanking.modules.bank.factory.AgencyFactory;
 import com.quantumbanking.modules.bank.factory.ManagerFactory;
 import com.quantumbanking.modules.bank.mapper.AgencyMapper;
 import com.quantumbanking.modules.bank.mapper.ManagerMapper;
@@ -30,6 +31,7 @@ public class AdminService {
     private final AgencyMapper agencyMapper;
     private final ManagerMapper managerMapper;
 
+    private final AgencyFactory agencyFactory;
     private final ManagerFactory managerFactory;
 
     private final PasswordEncoder passwordEncoder;
@@ -44,7 +46,7 @@ public class AdminService {
 
         agencyValidator.checkAgencyNotRegistered(dto.agencyNumber());
 
-        Agency agency = new Agency(dto, bank);
+        Agency agency = agencyFactory.createAgency(dto, bank);
         agencyService.save(agency);
 
         return agencyMapper.toAgencyResponseDTO(agency);

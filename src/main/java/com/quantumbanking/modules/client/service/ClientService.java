@@ -20,6 +20,7 @@ import com.quantumbanking.modules.client.repository.ClientRepository;
 import com.quantumbanking.modules.client.repository.CompanyRepository;
 import com.quantumbanking.modules.shared.domain.address.Address;
 import com.quantumbanking.modules.shared.domain.user.User;
+import com.quantumbanking.modules.shared.service.validation.CepValidator;
 import com.quantumbanking.modules.shared.service.validation.UserValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -44,6 +45,7 @@ public class ClientService {
     private final PasswordEncoder passwordEncoder;
 
     private final UserValidator userValidator;
+    private final CepValidator cepValidator;
 
     private Client userAuthenticated(Long userId) {
         return clientRepository.findById(userId)
@@ -118,7 +120,7 @@ public class ClientService {
     @Transactional
     public void updateAddress(User user, UpdateAddressRequestDTO requestDTO) {
 
-        String normalizedCep = userValidator.normalizeCep(requestDTO.zipCode());
+        String normalizedCep = cepValidator.normalizeCep(requestDTO.zipCode());
 
         Client client = userAuthenticated(user.getId());
 

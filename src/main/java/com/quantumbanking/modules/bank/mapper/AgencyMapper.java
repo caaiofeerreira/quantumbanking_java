@@ -16,6 +16,7 @@ public class AgencyMapper {
                 agency.getId(),
                 agency.getAgencyName(),
                 agency.getAgencyNumber(),
+                agency.getPhone(),
                 agency.getAddress().getCity(),
                 agency.getAddress().getState(),
                 agency.getAddress().getZipCode()
