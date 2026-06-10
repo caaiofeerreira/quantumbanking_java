@@ -34,6 +34,7 @@ public class ClientService {
 
     private final AccountService accountService;
     private final AgencyService agencyService;
+    private final CompanyService companyService;
 
     private final ClientRepository clientRepository;
     private final ClientMapper clientMapper;
@@ -72,8 +73,7 @@ public class ClientService {
         Company company = null;
 
         if (requestDTO.clientType() == ClientType.JURIDICA) {
-            company = companyFactory.createCompany(requestDTO.company(), client);
-            companyRepository.save(company);
+            company = companyService.registerCompany(requestDTO.company(),client);
         }
 
         Agency agency = agencyService.getAgencyByNumber(requestDTO.agencyNumber());
@@ -94,7 +94,8 @@ public class ClientService {
     public ClientProfileResponseDTO getProfile(User user) {
 
         Client client = userAuthenticated(user.getId());
-        return clientMapper.toProfileResponseDTO(client);
+        Company company = companyService.findByClient(client).orElse(null);
+        return clientMapper.toProfileResponseDTO(client, company);
     }
 
     @Transactional

@@ -34,7 +34,7 @@ public class ClientMapper {
         );
     }
 
-    public ClientProfileResponseDTO toProfileResponseDTO(Client client) {
+    public ClientProfileResponseDTO toProfileResponseDTO(Client client, Company company) {
 
         return new ClientProfileResponseDTO(
                 client.getName(),
@@ -43,7 +43,8 @@ public class ClientMapper {
                 FormattingUtils.formatPhone(client.getPhone()),
                 addressMapper.toAddressDTO(client.getAddress()),
                 client.getType(),
-                client.getStatus()
+                client.getStatus(),
+                company != null ? companyMapper.toCompanyResponseDTO(company) : null
         );
     }
 }

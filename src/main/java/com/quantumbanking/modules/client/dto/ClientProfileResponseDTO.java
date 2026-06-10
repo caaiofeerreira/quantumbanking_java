@@ -10,5 +10,6 @@ public record ClientProfileResponseDTO(String name,
                                        String phone,
                                        AddressDTO address,
                                        ClientType clientType,
-                                       UserStatus status) {
+                                       UserStatus status,
+                                       CompanyResponseDTO company) {
 }
