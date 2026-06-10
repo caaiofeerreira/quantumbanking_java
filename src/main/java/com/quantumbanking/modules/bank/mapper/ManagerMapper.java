@@ -4,6 +4,7 @@ import com.quantumbanking.modules.bank.domain.manager.Manager;
 import com.quantumbanking.modules.bank.dto.ManagerBasicViewDTO;
 import com.quantumbanking.modules.bank.dto.ManagerProfileResponseDTO;
 import com.quantumbanking.modules.bank.dto.ManagerResponseDTO;
+import com.quantumbanking.modules.shared.mapper.AddressMapper;
 import com.quantumbanking.modules.shared.util.DataMaskingUtils;
 import com.quantumbanking.modules.shared.util.FormattingUtils;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 public class ManagerMapper {
 
     private final AgencyMapper agencyMapper;
+    private final AddressMapper addressMapper;
 
     public ManagerResponseDTO toManagerResponseDTO(Manager manager) {
         return new ManagerResponseDTO(
@@ -44,7 +46,7 @@ public class ManagerMapper {
                 DataMaskingUtils.maskCpf(manager.getCpf()),
                 manager.getEmail(),
                 FormattingUtils.formatPhone(manager.getPhone()),
-                manager.getAddress(),
+                addressMapper.toAddressDTO(manager.getAddress()),
                 manager.getStatus()
         );
     }

@@ -1,10 +1,11 @@
 package com.quantumbanking.modules.bank.dto;
 
+import com.quantumbanking.modules.shared.dto.AddressDTO;
+
 public record AgencyResponseDTO(Long id,
-                                String agency_name,
-                                String agency_number,
+                                String agencyName,
+                                String agencyNumber,
                                 String phone,
-                                String city,
-                                String state,
-                                String zipCode) {
+                                AddressDTO address,
+                                String bankName) {
 }

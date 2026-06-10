@@ -5,14 +5,17 @@ import com.quantumbanking.modules.bank.domain.bank.Bank;
 import com.quantumbanking.modules.bank.dto.AgencyRegistrationDTO;
 import com.quantumbanking.modules.bank.service.validation.AgencyValidator;
 import com.quantumbanking.modules.shared.domain.address.Address;
+import com.quantumbanking.modules.shared.dto.AddressRequestDTO;
+import com.quantumbanking.modules.shared.mapper.AddressMapper;
 import com.quantumbanking.modules.shared.service.validation.CepValidator;
-import com.quantumbanking.modules.shared.service.validation.UserValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class AgencyFactory {
+
+    private final AddressMapper addressMapper;
 
     private final CepValidator cepValidator;
     private final AgencyValidator agencyValidator;
@@ -22,7 +25,7 @@ public class AgencyFactory {
         String normalizedPhone = agencyValidator.normalizePhone(dto.phone());
         String normalizedCep = cepValidator.normalizeCep(dto.address().getZipCode());
 
-        Address normalizedAddress = new Address(
+        AddressRequestDTO addressRequestDTO = new AddressRequestDTO(
                 dto.address().getStreet(),
                 dto.address().getNumber(),
                 dto.address().getComplement(),
@@ -32,6 +35,8 @@ public class AgencyFactory {
                 normalizedCep
         );
 
-        return new Agency(dto, normalizedPhone, normalizedAddress, bank);
+        Address address = addressMapper.toAddress(addressRequestDTO);
+
+        return new Agency(dto, normalizedPhone, address, bank);
     }
 }

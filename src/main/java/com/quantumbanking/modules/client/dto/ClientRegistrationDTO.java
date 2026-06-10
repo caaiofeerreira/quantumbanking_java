@@ -2,7 +2,7 @@ package com.quantumbanking.modules.client.dto;
 
 import com.quantumbanking.modules.account.domain.AccountType;
 import com.quantumbanking.modules.client.domain.ClientType;
-import com.quantumbanking.modules.shared.domain.address.Address;
+import com.quantumbanking.modules.shared.dto.AddressRequestDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -13,7 +13,7 @@ public record ClientRegistrationDTO(@NotBlank String name,
                                     @NotBlank String phone,
                                     @Email String email,
                                     @NotBlank String password,
-                                    @NotNull Address address,
+                                    @NotNull AddressRequestDTO address,
                                     @NotNull ClientType clientType,
                                     @NotNull AccountType accountType,
                                     @NotBlank String agencyNumber,

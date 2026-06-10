@@ -41,12 +41,12 @@ public class Company {
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 
-    public Company(CompanyRegistrationDTO dto, Client client) {
+    public Company(CompanyRegistrationDTO dto, Address address, Client client) {
         this.companyName = dto.companyName();
         this.tradeName = dto.tradeName();
         this.cnpj = dto.cnpj();
         this.stateRegistration = dto.stateRegistration();
-        this.address = dto.address();
+        this.address = address;
         this.client = client;
     }
 }

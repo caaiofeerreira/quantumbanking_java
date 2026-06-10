@@ -6,6 +6,7 @@ import com.quantumbanking.modules.client.domain.Client;
 import com.quantumbanking.modules.client.domain.Company;
 import com.quantumbanking.modules.client.dto.ClientProfileResponseDTO;
 import com.quantumbanking.modules.client.dto.ClientResponseDTO;
+import com.quantumbanking.modules.shared.mapper.AddressMapper;
 import com.quantumbanking.modules.shared.util.DataMaskingUtils;
 import com.quantumbanking.modules.shared.util.FormattingUtils;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ public class ClientMapper {
 
     private final AccountMapper accountMapper;
     private final CompanyMapper companyMapper;
+    private final AddressMapper addressMapper;
 
     public ClientResponseDTO toClientResponseDTO(Client client, Account account, Company company) {
         return new ClientResponseDTO(
@@ -33,12 +35,13 @@ public class ClientMapper {
     }
 
     public ClientProfileResponseDTO toProfileResponseDTO(Client client) {
+
         return new ClientProfileResponseDTO(
                 client.getName(),
                 DataMaskingUtils.maskCpf(client.getCpf()),
                 client.getEmail(),
                 FormattingUtils.formatPhone(client.getPhone()),
-                client.getAddress(),
+                addressMapper.toAddressDTO(client.getAddress()),
                 client.getType(),
                 client.getStatus()
         );

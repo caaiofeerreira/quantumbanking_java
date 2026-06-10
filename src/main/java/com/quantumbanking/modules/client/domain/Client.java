@@ -2,7 +2,6 @@ package com.quantumbanking.modules.client.domain;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.quantumbanking.modules.account.domain.Account;
-import com.quantumbanking.modules.client.dto.ClientRegistrationDTO;
 import com.quantumbanking.modules.shared.domain.address.Address;
 import com.quantumbanking.modules.shared.domain.user.User;
 import com.quantumbanking.modules.shared.domain.user.UserRole;
@@ -31,5 +30,4 @@ public class Client extends User {
         super(name, cpf, phone, email, password, UserRole.CLIENT, address);
         this.type = clientType;
     }
-
 }

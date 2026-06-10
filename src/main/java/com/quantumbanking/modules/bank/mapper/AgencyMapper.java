@@ -4,12 +4,16 @@ import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.bank.dto.AgencyAccountManagementDTO;
 import com.quantumbanking.modules.bank.dto.AgencyResponseDTO;
+import com.quantumbanking.modules.shared.mapper.AddressMapper;
 import com.quantumbanking.modules.shared.util.DataMaskingUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 @Component
+@RequiredArgsConstructor
 public class AgencyMapper {
+
+    private final AddressMapper addressMapper;
 
     public AgencyResponseDTO toAgencyResponseDTO(Agency agency) {
         return new AgencyResponseDTO(
@@ -17,9 +21,8 @@ public class AgencyMapper {
                 agency.getAgencyName(),
                 agency.getAgencyNumber(),
                 agency.getPhone(),
-                agency.getAddress().getCity(),
-                agency.getAddress().getState(),
-                agency.getAddress().getZipCode()
+                addressMapper.toAddressDTO(agency.getAddress()),
+                agency.getBank().getName()
         );
     }
 

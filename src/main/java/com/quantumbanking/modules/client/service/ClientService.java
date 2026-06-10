@@ -13,6 +13,7 @@ import com.quantumbanking.modules.client.domain.Company;
 import com.quantumbanking.modules.client.dto.ClientProfileResponseDTO;
 import com.quantumbanking.modules.client.dto.ClientRegistrationDTO;
 import com.quantumbanking.modules.client.dto.ClientResponseDTO;
+import com.quantumbanking.modules.client.factory.CompanyFactory;
 import com.quantumbanking.modules.shared.dto.UpdateAddressRequestDTO;
 import com.quantumbanking.modules.client.factory.ClientFactory;
 import com.quantumbanking.modules.client.mapper.ClientMapper;
@@ -41,6 +42,7 @@ public class ClientService {
     private final CompanyRepository companyRepository;
 
     private final AccountFactory accountFactory;
+    private final CompanyFactory companyFactory;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -70,7 +72,7 @@ public class ClientService {
         Company company = null;
 
         if (requestDTO.clientType() == ClientType.JURIDICA) {
-            company = new Company(requestDTO.company(), client);
+            company = companyFactory.createCompany(requestDTO.company(), client);
             companyRepository.save(company);
         }
 
