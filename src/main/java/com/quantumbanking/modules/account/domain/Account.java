@@ -12,7 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity(name = "Account")
-@Table(name = "tb_account")
+@Table(name = "tb_account", indexes = {
+        @Index(name = "idx_account_number", columnList = "number", unique = true)}
+)
 @Getter
 @Builder
 @NoArgsConstructor
@@ -34,8 +36,8 @@ public class Account {
     private BigDecimal balance;
 
     @JsonBackReference
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "client_id", nullable = false, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 
     @JsonBackReference

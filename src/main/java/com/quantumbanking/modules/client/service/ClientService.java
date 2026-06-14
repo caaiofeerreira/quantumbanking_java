@@ -3,7 +3,6 @@ package com.quantumbanking.modules.client.service;
 import com.quantumbanking.infra.exception.IncompleteCompanyDataException;
 import com.quantumbanking.infra.exception.UserNotFoundException;
 import com.quantumbanking.modules.account.domain.Account;
-import com.quantumbanking.modules.account.factory.AccountFactory;
 import com.quantumbanking.modules.account.service.AccountService;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.bank.service.AgencyService;
@@ -13,12 +12,10 @@ import com.quantumbanking.modules.client.domain.Company;
 import com.quantumbanking.modules.client.dto.ClientProfileResponseDTO;
 import com.quantumbanking.modules.client.dto.ClientRegistrationDTO;
 import com.quantumbanking.modules.client.dto.ClientResponseDTO;
-import com.quantumbanking.modules.client.factory.CompanyFactory;
 import com.quantumbanking.modules.shared.dto.UpdateAddressRequestDTO;
 import com.quantumbanking.modules.client.factory.ClientFactory;
 import com.quantumbanking.modules.client.mapper.ClientMapper;
 import com.quantumbanking.modules.client.repository.ClientRepository;
-import com.quantumbanking.modules.client.repository.CompanyRepository;
 import com.quantumbanking.modules.shared.domain.address.Address;
 import com.quantumbanking.modules.shared.domain.user.User;
 import com.quantumbanking.modules.shared.service.validation.CepValidator;
@@ -39,11 +36,6 @@ public class ClientService {
     private final ClientRepository clientRepository;
     private final ClientMapper clientMapper;
     private final ClientFactory clientFactory;
-
-    private final CompanyRepository companyRepository;
-
-    private final AccountFactory accountFactory;
-    private final CompanyFactory companyFactory;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -78,14 +70,12 @@ public class ClientService {
 
         Agency agency = agencyService.getAgencyByNumber(requestDTO.agencyNumber());
 
-        Account account = accountFactory.createDefaultAccount(
-                requestDTO.clientType(),
+        Account account = accountService.openInitialAccount(
+                client.getType(),
                 requestDTO.accountType(),
                 agency,
                 client
         );
-
-        accountService.save(account);
 
         return clientMapper.toClientResponseDTO(client,account, company);
     }

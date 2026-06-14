@@ -8,6 +8,9 @@ import com.quantumbanking.modules.shared.domain.user.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity(name = "Client")
 @Table(name = "tb_client")
 @Builder
@@ -22,8 +25,8 @@ public class Client extends User {
     private ClientType type;
 
     @JsonManagedReference
-    @OneToOne(mappedBy = "client", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    private Account account;
+    @OneToMany(mappedBy = "client", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<Account> accounts = new ArrayList<>();
 
     public Client(String name, String cpf, String phone, String email,
                   String password, Address address, ClientType clientType) {

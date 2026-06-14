@@ -59,6 +59,12 @@ public class ResourceExceptionHandler {
         return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), getPath());
     }
 
+    @ExceptionHandler(ClientNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleClientNotFoundException(ClientNotFoundException ex) {
+        log.warn("Cliente não encontrado: {}", ex.getMessage());
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), getPath());
+    }
+
     @ExceptionHandler(AccountNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleAccountNotFoundException(AccountNotFoundException ex) {
         log.warn("Conta não encontrada: {}", ex.getMessage());
@@ -209,5 +215,11 @@ public class ResourceExceptionHandler {
     public ResponseEntity<ErrorResponse> handleInvalidCepException(InvalidCepException ex) {
         log.warn("CEP inválido ou não encontrado: {}", ex.getMessage());
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(DuplicateAccountTypeException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateAccountTypeException(DuplicateAccountTypeException ex) {
+        log.warn("Tentativa de criar conta duplicada: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), getPath());
     }
 }

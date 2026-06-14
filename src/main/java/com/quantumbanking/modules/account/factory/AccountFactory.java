@@ -1,10 +1,10 @@
 package com.quantumbanking.modules.account.factory;
 
-import com.quantumbanking.infra.exception.IncompatibleAccountTypeException;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.domain.AccountStatus;
 import com.quantumbanking.modules.account.domain.AccountType;
 import com.quantumbanking.modules.account.repository.AccountRepository;
+import com.quantumbanking.modules.account.service.validation.AccountValidator;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.client.domain.Client;
 import com.quantumbanking.modules.client.domain.ClientType;
@@ -19,12 +19,12 @@ import java.util.Random;
 public class AccountFactory {
 
     private final AccountRepository accountRepository;
+    private final AccountValidator accountValidator;
 
     public Account createDefaultAccount(ClientType clientType, AccountType accountType, Agency agency, Client client) {
 
-        if (clientType == ClientType.FISICA && accountType == AccountType.JURIDICA) {
-            throw new IncompatibleAccountTypeException("Pessoa física não pode ter conta jurídica.");
-        }
+        accountValidator.checkCompatibleAccountType(clientType, accountType);
+        accountValidator.checkDuplicateAccountType(client, accountType);
 
         return Account.builder()
                 .accountNumber(generateAccountNumber())
