@@ -43,9 +43,9 @@ public class LoanService {
     }
 
     @Transactional
-    public LoanResponseDTO processLoan(User user, LoanRequestDTO requestDTO) {
+    public LoanResponseDTO processLoan(Long userId, LoanRequestDTO requestDTO) {
 
-        Account account = accountService.getAuthenticatedUserAccount(user.getId());
+        Account account = accountService.getAuthenticatedUserAccount(userId);
 
         BigDecimal installmentAmount = loanCalculator.calculateInstallmentAmount(
                 requestDTO.amount(),

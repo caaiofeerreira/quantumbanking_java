@@ -81,39 +81,39 @@ public class ClientService {
     }
 
     @Transactional(readOnly = true)
-    public ClientProfileResponseDTO getProfile(User user) {
+    public ClientProfileResponseDTO getProfile(Long userId) {
 
-        Client client = userAuthenticated(user.getId());
+        Client client = userAuthenticated(userId);
         Company company = companyService.findByClient(client).orElse(null);
         return clientMapper.toProfileResponseDTO(client, company);
     }
 
     @Transactional
-    public void updatePhone(User user, String phone) {
+    public void updatePhone(Long userId, String phone) {
 
         String normalizedPhone = userValidator.normalizePhone(phone);
 
-        Client client = userAuthenticated(user.getId());
+        Client client = userAuthenticated(userId);
         client.updatePhone(normalizedPhone);
         clientRepository.save(client);
     }
 
     @Transactional
-    public void updateEmail(User user, String email) {
+    public void updateEmail(Long userId, String email) {
 
         String normalizedEmail = userValidator.normalizeEmail(email);
 
-        Client client = userAuthenticated(user.getId());
+        Client client = userAuthenticated(userId);
         client.updateEmail(normalizedEmail);
         clientRepository.save(client);
     }
 
     @Transactional
-    public void updateAddress(User user, UpdateAddressRequestDTO requestDTO) {
+    public void updateAddress(Long userId, UpdateAddressRequestDTO requestDTO) {
 
         String normalizedCep = cepValidator.normalizeCep(requestDTO.zipCode());
 
-        Client client = userAuthenticated(user.getId());
+        Client client = userAuthenticated(userId);
 
         Address address = new Address(
                 requestDTO.street(),

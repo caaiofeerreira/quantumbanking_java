@@ -21,24 +21,24 @@ public class ClientProfileController {
 
     @GetMapping
     public ResponseEntity<ClientProfileResponseDTO> getProfile(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(clientService.getProfile(user));
+        return ResponseEntity.ok(clientService.getProfile(user.getId()));
     }
 
     @PatchMapping("/phone")
     public ResponseEntity<Void> updatePhone(@AuthenticationPrincipal User user, @RequestBody @Valid UpdatePhoneRequestDTO dto) {
-        clientService.updatePhone(user, dto.phone());
+        clientService.updatePhone(user.getId(), dto.phone());
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/email")
     public ResponseEntity<Void> updateEmail(@AuthenticationPrincipal User user, @RequestBody @Valid UpdateEmailRequestDTO dto) {
-        clientService.updateEmail(user, dto.email());
+        clientService.updateEmail(user.getId(), dto.email());
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/address")
     public ResponseEntity<Void> updateAddress(@AuthenticationPrincipal User user, @RequestBody @Valid UpdateAddressRequestDTO dto) {
-        clientService.updateAddress(user, dto);
+        clientService.updateAddress(user.getId(), dto);
         return ResponseEntity.noContent().build();
     }
 }

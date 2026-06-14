@@ -23,22 +23,22 @@ public class ManagerController {
 
     @GetMapping("/accounts")
     public ResponseEntity<List<AgencyAccountManagementDTO>> getAgencyAccounts(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(managerService.getAccountsByAgency(user));
+        return ResponseEntity.ok(managerService.getAccountsByAgency(user.getId()));
     }
 
     @GetMapping("/loans/requested")
     public ResponseEntity<List<LoanManagerViewDTO>> getRequestedLoans(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(managerService.getLoanRequestsByAgency(user));
+        return ResponseEntity.ok(managerService.getLoanRequestsByAgency(user.getId()));
     }
 
     @PatchMapping("/loans/{loanId}/approve")
     public ResponseEntity<LoanApprovedResponseDTO> approveLoan(@AuthenticationPrincipal User user, @PathVariable UUID loanId) {
-        return ResponseEntity.ok(managerService.approveLoan(user, loanId));
+        return ResponseEntity.ok(managerService.approveLoan(user.getId(), loanId));
     }
 
     @PatchMapping("/loans/{loanId}/reject")
     public ResponseEntity<Void> rejectLoan(@AuthenticationPrincipal User user, @PathVariable UUID loanId) {
-        managerService.rejectLoan(user, loanId);
+        managerService.rejectLoan(user.getId(), loanId);
         return ResponseEntity.noContent().build();
     }
 }

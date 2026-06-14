@@ -23,18 +23,18 @@ public class PixKeyController {
     @PostMapping()
     public ResponseEntity<PixKeyResponseDTO> register(@AuthenticationPrincipal User user,
                                                       @RequestBody @Valid PixKeyRequestDTO requestDTO) {
-        return ResponseEntity.status(201).body(pixKeyService.registerPixKey(user, requestDTO));
+        return ResponseEntity.status(201).body(pixKeyService.registerPixKey(user.getId(), requestDTO));
     }
 
     @GetMapping()
     public ResponseEntity<List<PixKeyResponseDTO>> list(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(pixKeyService.listPixKey(user));
+        return ResponseEntity.ok(pixKeyService.listPixKey(user.getId()));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> remove(@AuthenticationPrincipal User user,
                                        @PathVariable UUID id) {
-        pixKeyService.removePixKey(user, id);
+        pixKeyService.removePixKey(user.getId(), id);
         return ResponseEntity.noContent().build();
     }
 }

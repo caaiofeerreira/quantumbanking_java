@@ -60,9 +60,9 @@ public class ManagerService {
     }
 
     @Transactional(readOnly = true)
-    public List<AgencyAccountManagementDTO> getAccountsByAgency(User user) {
+    public List<AgencyAccountManagementDTO> getAccountsByAgency(Long userId) {
 
-        Manager manager = getAuthenticatedUserManager(user.getId());
+        Manager manager = getAuthenticatedUserManager(userId);
 
         List<Account> accounts = accountService.getAccountsByAgencyId(manager.getAgency().getId());
 
@@ -72,9 +72,9 @@ public class ManagerService {
     }
 
     @Transactional(readOnly = true)
-    public List<LoanManagerViewDTO> getLoanRequestsByAgency(User user) {
+    public List<LoanManagerViewDTO> getLoanRequestsByAgency(Long userId) {
 
-        Manager manager = getAuthenticatedUserManager(user.getId());
+        Manager manager = getAuthenticatedUserManager(userId);
 
         return loanService.getLoansByAgencyAndStatus(manager.getAgency().getId(), LoanStatus.REQUESTED)
                 .stream()
@@ -83,52 +83,52 @@ public class ManagerService {
     }
 
     @Transactional
-    public LoanApprovedResponseDTO approveLoan(User user, UUID loanId) {
+    public LoanApprovedResponseDTO approveLoan(Long userId, UUID loanId) {
 
-        Manager manager = getAuthenticatedUserManager(user.getId());
+        Manager manager = getAuthenticatedUserManager(userId);
         return loanService.approveLoan(loanId, manager);
     }
 
     @Transactional
-    public void rejectLoan(User user, UUID loanId) {
+    public void rejectLoan(Long userId, UUID loanId) {
 
-        Manager manager = getAuthenticatedUserManager(user.getId());
+        Manager manager = getAuthenticatedUserManager(userId);
         loanService.rejectLoan(loanId, manager);
     }
 
     @Transactional(readOnly = true)
-    public ManagerProfileResponseDTO getProfile(User user) {
+    public ManagerProfileResponseDTO getProfile(Long userId) {
 
-        Manager manager = getAuthenticatedUserManager(user.getId());
+        Manager manager = getAuthenticatedUserManager(userId);
         return managerMapper.toProfileResponseDTO(manager);
     }
 
     @Transactional
-    public void updatePhone(User user, String phone) {
+    public void updatePhone(Long userId, String phone) {
 
         String normalizedPhone = userValidator.normalizePhone(phone);
 
-        Manager manager = getAuthenticatedUserManager(user.getId());
+        Manager manager = getAuthenticatedUserManager(userId);
         manager.updatePhone(normalizedPhone);
         managerRepository.save(manager);
     }
 
     @Transactional
-    public void updateEmail(User user, String email) {
+    public void updateEmail(Long userId, String email) {
 
         String normalizedEmail = userValidator.normalizeEmail(email);
 
-        Manager manager = getAuthenticatedUserManager(user.getId());
+        Manager manager = getAuthenticatedUserManager(userId);
         manager.updateEmail(normalizedEmail);
         managerRepository.save(manager);
     }
 
     @Transactional
-    public void updateAddress(User user, UpdateAddressRequestDTO requestDTO) {
+    public void updateAddress(Long userId, UpdateAddressRequestDTO requestDTO) {
 
         String normalizedCep = cepValidator.normalizeCep(requestDTO.zipCode());
 
-        Manager manager = getAuthenticatedUserManager(user.getId());
+        Manager manager = getAuthenticatedUserManager(userId);
 
         Address address = new Address(
                 requestDTO.street(),

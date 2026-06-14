@@ -56,9 +56,9 @@ public class TransactionService {
     private String timezone;
 
     @Transactional
-    public DepositResponseDTO executeDeposit(User user, DepositRequestDTO requestDTO) {
+    public DepositResponseDTO executeDeposit(Long userId, DepositRequestDTO requestDTO) {
 
-        Account account = accountService.getAccountForUpdate(user.getId());
+        Account account = accountService.getAccountForUpdate(userId);
 
         transactionValidator.validateDeposit(
                 account,
@@ -66,13 +66,13 @@ public class TransactionService {
         );
 
         duplicateTransactionService.checkAndRegister(
-                user.getId(),
+                userId,
                 TransactionType.DEPOSIT,
                 requestDTO.amount(),
                 "self"
         );
 
-        Set<Long> usersToInvalidate = Set.of(user.getId());
+        Set<Long> usersToInvalidate = Set.of(userId);
 
         Transaction transaction = transactionFactory
                 .createDeposit(
@@ -92,10 +92,10 @@ public class TransactionService {
     }
 
     @Transactional
-    public WithdrawResponseDTO executeWithdraw(User user, WithdrawRequestDTO requestDTO) {
+    public WithdrawResponseDTO executeWithdraw(Long userId, WithdrawRequestDTO requestDTO) {
 
-        Account account = accountService.getAccountForUpdate(user.getId());
-        Set<Long> usersToInvalidate = Set.of(user.getId());
+        Account account = accountService.getAccountForUpdate(userId);
+        Set<Long> usersToInvalidate = Set.of(userId);
 
         LocalDateTime start = LocalDate.now().withDayOfMonth(1).atStartOfDay();
         LocalDateTime end = start.plusMonths(1);
@@ -115,7 +115,7 @@ public class TransactionService {
         );
 
         duplicateTransactionService.checkAndRegister(
-                user.getId(),
+                userId,
                 TransactionType.WITHDRAWAL,
                 requestDTO.amount(),
                 "self"

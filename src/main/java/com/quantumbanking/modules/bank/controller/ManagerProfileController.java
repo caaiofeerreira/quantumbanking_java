@@ -21,24 +21,24 @@ public class ManagerProfileController {
 
     @GetMapping()
     public ResponseEntity<ManagerProfileResponseDTO> getProfile(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(managerService.getProfile(user));
+        return ResponseEntity.ok(managerService.getProfile(user.getId()));
     }
 
     @PatchMapping("/phone")
     public ResponseEntity<Void> updatePhone(@AuthenticationPrincipal User user, @RequestBody @Valid UpdatePhoneRequestDTO requestDTO) {
-        managerService.updatePhone(user, requestDTO.phone());
+        managerService.updatePhone(user.getId(), requestDTO.phone());
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/email")
     public ResponseEntity<Void> updateEmail(@AuthenticationPrincipal User user, @RequestBody @Valid UpdateEmailRequestDTO requestDTO) {
-        managerService.updateEmail(user, requestDTO.email());
+        managerService.updateEmail(user.getId(), requestDTO.email());
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/address")
     public ResponseEntity<Void> updateAddress(@AuthenticationPrincipal User user, @RequestBody @Valid UpdateAddressRequestDTO requestDTO) {
-        managerService.updateAddress(user, requestDTO);
+        managerService.updateAddress(user.getId(), requestDTO);
         return ResponseEntity.noContent().build();
     }
 }

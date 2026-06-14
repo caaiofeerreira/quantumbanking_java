@@ -22,13 +22,13 @@ public class TransactionController {
     @PostMapping("/deposit")
     public ResponseEntity<DepositResponseDTO> deposit(@AuthenticationPrincipal User user,
                                                       @RequestBody @Valid DepositRequestDTO requestDTO) {
-        return ResponseEntity.ok(transactionService.executeDeposit(user, requestDTO));
+        return ResponseEntity.ok(transactionService.executeDeposit(user.getId(), requestDTO));
     }
 
     @PostMapping("/withdraw")
     public ResponseEntity<WithdrawResponseDTO> withdraw(@AuthenticationPrincipal User user,
                                                         @RequestBody @Valid WithdrawRequestDTO requestDTO) {
-        return ResponseEntity.ok(transactionService.executeWithdraw(user, requestDTO));
+        return ResponseEntity.ok(transactionService.executeWithdraw(user.getId(), requestDTO));
     }
 
     @PostMapping("/internal")

@@ -10,7 +10,6 @@ import com.quantumbanking.modules.account.dto.PixKeyRequestDTO;
 import com.quantumbanking.modules.account.dto.PixKeyResponseDTO;
 import com.quantumbanking.modules.account.mapper.PixKeyMapper;
 import com.quantumbanking.modules.account.repository.PixKeyRepository;
-import com.quantumbanking.modules.shared.domain.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,10 +32,10 @@ public class PixKeyService {
     }
 
     @Transactional
-    public PixKeyResponseDTO registerPixKey(User user, PixKeyRequestDTO requestDTO) {
+    public PixKeyResponseDTO registerPixKey(Long userId, PixKeyRequestDTO requestDTO) {
 
         Account account = accountService
-                .getAuthenticatedUserAccount(user.getId());
+                .getAuthenticatedUserAccount(userId);
 
         if (pixKeyRepository.countByAccountId(account.getId()) >= 5) {
             throw new PixKeyLimitException("Limite de 5 chaves Pix atingido.");
@@ -56,10 +55,10 @@ public class PixKeyService {
         return pixKeyMapper.toPixKeyResponseDTO(pixKey);
     }
 
-    public List<PixKeyResponseDTO> listPixKey(User user) {
+    public List<PixKeyResponseDTO> listPixKey(Long userId) {
 
         Account account = accountService
-                .getAuthenticatedUserAccount(user.getId());
+                .getAuthenticatedUserAccount(userId);
 
         return account.getPixKeys()
                 .stream()
@@ -68,12 +67,12 @@ public class PixKeyService {
     }
 
     @Transactional
-    public void removePixKey(User user, UUID pixKeyId) {
+    public void removePixKey(Long userId, UUID pixKeyId) {
 
         PixKey pixKey = pixKeyRepository.findById(pixKeyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chave Pix não encontrada."));
 
-        if (!pixKey.getAccount().getClient().getId().equals(user.getId())) {
+        if (!pixKey.getAccount().getClient().getId().equals(userId)) {
             throw new UnauthorizedAccessException("Você não tem permissão para deletar essa chave.");
         }
 

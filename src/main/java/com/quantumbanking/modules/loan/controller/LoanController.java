@@ -23,6 +23,6 @@ public class LoanController {
     @PostMapping()
     public ResponseEntity<LoanResponseDTO> loan(@AuthenticationPrincipal User user,
                                                 @RequestBody @Valid LoanRequestDTO requestDTO) {
-        return ResponseEntity.status(201).body(loanService.processLoan(user, requestDTO));
+        return ResponseEntity.status(201).body(loanService.processLoan(user.getId(), requestDTO));
     }
 }
