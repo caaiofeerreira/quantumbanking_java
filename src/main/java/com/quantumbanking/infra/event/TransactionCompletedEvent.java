@@ -2,8 +2,8 @@ package com.quantumbanking.infra.event;
 
 import java.util.Set;
 
-public record TransactionCompletedEvent(Set<Long> userIds) {
-    public TransactionCompletedEvent(Long userId) {
-        this(Set.of(userId));
+public record TransactionCompletedEvent(Set<String> accountNumbers) {
+    public TransactionCompletedEvent(String accountNumber) {
+        this(Set.of(accountNumber));
     }
 }

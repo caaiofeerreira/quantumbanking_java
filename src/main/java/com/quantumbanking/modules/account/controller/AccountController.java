@@ -21,16 +21,18 @@ public class AccountController {
 
     private final AccountService accountService;
 
-    @GetMapping("/balance")
-    public ResponseEntity<BigDecimal> balance(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(accountService.getBalance(user.getId()));
+    @GetMapping("/{accountNumber}/balance")
+    public ResponseEntity<BigDecimal> balance(@AuthenticationPrincipal User user,
+                                              @PathVariable String accountNumber) {
+        return ResponseEntity.ok(accountService.getBalance(user.getId(), accountNumber));
     }
 
-    @GetMapping("/statement")
+    @GetMapping("/{accountNumber}/statement")
     public ResponseEntity<StatementResponseDTO> statement(@AuthenticationPrincipal User user,
+                                                          @PathVariable String accountNumber,
                                                           @RequestParam Integer month,
                                                           @RequestParam Integer year) {
-        return ResponseEntity.ok(accountService.getStatement(user, month, year));
+        return ResponseEntity.ok(accountService.getStatement(user.getId(), accountNumber, month, year));
     }
 
     @GetMapping("/my-accounts")

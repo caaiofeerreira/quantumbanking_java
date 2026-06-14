@@ -18,25 +18,22 @@ public class TransactionValidator {
     private static final LocalTime NIGHTTIME_START = LocalTime.of(18, 0);
     private static final LocalTime NIGHTTIME_END   = LocalTime.of(6, 0);
 
-    @Value("${bank.compe}")
-    private String compe;
-
     @Value("${transaction.nighttime-limit}")
     private BigDecimal nighttimeLimit;
 
     @Value("${transaction.max-atm-amount}")
     private BigDecimal maxAtmAmount;
 
+    @Value("${bank.compe}")
+    private String compe;
 
     private void checkAccountActive(Account account) {
-
         if (account.getStatus() != AccountStatus.ACTIVE) {
             throw new AccountStatusException("A conta " + account.getId() + " não está ativa.");
         }
     }
 
     private void checkDifferentAccounts(Account originAccount, Account destinationAccount) {
-
         if (originAccount == null || destinationAccount == null) {
             return;
         }
@@ -47,7 +44,6 @@ public class TransactionValidator {
     }
 
     private void checkMinimumTransactionAmount(BigDecimal amount) {
-
         if (amount == null) {
             throw new InvalidTransactionValueException("O valor da transação é obrigatório e não pode ser nulo.");
         }
@@ -58,7 +54,6 @@ public class TransactionValidator {
     }
 
     private void checkATMMaximumAmount(BigDecimal amount) {
-
         if (amount == null) {
             throw new InvalidTransactionValueException("O valor é obrigatório e não pode ser nulo.");
         }
@@ -68,22 +63,36 @@ public class TransactionValidator {
         }
     }
 
-    private void checkAccountType(Account account) {
+    private void checkSavingsAccountInternal(Account originAccount, Account destinationAccount) {
+        if (originAccount.getType().equals(AccountType.POUPANCA)) {
+            if (!destinationAccount.getClient().getId().equals(originAccount.getClient().getId())) {
+                throw new TransactionNotAuthorizedException(
+                        "Transferência não permitida. Contas poupança só podem realizar transferências para contas do mesmo titular.");
+            }
+        }
+    }
 
-        if (account.getType().equals(AccountType.POUPANCA)){
-            throw new TransactionNotAuthorizedException("Transferência não permitida. Contas poupança só podem realizar transações para a conta corrente do mesmo titular.");
+    private void checkSavingsAccountExternal(Account account) {
+        if (account.getType().equals(AccountType.POUPANCA)) {
+            throw new TransactionNotAuthorizedException(
+                    "Transferência não permitida. Contas poupança não podem realizar transferências externas.");
         }
     }
 
     private void checkPixAuthorized(BigDecimal amount, LocalTime transactionTime) {
-
         boolean isNighttime = !transactionTime.isBefore(NIGHTTIME_START) || transactionTime.isBefore(NIGHTTIME_END);
 
         if (isNighttime && amount.compareTo(nighttimeLimit) > 0) {
             throw new TransactionNotAuthorizedException(
-                    "Transação recusada: Valor acima do limite noturno de R$ 1000,00.");
+                    "Transação recusada: Valor acima do limite noturno de R$ 1000,00."
+            );
         }
+    }
 
+    private void checkAccountOwnership(Account account, Long userId) {
+        if (!account.getClient().getId().equals(userId)) {
+            throw new UnauthorizedAccessException("Conta não pertence ao usuário autenticado.");
+        }
     }
 
     public void validateDeposit(Account account, BigDecimal amount) {
@@ -91,33 +100,38 @@ public class TransactionValidator {
         checkATMMaximumAmount(amount);
     }
 
-    public void validateWithdraw(Account account, BigDecimal amount) {
+    public void validateWithdraw(Account account, BigDecimal amount, boolean shouldChargeFee) {
         checkAccountActive(account);
         checkATMMaximumAmount(amount);
+
+        BigDecimal feeAmount = shouldChargeFee ? account.getType().getFeeAmount() : BigDecimal.ZERO;
+        account.ensureSufficientBalance(amount.add(feeAmount));
     }
 
-    public void validateInternal(Account originAccount, Account destinationAccount, Agency agency, BigDecimal amount) {
+    public void validateInternal(Account originAccount, Account destinationAccount, Agency agency, BigDecimal amount, Long userId) {
+        checkAccountOwnership(originAccount, userId);
         checkDifferentAccounts(originAccount, destinationAccount);
-        checkAccountType(originAccount);
+        checkSavingsAccountInternal(originAccount, destinationAccount);
         checkMinimumTransactionAmount(amount);
 
         if (!destinationAccount.getAgency().equals(agency)) {
             throw new AgencyAccountMismatchException("A agência informada não coincide com a conta de destino.");
         }
-
     }
 
-    public void validateExternal(Account account, String destinationAccount, String bankingCode, BigDecimal amount) {
-        checkAccountType(account);
+    public void validateExternal(Account account, String bankingCode, BigDecimal amount, Long userId) {
+        checkAccountOwnership(account, userId);
+        checkSavingsAccountExternal(account);
         checkMinimumTransactionAmount(amount);
 
-        if (account.getAccountNumber().equals(destinationAccount)
-                && bankingCode.equals(compe)) {
-            throw new TransactionNotAuthorizedException("Não é possível transferir para a própria conta.");
+        if (bankingCode.equals(compe)) {
+            throw new TransactionNotAuthorizedException(
+                    "Para transferências entre contas do Quantum Banking, utilize a transferência interna.");
         }
     }
 
-    public void validatePix(Account originAccount, Account destinationAccount, BigDecimal amount, LocalTime time) {
+    public void validatePix(Account originAccount, Account destinationAccount, BigDecimal amount, LocalTime time, Long userId) {
+        checkAccountOwnership(originAccount, userId);
         checkAccountActive(originAccount);
         checkPixAuthorized(amount, time);
         checkMinimumTransactionAmount(amount);

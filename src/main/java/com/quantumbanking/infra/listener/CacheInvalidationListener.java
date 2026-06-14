@@ -1,7 +1,6 @@
 package com.quantumbanking.infra.listener;
 
 import com.quantumbanking.infra.event.TransactionCompletedEvent;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisCallback;
@@ -26,9 +25,9 @@ public class CacheInvalidationListener {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleTransactionEvent(TransactionCompletedEvent event) {
-        for (Long userId : event.userIds()) {
-            clearCache("statement:" + userId + ":*");
-            clearCache("balance::" + userId + "*");
+        for (String accountNumber : event.accountNumbers()) {
+            clearCache("statement:" + accountNumber + ":*");
+            clearCache("balance::" + accountNumber);
         }
     }
 

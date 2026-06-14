@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 
-public record InternalTransactionRequestDTO(@NotBlank String accountNumber,
+public record InternalTransactionRequestDTO(@NotBlank String destinationAccountNumber,
                                             @NotNull BigDecimal amount,
                                             @NotBlank String agencyNumber,
                                             String description) {

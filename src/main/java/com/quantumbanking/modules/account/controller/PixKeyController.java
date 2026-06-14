@@ -11,30 +11,31 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/account/pix/keys")
+@RequestMapping("/api/account/{accountNumber}/pix/keys")
 public class PixKeyController {
 
     private final PixKeyService pixKeyService;
 
     @PostMapping()
     public ResponseEntity<PixKeyResponseDTO> register(@AuthenticationPrincipal User user,
+                                                      @PathVariable String accountNumber,
                                                       @RequestBody @Valid PixKeyRequestDTO requestDTO) {
-        return ResponseEntity.status(201).body(pixKeyService.registerPixKey(user.getId(), requestDTO));
+        return ResponseEntity.status(201).body(pixKeyService.registerPixKey(user.getId(), accountNumber, requestDTO));
     }
 
     @GetMapping()
-    public ResponseEntity<List<PixKeyResponseDTO>> list(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(pixKeyService.listPixKey(user.getId()));
+    public ResponseEntity<List<PixKeyResponseDTO>> list(@AuthenticationPrincipal User user,
+                                                        @PathVariable String accountNumber) {
+        return ResponseEntity.ok(pixKeyService.listPixKey(user.getId(), accountNumber));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{key}")
     public ResponseEntity<Void> remove(@AuthenticationPrincipal User user,
-                                       @PathVariable UUID id) {
-        pixKeyService.removePixKey(user.getId(), id);
+                                       @PathVariable String key) {
+        pixKeyService.removePixKey(user.getId(), key);
         return ResponseEntity.noContent().build();
     }
 }

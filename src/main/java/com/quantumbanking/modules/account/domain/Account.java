@@ -52,15 +52,18 @@ public class Account {
     @OneToMany(mappedBy = "account", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<PixKey> pixKeys = new ArrayList<>();
 
+    public void ensureSufficientBalance(BigDecimal amount) {
+        if (amount.compareTo(this.balance) > 0) {
+            throw new TransactionNotAuthorizedException(
+                    "Saldo insuficiente. O valor total da operação excede o saldo disponível.");
+        }
+    }
+
     public void debit(BigDecimal amount) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new TransactionNotAuthorizedException("O valor do débito deve ser positivo");
         }
-
-        if (amount.compareTo(this.balance) > 0) {
-            throw new TransactionNotAuthorizedException("Saldo insuficiente para realizar a operação");
-        }
-
+        ensureSufficientBalance(amount);
         this.balance = this.balance.subtract(amount);
     }
 
@@ -68,7 +71,6 @@ public class Account {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new TransactionNotAuthorizedException("O valor do crédito deve ser positivo");
         }
-
         this.balance = this.balance.add(amount);
     }
 }

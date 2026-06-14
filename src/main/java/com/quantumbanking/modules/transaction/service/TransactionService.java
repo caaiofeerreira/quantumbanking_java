@@ -56,14 +56,12 @@ public class TransactionService {
     private String timezone;
 
     @Transactional
-    public DepositResponseDTO executeDeposit(Long userId, DepositRequestDTO requestDTO) {
+    public DepositResponseDTO executeDeposit(Long userId, String accountNumber, DepositRequestDTO requestDTO) {
 
-        Account account = accountService.getAccountForUpdate(userId);
+        Account account = accountService.getAccountForUpdate(userId, accountNumber);
+        Set<String> accountsToInvalidate = Set.of(account.getAccountNumber());
 
-        transactionValidator.validateDeposit(
-                account,
-                requestDTO.amount()
-        );
+        transactionValidator.validateDeposit(account, requestDTO.amount());
 
         duplicateTransactionService.checkAndRegister(
                 userId,
@@ -71,8 +69,6 @@ public class TransactionService {
                 requestDTO.amount(),
                 "self"
         );
-
-        Set<Long> usersToInvalidate = Set.of(userId);
 
         Transaction transaction = transactionFactory
                 .createDeposit(
@@ -86,33 +82,29 @@ public class TransactionService {
         accountService.save(account);
         transactionRepository.save(transaction);
 
-        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(usersToInvalidate));
+        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(accountsToInvalidate));
 
         return transactionMapper.toDepositResponse(transaction);
     }
 
     @Transactional
-    public WithdrawResponseDTO executeWithdraw(Long userId, WithdrawRequestDTO requestDTO) {
+    public WithdrawResponseDTO executeWithdraw(Long userId, String accountNumber, WithdrawRequestDTO requestDTO) {
 
-        Account account = accountService.getAccountForUpdate(userId);
-        Set<Long> usersToInvalidate = Set.of(userId);
+        Account account = accountService.getAccountForUpdate(userId, accountNumber);
 
         LocalDateTime start = LocalDate.now().withDayOfMonth(1).atStartOfDay();
         LocalDateTime end = start.plusMonths(1);
 
-        long withdrawalsThisMonth = transactionRepository
-                .countByOriginAccountAndTypeAndPeriod(
-                        account.getId(),
-                        TransactionType.WITHDRAWAL,
-                        start,
-                        end);
+        long withdrawalsThisMonth = transactionRepository.countByOriginAccountAndTypeAndPeriod(
+                account.getId(),
+                TransactionType.WITHDRAWAL,
+                start,
+                end
+        );
         int freeWithdrawals = account.getType().getFreeWithdrawals();
         boolean shouldChargeFee = withdrawalsThisMonth >= freeWithdrawals;
 
-        transactionValidator.validateWithdraw(
-                account,
-                requestDTO.amount()
-        );
+        transactionValidator.validateWithdraw(account, requestDTO.amount(), shouldChargeFee);
 
         duplicateTransactionService.checkAndRegister(
                 userId,
@@ -126,7 +118,7 @@ public class TransactionService {
         if (shouldChargeFee) {
 
             BigDecimal feeAmount = account.getType().getFeeAmount();
-            Transaction feeTransaction = transactionFactory.createFee(account,feeAmount);
+            Transaction feeTransaction = transactionFactory.createFee(account, feeAmount);
             account.debit(feeAmount);
             bankService.creditFee(feeAmount);
             transactionRepository.save(feeTransaction);
@@ -152,16 +144,22 @@ public class TransactionService {
         accountService.save(account);
         transactionRepository.save(transaction);
 
-        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(usersToInvalidate));
+        Set<String> accountsToInvalidate = Set.of(account.getAccountNumber());
+
+        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(accountsToInvalidate));
 
         return transactionMapper.toWithdrawResponse(transaction, fee);
     }
 
     @Transactional
-    public InternalTransactionResponseDTO executeInternalTransaction(User user, InternalTransactionRequestDTO requestDTO) {
+    public InternalTransactionResponseDTO executeInternalTransaction(User user, String accountNumber, InternalTransactionRequestDTO requestDTO) {
 
-        Account originAccount = accountService.getAccountForUpdate(user.getId());
-        Account destinationAccount = accountService.getAccountByNumber(requestDTO.accountNumber());
+        Account originAccount = accountService.getAccountByNumber(accountNumber);
+        Account destinationAccount = accountService.getAccountByNumber(requestDTO.destinationAccountNumber());
+
+        AccountPair accounts = lockAccountsInOrder(originAccount.getId(), destinationAccount.getId());
+        originAccount = accounts.originAccount();
+        destinationAccount = accounts.destinationAccount();
 
         Agency agency = agencyService.getAgencyByNumber(requestDTO.agencyNumber());
 
@@ -169,19 +167,16 @@ public class TransactionService {
                 originAccount,
                 destinationAccount,
                 agency,
-                requestDTO.amount()
+                requestDTO.amount(),
+                user.getId()
         );
 
         duplicateTransactionService.checkAndRegister(
                 user.getId(),
                 TransactionType.INTERNAL_TRANSFER,
                 requestDTO.amount(),
-                requestDTO.accountNumber()
+                requestDTO.destinationAccountNumber()
         );
-
-        Set<Long> usersToInvalidate = new HashSet<>();
-        usersToInvalidate.add(user.getId());
-        usersToInvalidate.add(destinationAccount.getClient().getId());
 
         Transaction transaction = transactionFactory
                 .createInternalTransfer(
@@ -199,24 +194,29 @@ public class TransactionService {
         accountService.save(destinationAccount);
         transactionRepository.save(transaction);
 
-        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(usersToInvalidate));
+        Set<String> accountsToInvalidate = Set.of(
+                originAccount.getAccountNumber(),
+                destinationAccount.getAccountNumber()
+        );
+        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(accountsToInvalidate));
 
         return transactionMapper.toInternalResponse(transaction);
     }
 
     @Transactional
-    public ExternalTransactionResponseDTO executeExternalTransaction(User user, ExternalTransactionRequestDTO requestDTO) {
+    public ExternalTransactionResponseDTO executeExternalTransaction(User user, String accountNumber, ExternalTransactionRequestDTO requestDTO) {
 
-        Account account = accountService.getAccountForUpdate(user.getId());
-
-        BankRegistry bankRegistry = bankRegistryService.getByCompe(requestDTO.compe());
+        Account account = accountService.getAccountForUpdate(user.getId(), accountNumber);
+        Set<String> accountsToInvalidate = Set.of(account.getAccountNumber());
 
         transactionValidator.validateExternal(
                 account,
-                requestDTO.destinationAccount(),
                 requestDTO.compe(),
-                requestDTO.amount()
+                requestDTO.amount(),
+                user.getId()
         );
+
+        BankRegistry bankRegistry = bankRegistryService.getByCompe(requestDTO.compe());
 
         duplicateTransactionService.checkAndRegister(
                 user.getId(),
@@ -224,8 +224,6 @@ public class TransactionService {
                 requestDTO.amount(),
                 requestDTO.destinationAccount()
         );
-
-        Set<Long> usersToInvalidate = Set.of(user.getId());
 
         Transaction transaction = transactionFactory
                 .createExternalTransfer(
@@ -245,26 +243,37 @@ public class TransactionService {
         accountService.save(account);
         transactionRepository.save(transaction);
 
-        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(usersToInvalidate));
+        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(accountsToInvalidate));
 
         return transactionMapper.toExternalResponse(transaction);
     }
 
     @Transactional
-    public PixTransactionResponseDTO executePixTransaction(User user, PixTransactionRequestDTO requestDTO) {
-
-        Account originAccount = accountService.getAccountForUpdate(user.getId());
+    public PixTransactionResponseDTO executePixTransaction(User user, String accountNumber, PixTransactionRequestDTO requestDTO) {
 
         LocalTime transactionTime = LocalDateTime.now(ZoneId.of(timezone)).toLocalTime();
 
-        Optional<PixKey> pixKey = pixKeyService.findByKey(requestDTO.key());
-        Account destinationAccount = pixKey.map(PixKey::getAccount).orElse(null);
+        Optional<PixKey> pixKey = pixKeyService.getKey(requestDTO.key());
+
+        Account originAccount = accountService.getAccountByNumber(accountNumber);
+        Account destinationAccount = pixKey
+                .map(PixKey::getAccount)
+                .orElse(null);
+
+        if (destinationAccount != null) {
+            AccountPair accounts = lockAccountsInOrder(originAccount.getId(), destinationAccount.getId());
+            originAccount = accounts.originAccount();
+            destinationAccount = accounts.destinationAccount();
+        } else {
+            originAccount = accountService.getByIdWithLock(originAccount.getId());
+        }
 
         transactionValidator.validatePix(
                 originAccount,
                 destinationAccount,
                 requestDTO.amount(),
-                transactionTime
+                transactionTime,
+                user.getId()
         );
 
         duplicateTransactionService.checkAndRegister(
@@ -285,19 +294,13 @@ public class TransactionService {
 
         originAccount.debit(requestDTO.amount());
 
-        Set<Long> usersToInvalidate = new HashSet<>();
-        usersToInvalidate.add(user.getId());
-
-        if (destinationAccount != null) {
-            destinationAccount.credit(requestDTO.amount());
-            accountService.save(destinationAccount);
-            usersToInvalidate.add(destinationAccount.getClient().getId());
-        }
+        Set<String> accountsToInvalidate = new HashSet<>();
+        accountsToInvalidate.add(originAccount.getAccountNumber());
 
         accountService.save(originAccount);
         transactionRepository.save(transaction);
 
-        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(usersToInvalidate));
+        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(accountsToInvalidate));
 
         return transactionMapper.toPixResponse(transaction);
     }
@@ -305,11 +308,27 @@ public class TransactionService {
     @Transactional
     public void executeLoan(Bank bank, Account account, BigDecimal amount, String description) {
 
+        Set<String> accountsToInvalidate = Set.of(account.getAccountNumber());
+
         Transaction transaction = transactionFactory.createLoan(bank, account, amount, description);
         transactionRepository.save(transaction);
 
-        Set<Long> usersToInvalidate = Set.of(account.getClient().getId());
-        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(usersToInvalidate));
+        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(accountsToInvalidate));
     }
 
+
+    /// Lock em ordem crescente de ID para evitar deadlock em transferências simultâneas entre as mesmas contas (ex: A→B e B→A)
+    private AccountPair lockAccountsInOrder(Long originId, Long destinationId) {
+
+        Long firstId = Math.min(originId, destinationId);
+        Long secondId = Math.max(originId, destinationId);
+
+        Account first = accountService.getByIdWithLock(firstId);
+        Account second = accountService.getByIdWithLock(secondId);
+
+        return new AccountPair(
+                originId.equals(firstId) ? first : second,
+                originId.equals(firstId) ? second : first
+        );
+    }
 }

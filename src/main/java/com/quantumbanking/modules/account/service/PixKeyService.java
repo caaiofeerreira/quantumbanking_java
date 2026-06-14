@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -27,15 +26,15 @@ public class PixKeyService {
     private final PixKeyRepository pixKeyRepository;
     private final PixKeyMapper pixKeyMapper;
 
-    public Optional<PixKey> findByKey(String key) {
+    public Optional<PixKey> getKey(String key) {
         return pixKeyRepository.findByKey(key);
     }
 
     @Transactional
-    public PixKeyResponseDTO registerPixKey(Long userId, PixKeyRequestDTO requestDTO) {
+    public PixKeyResponseDTO registerPixKey(Long userId, String accountNumber, PixKeyRequestDTO requestDTO) {
 
         Account account = accountService
-                .getAuthenticatedUserAccount(userId);
+                .getAuthenticatedUserAccount(userId, accountNumber);
 
         if (pixKeyRepository.countByAccountId(account.getId()) >= 5) {
             throw new PixKeyLimitException("Limite de 5 chaves Pix atingido.");
@@ -55,10 +54,11 @@ public class PixKeyService {
         return pixKeyMapper.toPixKeyResponseDTO(pixKey);
     }
 
-    public List<PixKeyResponseDTO> listPixKey(Long userId) {
+    @Transactional(readOnly = true)
+    public List<PixKeyResponseDTO> listPixKey(Long userId , String accountNumber) {
 
         Account account = accountService
-                .getAuthenticatedUserAccount(userId);
+                .getAuthenticatedUserAccount(userId, accountNumber);
 
         return account.getPixKeys()
                 .stream()
@@ -67,9 +67,9 @@ public class PixKeyService {
     }
 
     @Transactional
-    public void removePixKey(Long userId, UUID pixKeyId) {
+    public void removePixKey(Long userId, String key) {
 
-        PixKey pixKey = pixKeyRepository.findById(pixKeyId)
+        PixKey pixKey = pixKeyRepository.findByKey(key)
                 .orElseThrow(() -> new ResourceNotFoundException("Chave Pix não encontrada."));
 
         if (!pixKey.getAccount().getClient().getId().equals(userId)) {

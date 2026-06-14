@@ -10,7 +10,6 @@ import com.quantumbanking.modules.loan.dto.LoanRequestDTO;
 import com.quantumbanking.modules.loan.dto.LoanResponseDTO;
 import com.quantumbanking.modules.loan.mapper.LoanMapper;
 import com.quantumbanking.modules.loan.repository.LoanRepository;
-import com.quantumbanking.modules.shared.domain.user.User;
 import com.quantumbanking.modules.transaction.service.TransactionService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -43,9 +42,9 @@ public class LoanService {
     }
 
     @Transactional
-    public LoanResponseDTO processLoan(Long userId, LoanRequestDTO requestDTO) {
+    public LoanResponseDTO processLoan(Long userId, String accountNumber, LoanRequestDTO requestDTO) {
 
-        Account account = accountService.getAuthenticatedUserAccount(userId);
+        Account account = accountService.getAuthenticatedUserAccount(userId, accountNumber);
 
         BigDecimal installmentAmount = loanCalculator.calculateInstallmentAmount(
                 requestDTO.amount(),

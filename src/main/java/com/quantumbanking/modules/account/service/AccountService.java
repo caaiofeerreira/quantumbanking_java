@@ -1,10 +1,7 @@
 package com.quantumbanking.modules.account.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.quantumbanking.infra.exception.AccountNotFoundException;
-import com.quantumbanking.infra.exception.ClientNotFoundException;
-import com.quantumbanking.infra.exception.TransactionNotAuthorizedException;
-import com.quantumbanking.infra.exception.UserNotFoundException;
+import com.quantumbanking.infra.exception.*;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.domain.AccountStatus;
 import com.quantumbanking.modules.account.domain.AccountType;
@@ -18,13 +15,11 @@ import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.client.domain.Client;
 import com.quantumbanking.modules.client.domain.ClientType;
 import com.quantumbanking.modules.client.repository.ClientRepository;
-import com.quantumbanking.modules.shared.domain.user.User;
 import com.quantumbanking.modules.transaction.domain.Transaction;
 import com.quantumbanking.modules.transaction.mapper.TransactionMapper;
 import com.quantumbanking.modules.transaction.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,31 +45,49 @@ public class AccountService {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-    public Account getAuthenticatedUserAccount(Long userId) {
-
-        return accountRepository.findByUserId(userId)
-                .orElseThrow(() -> new UserNotFoundException("Conta não encontrada."));
-    }
-
-    public Account getAccountForUpdate(Long userId) {
-        return accountRepository.findByUserIdWithLock(userId)
-                .orElseThrow(() -> new AccountNotFoundException("Conta não encontrada."));
-    }
-
-    public void save(Account account) {
-        accountRepository.save(account);
-    }
-
     public Account getAccountByNumber(String accountNumber) {
         return accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new AccountNotFoundException("Conta não encontrada."));
+    }
+
+    public Account getAuthenticatedUserAccount(Long userId, String accountNumber) {
+
+        Account account = getAccountByNumber(accountNumber);
+
+        if (!account.getClient().getId().equals(userId)) {
+            throw new UnauthorizedAccessException("Conta não pertence ao usuário autenticado.");
+        }
+
+        return account;
+    }
+
+    public Account getAccountForUpdate(Long userId, String accountNumber) {
+
+        Account account = accountRepository.findByAccountNumberWithLock(accountNumber)
+                .orElseThrow(() -> new AccountNotFoundException("Conta não encontrada."));
+
+        if (!account.getClient().getId().equals(userId)) {
+            throw new UnauthorizedAccessException("Conta não pertence ao usuário autenticado.");
+        }
+
+        return account;
+    }
+
+    public Account getByIdWithLock(Long id) {
+        return accountRepository.findByIdWithLock(id)
+                .orElseThrow(() -> new AccountNotFoundException ("Conta não encontrada: "+ id));
     }
 
     public List<Account> getAccountsByAgencyId(Long agencyId) {
         return accountRepository.findByAgencyId(agencyId);
     }
 
+    public void save(Account account) {
+        accountRepository.save(account);
+    }
+
     private StatementResponseDTO getFromCache(String key) {
+
         try {
             String cachedJson = (String) redisTemplate.opsForValue().get(key);
             if (cachedJson != null) {
@@ -87,6 +100,7 @@ public class AccountService {
     }
 
     private void saveToCache(String key, StatementResponseDTO data) {
+
         try {
             String json = objectMapper.writeValueAsString(data);
             redisTemplate.opsForValue().set(key, json, Duration.ofMinutes(10));
@@ -144,32 +158,50 @@ public class AccountService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "balance", key = "#userId")
-    public BigDecimal getBalance(Long userId) {
+    public BigDecimal getBalance(Long userId, String accountNumber) {
 
-        Account account = getAuthenticatedUserAccount(userId);
-        return account.getBalance();
+        String cacheKey = "balance::" + accountNumber;
+        Object cached = redisTemplate.opsForValue().get(cacheKey);
+
+        if (cached != null) {
+            getAuthenticatedUserAccount(userId, accountNumber);
+            return new BigDecimal(cacheKey.toString());
+        }
+
+        Account account = getAuthenticatedUserAccount(userId, accountNumber);
+        BigDecimal balance = account.getBalance();
+        redisTemplate.opsForValue().set(cacheKey, balance.toString(), Duration.ofMinutes(10));
+
+        return balance;
     }
 
     @Transactional(readOnly = true)
-    public StatementResponseDTO getStatement(User user, Integer month, Integer year) {
+    public StatementResponseDTO getStatement(Long userId, String accountNumber, Integer month, Integer year) {
 
-        String cacheKey = "statement:" + user.getId() + ":" + month + ":" + year;
+        Account account = getAuthenticatedUserAccount(userId, accountNumber);
+
+        String cacheKey = "statement:" + accountNumber + ":" + month + ":" + year;
 
         StatementResponseDTO cached = getFromCache(cacheKey);
         if (cached != null) return cached;
-
-        Account account = getAuthenticatedUserAccount(user.getId());
 
         if (account.getStatus() != AccountStatus.ACTIVE) {
             throw new TransactionNotAuthorizedException("Conta não está ativa.");
         }
 
-        List<Transaction> transactions = transactionRepository.findByAccountAndPeriod(account.getId(), month, year);
+        List<Transaction> transactions = transactionRepository.findByAccountAndPeriod(
+                account.getId(),
+                month,
+                year
+        );
 
         StatementResponseDTO result = new StatementResponseDTO(
-                month, year, account.getBalance(),
-                transactions.stream().map(t -> transactionMapper.toStatementResponse(t, account)).toList()
+                month,
+                year,
+                account.getBalance(),
+                transactions
+                        .stream()
+                        .map(t -> transactionMapper.toStatementResponse(t, account)).toList()
         );
 
         saveToCache(cacheKey, result);
