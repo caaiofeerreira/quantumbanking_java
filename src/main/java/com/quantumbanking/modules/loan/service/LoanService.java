@@ -10,6 +10,7 @@ import com.quantumbanking.modules.loan.dto.LoanRequestDTO;
 import com.quantumbanking.modules.loan.dto.LoanResponseDTO;
 import com.quantumbanking.modules.loan.mapper.LoanMapper;
 import com.quantumbanking.modules.loan.repository.LoanRepository;
+import com.quantumbanking.modules.loan.service.validation.LoanValidator;
 import com.quantumbanking.modules.transaction.service.TransactionService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ public class LoanService {
     private final LoanRepository loanRepository;
     private final LoanMapper loanMapper;
     private final LoanCalculator loanCalculator;
+    private final LoanValidator loanValidator;
 
     @Value("${loan.interest-rate}")
     private BigDecimal interestRate;
@@ -41,10 +43,14 @@ public class LoanService {
         return loanRepository.findByAgencyIdAndStatus(agencyId, status);
     }
 
+    /// AÇÕES DO CLIENTE
+
     @Transactional
     public LoanResponseDTO processLoan(Long userId, String accountNumber, LoanRequestDTO requestDTO) {
 
         Account account = accountService.getAuthenticatedUserAccount(userId, accountNumber);
+
+        loanValidator.validateLoan(account);
 
         BigDecimal installmentAmount = loanCalculator.calculateInstallmentAmount(
                 requestDTO.amount(),
@@ -72,6 +78,20 @@ public class LoanService {
 
         return loanMapper.toLoanResponseDTO(loan);
     }
+
+    @Transactional(readOnly = true)
+    public List<LoanResponseDTO> getLoansByAccount(Long userId, String accountNumber) {
+
+        Account account = accountService.getAuthenticatedUserAccount(userId, accountNumber);
+
+        List<Loan> loans = loanRepository.findByAccountId(account.getId());
+        return loans
+                .stream()
+                .map(loanMapper::toLoanResponseDTO)
+                .toList();
+    }
+
+    /// AÇÕES DO GERENTE
 
     @Transactional
     public LoanApprovedResponseDTO approveLoan(UUID loanId, Manager manager) {

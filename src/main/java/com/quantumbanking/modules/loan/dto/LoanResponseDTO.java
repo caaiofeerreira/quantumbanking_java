@@ -8,9 +8,11 @@ import java.util.UUID;
 
 public record LoanResponseDTO(UUID id,
                               BigDecimal amount,
+                              BigDecimal totalAmount,
+                              BigDecimal installmentAmount,
                               BigDecimal interestRate,
                               Integer installments,
                               String description,
-                              LocalDateTime createdAt,
-                              LoanStatus status) {
+                              LoanStatus status,
+                              LocalDateTime createdAt) {
 }

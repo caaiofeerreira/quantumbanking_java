@@ -13,11 +13,13 @@ public class LoanMapper {
         return new LoanResponseDTO(
                 loan.getId(),
                 loan.getAmount(),
+                loan.getTotalAmount(),
+                loan.getInstallmentAmount(),
                 loan.getInterestRate(),
                 loan.getInstallments(),
                 loan.getDescription(),
-                loan.getCreatedAt(),
-                loan.getStatus()
+                loan.getStatus(),
+                loan.getCreatedAt()
         );
     }
 

@@ -17,4 +17,8 @@ public interface LoanRepository extends JpaRepository<Loan, UUID> {
 
     @Query("SELECT l FROM Loan l JOIN FETCH l.account acc JOIN FETCH acc.agency ag JOIN FETCH ag.bank WHERE l.id = :id")
     Optional<Loan> findByIdWithDetails(@Param("id") UUID id);
+
+    List<Loan> findByAccountId(Long accountId);
+
+    boolean existsByAccountIdAndStatusIn(Long accountId, List<LoanStatus> statuses);
 }
