@@ -1,15 +1,15 @@
 package com.quantumbanking.modules.account.service;
 
-import com.quantumbanking.infra.exception.PixKeyAlreadyExistsException;
-import com.quantumbanking.infra.exception.PixKeyLimitException;
 import com.quantumbanking.infra.exception.ResourceNotFoundException;
 import com.quantumbanking.infra.exception.UnauthorizedAccessException;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.domain.PixKey;
+import com.quantumbanking.modules.account.domain.PixKeyType;
 import com.quantumbanking.modules.account.dto.PixKeyRequestDTO;
 import com.quantumbanking.modules.account.dto.PixKeyResponseDTO;
 import com.quantumbanking.modules.account.mapper.PixKeyMapper;
 import com.quantumbanking.modules.account.repository.PixKeyRepository;
+import com.quantumbanking.modules.account.service.validation.PixKeyValidation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +25,7 @@ public class PixKeyService {
 
     private final PixKeyRepository pixKeyRepository;
     private final PixKeyMapper pixKeyMapper;
+    private final PixKeyValidation pixKeyValidation;
 
     public Optional<PixKey> getKey(String key) {
         return pixKeyRepository.findByKey(key);
@@ -33,24 +34,18 @@ public class PixKeyService {
     @Transactional
     public PixKeyResponseDTO registerPixKey(Long userId, String accountNumber, PixKeyRequestDTO requestDTO) {
 
-        Account account = accountService
-                .getAuthenticatedUserAccount(userId, accountNumber);
+        Account account = accountService.getAuthenticatedUserAccount(userId, accountNumber);
 
-        if (pixKeyRepository.countByAccountId(account.getId()) >= 5) {
-            throw new PixKeyLimitException("Limite de 5 chaves Pix atingido.");
-        }
+        pixKeyValidation.validatePixKey(account.getId(), requestDTO.key());
 
-        if (pixKeyRepository.existsByKey(requestDTO.key())) {
-            throw new PixKeyAlreadyExistsException("Chave Pix já cadastrada.");
-        }
+        PixKeyType type = PixKeyType.detect(requestDTO.key());
 
         PixKey pixKey = new PixKey(
                 requestDTO.key().toLowerCase(),
-                requestDTO.type(),
-                account);
-
+                type,
+                account
+        );
         pixKeyRepository.save(pixKey);
-
         return pixKeyMapper.toPixKeyResponseDTO(pixKey);
     }
 
