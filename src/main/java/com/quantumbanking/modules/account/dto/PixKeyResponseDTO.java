@@ -4,7 +4,6 @@ import com.quantumbanking.modules.account.domain.PixKeyType;
 
 import java.util.UUID;
 
-public record PixKeyResponseDTO(UUID id,
-                                String key,
+public record PixKeyResponseDTO(String key,
                                 PixKeyType type) {
 }

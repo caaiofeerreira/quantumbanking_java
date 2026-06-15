@@ -9,7 +9,6 @@ public class PixKeyMapper {
 
     public PixKeyResponseDTO toPixKeyResponseDTO(PixKey pixKey) {
         return new PixKeyResponseDTO(
-                pixKey.getId(),
                 pixKey.getKey(),
                 pixKey.getType()
         );

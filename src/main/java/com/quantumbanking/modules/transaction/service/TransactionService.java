@@ -59,7 +59,6 @@ public class TransactionService {
     public DepositResponseDTO executeDeposit(Long userId, String accountNumber, DepositRequestDTO requestDTO) {
 
         Account account = accountService.getAccountForUpdate(userId, accountNumber);
-        Set<String> accountsToInvalidate = Set.of(account.getAccountNumber());
 
         transactionValidator.validateDeposit(account, requestDTO.amount());
 
@@ -82,7 +81,7 @@ public class TransactionService {
         accountService.save(account);
         transactionRepository.save(transaction);
 
-        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(accountsToInvalidate));
+        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(account.getAccountNumber()));
 
         return transactionMapper.toDepositResponse(transaction);
     }
@@ -144,9 +143,7 @@ public class TransactionService {
         accountService.save(account);
         transactionRepository.save(transaction);
 
-        Set<String> accountsToInvalidate = Set.of(account.getAccountNumber());
-
-        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(accountsToInvalidate));
+        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(account.getAccountNumber()));
 
         return transactionMapper.toWithdrawResponse(transaction, fee);
     }
@@ -207,7 +204,6 @@ public class TransactionService {
     public ExternalTransactionResponseDTO executeExternalTransaction(User user, String accountNumber, ExternalTransactionRequestDTO requestDTO) {
 
         Account account = accountService.getAccountForUpdate(user.getId(), accountNumber);
-        Set<String> accountsToInvalidate = Set.of(account.getAccountNumber());
 
         transactionValidator.validateExternal(
                 account,
@@ -243,7 +239,7 @@ public class TransactionService {
         accountService.save(account);
         transactionRepository.save(transaction);
 
-        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(accountsToInvalidate));
+        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(account.getAccountNumber()));
 
         return transactionMapper.toExternalResponse(transaction);
     }
@@ -292,10 +288,16 @@ public class TransactionService {
                         requestDTO.key()
                 );
 
-        originAccount.debit(requestDTO.amount());
-
         Set<String> accountsToInvalidate = new HashSet<>();
         accountsToInvalidate.add(originAccount.getAccountNumber());
+
+        originAccount.debit(requestDTO.amount());
+
+        if (destinationAccount != null) {
+            destinationAccount.credit(requestDTO.amount());
+            accountsToInvalidate.add(destinationAccount.getAccountNumber());
+            accountService.save(destinationAccount);
+        }
 
         accountService.save(originAccount);
         transactionRepository.save(transaction);
