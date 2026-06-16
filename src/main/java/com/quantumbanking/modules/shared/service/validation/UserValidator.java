@@ -1,6 +1,7 @@
 package com.quantumbanking.modules.shared.service.validation;
 
 import com.quantumbanking.infra.exception.CpfAlreadyRegisteredException;
+import com.quantumbanking.infra.exception.EmailAlreadyRegisteredException;
 import com.quantumbanking.infra.exception.InvalidEmailException;
 import com.quantumbanking.infra.exception.InvalidPhoneException;
 import com.quantumbanking.modules.shared.repository.UserRepository;
@@ -26,7 +27,7 @@ public class UserValidator {
 
         String digits = phone.replaceAll("\\D", "");
 
-        if (digits.length() == 10 && digits.charAt(2) == '9') {
+        if (digits.length() == 10) {
             digits = digits.substring(0, 2) + "9" + digits.substring(2);
         }
 
@@ -42,13 +43,25 @@ public class UserValidator {
         return email.trim().toLowerCase();
     }
 
-    public String normalizeCpf(String cpf) {
-        String normalizedCpf = cpf.replaceAll("[^0-9]", "");
+    public void checkEmailNotRegistered(String email) {
 
-        if (userRepository.existsByCpf(normalizedCpf)) {
+        String normalized = normalizeEmail(email);
+
+        if (userRepository.existsByEmail(normalized)) {
+            throw new EmailAlreadyRegisteredException("Este e-mail já está vinculado a outro usuário.");
+        }
+    }
+
+    public String normalizeCpf(String cpf) {
+        return cpf.replaceAll("[^0-9]", "");
+    }
+
+    public void checkCpfNotRegistered(String cpf) {
+
+        String normalized = normalizeCpf(cpf);
+
+        if (userRepository.existsByCpf(normalized)) {
             throw new CpfAlreadyRegisteredException("Este CPF já está vinculado a outro usuário.");
         }
-
-        return normalizedCpf;
     }
 }

@@ -1,7 +1,10 @@
 package com.quantumbanking.modules.client.service;
 
+import com.quantumbanking.infra.exception.IncompleteCompanyDataException;
 import com.quantumbanking.modules.client.domain.Client;
+import com.quantumbanking.modules.client.domain.ClientType;
 import com.quantumbanking.modules.client.domain.Company;
+import com.quantumbanking.modules.client.dto.ClientRegistrationDTO;
 import com.quantumbanking.modules.client.dto.CompanyRegistrationDTO;
 import com.quantumbanking.modules.client.factory.CompanyFactory;
 import com.quantumbanking.modules.client.repository.CompanyRepository;
@@ -23,8 +26,16 @@ public class CompanyService {
     }
 
     @Transactional
-    public Company registerCompany(CompanyRegistrationDTO registrationDTO, Client client) {
-        Company company = companyFactory.createCompany(registrationDTO, client);
-        return companyRepository.save(company);
+    public Company createIfApplicable(ClientRegistrationDTO dto, Client client) {
+
+        if (dto.clientType() != ClientType.JURIDICA) return null;
+
+        if (dto.company() == null) {
+            throw new IncompleteCompanyDataException("Dados da empresa são obrigatórios para pessoa jurídica.");
+        }
+
+        Company company = companyFactory.createCompany(dto.company(), client);
+        companyRepository.save(company);
+        return company;
     }
 }

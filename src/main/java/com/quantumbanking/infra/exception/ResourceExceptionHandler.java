@@ -222,4 +222,10 @@ public class ResourceExceptionHandler {
         log.warn("Tentativa de criar conta duplicada: {}", ex.getMessage());
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), getPath());
     }
+
+    @ExceptionHandler(EmailAlreadyRegisteredException.class)
+    public ResponseEntity<ErrorResponse> handleEmailAlreadyRegisteredException(EmailAlreadyRegisteredException ex) {
+        log.warn("Tentativa de cadastro com e-mail já registrado: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), getPath());
+    }
 }

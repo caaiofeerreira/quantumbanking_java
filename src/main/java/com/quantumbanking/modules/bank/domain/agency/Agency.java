@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.bank.domain.bank.Bank;
 import com.quantumbanking.modules.bank.domain.manager.Manager;
-import com.quantumbanking.modules.bank.dto.AgencyRegistrationDTO;
 import com.quantumbanking.modules.shared.domain.address.Address;
 import jakarta.persistence.*;
 import lombok.*;
@@ -50,11 +49,11 @@ public class Agency {
     @JoinColumn(name = "banking_id", nullable = false)
     private Bank bank;
 
-    public Agency(AgencyRegistrationDTO dto, String normalizedPhone, Address normalizedAddress, Bank bank) {
-        this.agencyName = dto.agencyName();
-        this.agencyNumber = dto.agencyNumber();
-        this.phone = normalizedPhone;
-        this.address = normalizedAddress;
+    public Agency(String agencyName, String agencyNumber, String phone, Address address, Bank bank) {
+        this.agencyName = agencyName;
+        this.agencyNumber = agencyNumber;
+        this.phone = phone;
+        this.address = address;
         this.bank = bank;
     }
 }

@@ -15,26 +15,24 @@ import org.springframework.stereotype.Component;
 public class CompanyFactory {
 
     private final AddressMapper addressMapper;
-
     private final CepValidator cepValidator;
 
-    public Company createCompany(CompanyRegistrationDTO registrationDTO, Client client) {
+    public Company createCompany(CompanyRegistrationDTO dto, Client client) {
 
-        String normalizedCep = cepValidator.normalizeCep(registrationDTO.address().zipCode());
+        String normalizedCep = cepValidator.normalizeCep(dto.address().zipCode());
 
-        AddressRequestDTO addressRequestDTO = new AddressRequestDTO(
-                registrationDTO.address().street(),
-                registrationDTO.address().number(),
-                registrationDTO.address().complement(),
-                registrationDTO.address().neighborhood(),
-                registrationDTO.address().city(),
-                registrationDTO.address().state().toUpperCase(),
+        AddressRequestDTO normalizedAddress = new AddressRequestDTO(
+                dto.address().street(),
+                dto.address().number(),
+                dto.address().complement(),
+                dto.address().neighborhood(),
+                dto.address().city(),
+                dto.address().state().toUpperCase(),
                 normalizedCep
         );
 
-        Address address = addressMapper.toAddress(addressRequestDTO);
+        Address address = addressMapper.toAddress(normalizedAddress);
 
-        return new Company(registrationDTO, address, client);
+        return new Company(dto, address, client);
     }
-
 }

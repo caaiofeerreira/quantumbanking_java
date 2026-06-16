@@ -2,7 +2,6 @@ package com.quantumbanking.modules.bank.domain.manager;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
-import com.quantumbanking.modules.bank.dto.ManagerRegistrationDTO;
 import com.quantumbanking.modules.shared.domain.address.Address;
 import com.quantumbanking.modules.shared.domain.user.User;
 import com.quantumbanking.modules.shared.domain.user.UserRole;

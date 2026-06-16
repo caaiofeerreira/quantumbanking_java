@@ -1,23 +1,21 @@
 package com.quantumbanking.modules.client.service;
 
-import com.quantumbanking.infra.exception.IncompleteCompanyDataException;
 import com.quantumbanking.infra.exception.UserNotFoundException;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.service.AccountService;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.bank.service.AgencyService;
 import com.quantumbanking.modules.client.domain.Client;
-import com.quantumbanking.modules.client.domain.ClientType;
 import com.quantumbanking.modules.client.domain.Company;
 import com.quantumbanking.modules.client.dto.ClientProfileResponseDTO;
 import com.quantumbanking.modules.client.dto.ClientRegistrationDTO;
 import com.quantumbanking.modules.client.dto.ClientResponseDTO;
+import com.quantumbanking.modules.shared.dto.NormalizedUserData;
 import com.quantumbanking.modules.shared.dto.UpdateAddressRequestDTO;
 import com.quantumbanking.modules.client.factory.ClientFactory;
 import com.quantumbanking.modules.client.mapper.ClientMapper;
 import com.quantumbanking.modules.client.repository.ClientRepository;
 import com.quantumbanking.modules.shared.domain.address.Address;
-import com.quantumbanking.modules.shared.domain.user.User;
 import com.quantumbanking.modules.shared.service.validation.CepValidator;
 import com.quantumbanking.modules.shared.service.validation.UserValidator;
 import lombok.RequiredArgsConstructor;
@@ -47,37 +45,50 @@ public class ClientService {
                 .orElseThrow(() -> new UserNotFoundException("Cliente não encontrado."));
     }
 
-    @Transactional
-    public ClientResponseDTO registerClient(ClientRegistrationDTO requestDTO) {
+    private Client createClient(ClientRegistrationDTO dto) {
 
-        if (requestDTO.clientType() == ClientType.JURIDICA && requestDTO.company() == null) {
-            throw new IncompleteCompanyDataException("Dados da empresa são obrigatórios para pessoa jurídica.");
-        }
+        userValidator.checkCpfNotRegistered(dto.cpf());
+        userValidator.checkEmailNotRegistered(dto.email());
 
-        String encryptedPassword = passwordEncoder.encode(requestDTO.password());
+        NormalizedUserData data = new NormalizedUserData(
+                dto.name(),
+                userValidator.normalizeCpf(dto.cpf()),
+                userValidator.normalizePhone(dto.phone()),
+                userValidator.normalizeEmail(dto.email()),
+                passwordEncoder.encode(dto.password()),
+                dto.address().street(),
+                dto.address().number(),
+                dto.address().complement(),
+                dto.address().neighborhood(),
+                dto.address().city(),
+                dto.address().state().toUpperCase(),
+                cepValidator.normalizeCep(dto.address().zipCode())
+        );
 
         Client client = clientFactory.createClient(
-                requestDTO,
-                encryptedPassword
+                data,
+                dto.clientType()
         );
         clientRepository.save(client);
 
-        Company company = null;
+        return client;
+    }
 
-        if (requestDTO.clientType() == ClientType.JURIDICA) {
-            company = companyService.registerCompany(requestDTO.company(),client);
-        }
+    @Transactional
+    public ClientResponseDTO registerClient(ClientRegistrationDTO dto) {
 
-        Agency agency = agencyService.getAgencyByNumber(requestDTO.agencyNumber());
+        Client client = createClient(dto);
+        Company company = companyService.createIfApplicable(dto, client);
+        Agency agency =agencyService.getAgencyByNumber(dto.agencyNumber());
 
         Account account = accountService.openInitialAccount(
                 client.getType(),
-                requestDTO.accountType(),
+                dto.accountType(),
                 agency,
                 client
         );
 
-        return clientMapper.toClientResponseDTO(client,account, company);
+        return clientMapper.toClientResponseDTO(client, account, company);
     }
 
     @Transactional(readOnly = true)
