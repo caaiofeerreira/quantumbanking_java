@@ -49,6 +49,7 @@ public class ClientService {
 
         userValidator.checkCpfNotRegistered(dto.cpf());
         userValidator.checkEmailNotRegistered(dto.email());
+        userValidator.checkPhoneNotRegistered(dto.phone());
 
         NormalizedUserData data = new NormalizedUserData(
                 dto.name(),

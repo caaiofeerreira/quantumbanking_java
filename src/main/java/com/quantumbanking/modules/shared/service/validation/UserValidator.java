@@ -1,10 +1,8 @@
 package com.quantumbanking.modules.shared.service.validation;
 
-import com.quantumbanking.infra.exception.CpfAlreadyRegisteredException;
-import com.quantumbanking.infra.exception.EmailAlreadyRegisteredException;
-import com.quantumbanking.infra.exception.InvalidEmailException;
-import com.quantumbanking.infra.exception.InvalidPhoneException;
+import com.quantumbanking.infra.exception.*;
 import com.quantumbanking.modules.shared.repository.UserRepository;
+import com.quantumbanking.modules.shared.util.FormattingUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -19,28 +17,40 @@ public class UserValidator {
     private static final Pattern PHONE_PATTERN = Pattern.compile("^\\(?\\d{2}\\)?[\\s-]?9?\\d{4}[-\\s]?\\d{4}$");
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[\\w.+\\-]+@[\\w\\-]+\\.[a-zA-Z]{2,}$");
 
+    public String normalizeCpf(String cpf) {
+        return FormattingUtils.normalizeCpf(cpf);
+    }
+
+    public String normalizeEmail(String email) {
+
+        if (email == null || email.isBlank()) {
+            throw new InvalidEmailException("E-mail não pode ser nulo.");
+        }
+
+        String cleanedEmail = email.trim();
+        if (!EMAIL_PATTERN.matcher(cleanedEmail).matches()) {
+            throw new InvalidEmailException("Formato de e-mail inválido.");
+        }
+
+        return FormattingUtils.normalizeEmail(cleanedEmail);
+    }
+
     public String normalizePhone(String phone) {
 
         if (!PHONE_PATTERN.matcher(phone.trim()).matches()) {
             throw new InvalidPhoneException("Telefone inválido: " + phone);
         }
 
-        String digits = phone.replaceAll("\\D", "");
-
-        if (digits.length() == 10) {
-            digits = digits.substring(0, 2) + "9" + digits.substring(2);
-        }
-
-        return "+55" + digits;
+        return FormattingUtils.normalizePhone(phone);
     }
 
-    public String normalizeEmail(String email) {
+    public void checkCpfNotRegistered(String cpf) {
 
-        if (!EMAIL_PATTERN.matcher(email.trim()).matches()) {
-            throw new InvalidEmailException("Formato de e-mail inválido.");
+        String normalized = normalizeCpf(cpf);
+
+        if (userRepository.existsByCpf(normalized)) {
+            throw new CpfAlreadyRegisteredException("Este CPF já está vinculado a outro usuário.");
         }
-
-        return email.trim().toLowerCase();
     }
 
     public void checkEmailNotRegistered(String email) {
@@ -52,16 +62,12 @@ public class UserValidator {
         }
     }
 
-    public String normalizeCpf(String cpf) {
-        return cpf.replaceAll("[^0-9]", "");
-    }
+    public void checkPhoneNotRegistered(String phone) {
 
-    public void checkCpfNotRegistered(String cpf) {
+        String normalized = normalizePhone(phone);
 
-        String normalized = normalizeCpf(cpf);
-
-        if (userRepository.existsByCpf(normalized)) {
-            throw new CpfAlreadyRegisteredException("Este CPF já está vinculado a outro usuário.");
+        if (userRepository.existsByPhone(normalized)) {
+            throw new PhoneAlreadyExistsException("Este telefone já está vinculado a outro usuário.");
         }
     }
 }

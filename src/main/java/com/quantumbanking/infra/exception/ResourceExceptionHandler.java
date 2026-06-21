@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -37,14 +38,30 @@ public class ResourceExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(
-            MethodArgumentNotValidException ex
-    ) {
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+
         String message = ex.getBindingResult().getFieldErrors()
                 .stream()
-                .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .collect(Collectors.joining("; "));
+
         return buildResponse(HttpStatus.BAD_REQUEST, message, getPath());
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+
+        Throwable rootCause = ex.getMostSpecificCause();
+
+        if (rootCause instanceof RuntimeException runtimeCause) {
+            log.warn("Falha ao desserializar corpo da requisição: {}", rootCause.getMessage());
+            return buildResponse(HttpStatus.BAD_REQUEST, rootCause.getMessage(), getPath());
+        }
+
+        log.warn("Requisição malformada: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST,
+                "Corpo da requisição inválido ou malformado. Verifique os campos enviados.",
+                getPath());
     }
 
     @ExceptionHandler(BadCredentialsException.class)
@@ -227,5 +244,23 @@ public class ResourceExceptionHandler {
     public ResponseEntity<ErrorResponse> handleEmailAlreadyRegisteredException(EmailAlreadyRegisteredException ex) {
         log.warn("Tentativa de cadastro com e-mail já registrado: {}", ex.getMessage());
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(PhoneAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handlePhoneAlreadyExistsException(PhoneAlreadyExistsException ex) {
+        log.warn("Tentativa de cadastro com telefone já registrado: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(InvalidAccountTypeException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidAccountTypeException(InvalidAccountTypeException ex) {
+        log.warn("Tentativa de cadastrar tipo de conta inválido: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(InvalidClientTypeException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidClientTypeException(InvalidClientTypeException ex) {
+        log.warn("Tentativa de cadastro com tipo de cliente inválido: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
     }
 }
