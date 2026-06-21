@@ -2,15 +2,15 @@ package com.quantumbanking.modules.transaction.service;
 
 import com.quantumbanking.infra.event.TransactionCompletedEvent;
 import com.quantumbanking.modules.account.domain.Account;
-import com.quantumbanking.modules.account.domain.PixKey;
 import com.quantumbanking.modules.account.service.AccountService;
-import com.quantumbanking.modules.account.service.PixKeyService;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.bank.domain.bank.Bank;
 import com.quantumbanking.modules.bank.domain.bank.BankRegistry;
 import com.quantumbanking.modules.bank.service.AgencyService;
 import com.quantumbanking.modules.bank.service.BankRegistryService;
 import com.quantumbanking.modules.bank.service.BankService;
+import com.quantumbanking.modules.pixKey.domain.PixKey;
+import com.quantumbanking.modules.pixKey.service.PixKeyService;
 import com.quantumbanking.modules.shared.domain.user.User;
 import com.quantumbanking.modules.transaction.domain.Transaction;
 import com.quantumbanking.modules.transaction.domain.TransactionType;

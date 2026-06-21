@@ -1,5 +1,6 @@
-package com.quantumbanking.modules.account.domain;
+package com.quantumbanking.modules.pixKey.domain;
 
+import com.quantumbanking.modules.account.domain.Account;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;

@@ -1,4 +1,4 @@
-package com.quantumbanking.modules.account.dto;
+package com.quantumbanking.modules.pixKey.dto;
 
 import jakarta.validation.constraints.NotBlank;
 

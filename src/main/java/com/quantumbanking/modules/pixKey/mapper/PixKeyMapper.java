@@ -1,7 +1,7 @@
-package com.quantumbanking.modules.account.mapper;
+package com.quantumbanking.modules.pixKey.mapper;
 
-import com.quantumbanking.modules.account.domain.PixKey;
-import com.quantumbanking.modules.account.dto.PixKeyResponseDTO;
+import com.quantumbanking.modules.pixKey.domain.PixKey;
+import com.quantumbanking.modules.pixKey.dto.PixKeyResponseDTO;
 import org.springframework.stereotype.Component;
 
 @Component

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.quantumbanking.infra.exception.TransactionNotAuthorizedException;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.client.domain.Client;
+
+import com.quantumbanking.modules.pixKey.domain.PixKey;
 import jakarta.persistence.*;
 import lombok.*;
 

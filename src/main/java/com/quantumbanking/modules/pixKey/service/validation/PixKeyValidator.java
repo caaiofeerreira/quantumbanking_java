@@ -1,19 +1,19 @@
-package com.quantumbanking.modules.account.service.validation;
+package com.quantumbanking.modules.pixKey.service.validation;
 
 import com.quantumbanking.infra.exception.PixKeyAlreadyExistsException;
 import com.quantumbanking.infra.exception.PixKeyLimitException;
-import com.quantumbanking.modules.account.repository.PixKeyRepository;
+import com.quantumbanking.modules.pixKey.repository.PixKeyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class PixKeyValidation {
+public class PixKeyValidator {
 
     private final PixKeyRepository pixKeyRepository;
 
-    public void validatePixKey(Long keys, String key) {
-        checkCountByAccountId(keys);
+    public void validatePixKey(Long accountId, String key) {
+        checkCountByAccountId(accountId);
         checkKeyAlreadyExists(key);
     }
 

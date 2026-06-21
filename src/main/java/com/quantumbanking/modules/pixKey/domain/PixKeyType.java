@@ -1,4 +1,4 @@
-package com.quantumbanking.modules.account.domain;
+package com.quantumbanking.modules.pixKey.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.quantumbanking.infra.exception.InvalidPixKeyTypeException;
@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.regex.Pattern;
 
 public enum PixKeyType {
+
     CPF("^\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d{2}$"),
     CNPJ("^\\d{2}\\.?\\d{3}\\.?\\d{3}\\/?\\d{4}-?\\d{2}$"),
     EMAIL("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"),
@@ -28,14 +29,11 @@ public enum PixKeyType {
         if (key == null || key.isBlank()) {
             throw new InvalidPixKeyTypeException("Chave Pix não pode ser nula ou vazia.");
         }
-
-        return Arrays
-                .stream(values())
+        return Arrays.stream(values())
                 .filter(type -> type.matches(key))
                 .findFirst()
-                .orElseThrow(() -> new InvalidPixKeyTypeException("Formato de chave Pix inválido: "+ key));
+                .orElseThrow(() -> new InvalidPixKeyTypeException("Formato de chave Pix inválido: " + key));
     }
-
 
     @JsonCreator
     public static PixKeyType fromValue(String value) {

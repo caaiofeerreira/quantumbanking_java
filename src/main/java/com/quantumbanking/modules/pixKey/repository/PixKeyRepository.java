@@ -1,6 +1,6 @@
-package com.quantumbanking.modules.account.repository;
+package com.quantumbanking.modules.pixKey.repository;
 
-import com.quantumbanking.modules.account.domain.PixKey;
+import com.quantumbanking.modules.pixKey.domain.PixKey;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

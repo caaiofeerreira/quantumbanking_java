@@ -1,15 +1,17 @@
-package com.quantumbanking.modules.account.service;
+package com.quantumbanking.modules.pixKey.service;
 
 import com.quantumbanking.infra.exception.ResourceNotFoundException;
 import com.quantumbanking.infra.exception.UnauthorizedAccessException;
 import com.quantumbanking.modules.account.domain.Account;
-import com.quantumbanking.modules.account.domain.PixKey;
-import com.quantumbanking.modules.account.domain.PixKeyType;
-import com.quantumbanking.modules.account.dto.PixKeyRequestDTO;
-import com.quantumbanking.modules.account.dto.PixKeyResponseDTO;
-import com.quantumbanking.modules.account.mapper.PixKeyMapper;
-import com.quantumbanking.modules.account.repository.PixKeyRepository;
-import com.quantumbanking.modules.account.service.validation.PixKeyValidation;
+import com.quantumbanking.modules.account.service.AccountService;
+import com.quantumbanking.modules.pixKey.domain.PixKey;
+import com.quantumbanking.modules.pixKey.domain.PixKeyType;
+import com.quantumbanking.modules.pixKey.dto.PixKeyRequestDTO;
+import com.quantumbanking.modules.pixKey.dto.PixKeyResponseDTO;
+import com.quantumbanking.modules.pixKey.mapper.PixKeyMapper;
+import com.quantumbanking.modules.pixKey.repository.PixKeyRepository;
+import com.quantumbanking.modules.pixKey.service.validation.PixKeyValidator;
+import com.quantumbanking.modules.shared.util.FormattingUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,10 +27,19 @@ public class PixKeyService {
 
     private final PixKeyRepository pixKeyRepository;
     private final PixKeyMapper pixKeyMapper;
-    private final PixKeyValidation pixKeyValidation;
+    private final PixKeyValidator pixKeyValidation;
 
     public Optional<PixKey> getKey(String key) {
         return pixKeyRepository.findByKey(key);
+    }
+
+    private String normalizeKey(String key) {
+        return isPhoneCandidate(key) ? FormattingUtils.normalizePhone(key) : key.toLowerCase();
+    }
+
+    private boolean isPhoneCandidate(String key) {
+        String noFormatting = key.replaceAll("[()\\s-]", "");
+        return noFormatting.matches("^\\d{10,13}$");
     }
 
     @Transactional
@@ -36,16 +47,20 @@ public class PixKeyService {
 
         Account account = accountService.getAuthenticatedUserAccount(userId, accountNumber);
 
-        pixKeyValidation.validatePixKey(account.getId(), requestDTO.key());
+        String normalizedKey = normalizeKey(requestDTO.key());
 
-        PixKeyType type = PixKeyType.detect(requestDTO.key());
+        pixKeyValidation.validatePixKey(account.getId(), normalizedKey);
+
+        PixKeyType type = PixKeyType.detect(normalizedKey);
 
         PixKey pixKey = new PixKey(
-                requestDTO.key().toLowerCase(),
+                normalizedKey,
                 type,
                 account
         );
+
         pixKeyRepository.save(pixKey);
+
         return pixKeyMapper.toPixKeyResponseDTO(pixKey);
     }
 
