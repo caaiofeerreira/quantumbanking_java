@@ -34,6 +34,13 @@ public class PixKeyService {
     }
 
     private String normalizeKey(String key) {
+        if (PixKeyType.CPF.matches(key)) {
+            return FormattingUtils.normalizeCpf(key);
+        }
+
+        if (PixKeyType.EMAIL.matches(key)) {
+            return key.toLowerCase();
+        }
         return isPhoneCandidate(key) ? FormattingUtils.normalizePhone(key) : key.toLowerCase();
     }
 
@@ -49,9 +56,14 @@ public class PixKeyService {
 
         String normalizedKey = normalizeKey(requestDTO.key());
 
-        pixKeyValidation.validatePixKey(account.getId(), normalizedKey);
-
         PixKeyType type = PixKeyType.detect(normalizedKey);
+
+        pixKeyValidation.validatePixKey(
+                type,
+                normalizedKey,
+                account.getClient(),
+                account.getId()
+        );
 
         PixKey pixKey = new PixKey(
                 normalizedKey,
@@ -60,7 +72,6 @@ public class PixKeyService {
         );
 
         pixKeyRepository.save(pixKey);
-
         return pixKeyMapper.toPixKeyResponseDTO(pixKey);
     }
 
