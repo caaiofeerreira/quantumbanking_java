@@ -46,7 +46,7 @@ function Request-Api {
 
 #ADMIN
 function RegisterAgency($agencyName, $agencyNumber, $phone,
-                       $street, $number, $complement, $neighborhood, $city, $state, $zip, $bankCode) {
+                       $street, $number, $complement, $neighborhood, $city, $state, $zip, $compe) {
 
     return Request-Api `
         -Path "/api/admin/agency/register"`
@@ -64,12 +64,12 @@ function RegisterAgency($agencyName, $agencyNumber, $phone,
                 state = $state
                 zipCode = $zip
             }
-            bankCode = $bankCode
+             compe = $compe
         }
 }
 
 function RegisterManager($name, $cpf, $phone, $email, $pass,
-                        $street, $number, $complement, $neighborhood, $city, $state, $zip, $agency) {
+                        $street, $number, $complement, $neighborhood, $city, $state, $zip, $agencyNumber) {
 
     return Request-Api `
         -Path "/api/admin/manager/register"`
@@ -89,14 +89,28 @@ function RegisterManager($name, $cpf, $phone, $email, $pass,
                 state = $state
                 zipCode = $zip
             }
-            agencyNumber = $agency
+            agencyNumber = $agencyNumber
         }
 }
+
+#MANAGER
+function ManagerProfile {
+     return Request-Api `
+        -Path "/api/manager/profile" `
+        -Method GET
+}
+
+function ListAccounts {
+    return Request-Api `
+        -Path "/api/manager/my-agency/accounts" `
+        -Method GET
+}
+
 
 #CLIENT
 function RegisterClient($name, $cpf, $phone, $email, $pass,
                         $street, $number, $complement, $neighborhood, $city, $state, $zip,
-                        $clientType, $accountType, $agency) {
+                        $clientType, $accountType, $agencyNumber) {
 
     $global:token =$null
 
@@ -120,7 +134,7 @@ function RegisterClient($name, $cpf, $phone, $email, $pass,
             }
             clientType = $clientType
             accountType = $accountType
-            agencyNumber = $agency
+            agencyNumber = $agencyNumber
         }
 }
 
@@ -140,14 +154,49 @@ function Login($cpf, $pass) {
     }
 }
 
-function GetBalance {
+function MyAccounts {
     return Request-Api `
-        -Path "/api/account/balance"
+        -Path "/api/account/my-accounts" `
+        -Method GET
 }
 
-function ExecuteDeposit($amount) {
+
+function ClientProfile {
     return Request-Api `
-        -Path "/api/account/deposit" `
+        -Path "/api/account/profile" `
+        -Method GET
+}
+
+function RegisterPixKey($accountNumber, $key) {
+    return Request-Api `
+        -Path "/api/account/$accountNumber/pix/keys" `
+        -Method POST `
+        -Body @{
+            key = $key;
+        }
+}
+
+function ListPixKey($accountNumber) {
+    return Request-Api `
+        -Path "/api/account/$accountNumber/pix/keys" `
+        -Method GET
+}
+
+function RemovePixKey($accountNumber, $keyId) {
+    return Request-Api `
+        -Path "/api/account/$accountNumber/pix/keys/$KeyId" `
+        -Method DELETE
+}
+
+function GetBalance($accountNumber) {
+    return Request-Api `
+        -Path "/api/account/$accountNumber/balance" `
+        -Method GET
+}
+
+function ExecuteDeposit($accountNumber, $amount) {
+    return Request-Api `
+        -Path "/api/account/$accountNumber/transaction/deposit" `
         -Method POST `
         -Body @{
             amount = $amount;
@@ -155,9 +204,9 @@ function ExecuteDeposit($amount) {
         }
 }
 
-function ExecuteWithdraw($amount) {
+function ExecuteWithdraw($accountNumber, $amount) {
     return Request-Api `
-        -Path "/api/account/withdraw" `
+        -Path "/api/account/$accountNumber/transaction/withdraw" `
         -Method POST `
         -Body @{
             amount = $amount;
@@ -165,73 +214,40 @@ function ExecuteWithdraw($amount) {
         }
 }
 
-function ExecuteInternalTransaction($account, $agency, $amount, $description) {
+function ExecuteInternalTransaction($accountNumber, $destinationAccountNumber, $agencyNumber, $amount, $description) {
     return Request-Api `
-        -Path "/api/account/transaction/internal" `
+        -Path "/api/account/$accountNumber/transaction/internal" `
         -Method POST `
         -Body @{
-            accountNumber = $account;
-            agencyNumber = $agency;
+            destinationAccountNumber = $destinationAccountNumber;
+            agencyNumber = $agencyNumber;
             amount = $amount
             description = $description
         }
 }
 
-function ExecuteExternalTransaction($name, $account, $agency, $bank, $doc, $amount, $description) {
+function ExecuteExternalTransaction($accountNumber, $destinationName, $destinationAccount, $destinationAgency, $compe, $destinationDocument, $amount, $description) {
     return Request-Api `
-        -Path "/api/account/transaction/external" `
+        -Path "/api/account/$accountNumber/transaction/external" `
         -Method POST `
         -Body @{
-            destinyName = $name
-            destinyAccount = $account
-            destinyAgency = $agency
-            bankCode = $bank
-            destinyDocument = $doc
+            destinationName = $destinationName
+            destinationAccount = $destinationAccount
+            destinationAgency = $destinationAgency
+            compe = $compe
+            destinationDocument = $destinationDocument
             amount = $amount
             description = $description
         }
 }
 
-function RegisterPixKey($key, $type) {
+function ExecutePixTransaction($accountNumber, $key, $amount, $description) {
     return Request-Api `
-        -Path "/api/account/pix/register" `
-        -Method POST `
-        -Body @{
-            key = $key;
-            type = $type
-        }
-}
-
-function ListPixKey {
-    return Request-Api `
-        -Path "/api/account/pix/keys"
-}
-
-function RemovePixKey($KeyId) {
-    return Request-Api `
-        -Path "/api/account/pix/$KeyId" `
-        -Method DELETE
-}
-
-function ExecutePixTransaction($key, $amount, $description) {
-    return Request-Api `
-        -Path "/api/account/transaction/pix" `
+        -Path "/api/account/$accountNumber/transaction/pix" `
         -Method POST `
         -Body @{
             key = $key
             amount = $amount
             description = $description
         }
-}
-
-function GetStatement($month, $year) {
-
-    $resp = Request-Api `
-        -Path "/api/account/statement?month=$month&year=$year"
-
-    Write-Host "`n--- EXTRATO BANCARIO: Mes $month / Ano $year ---" -ForegroundColor Cyan
-    Write-Host "Saldo: R$ $($resp.currentBalance)" -ForegroundColor Green
-    Write-Host "-------------------------------------------"
-
-    return $resp.transactions | Format-Table -AutoSize
 }
