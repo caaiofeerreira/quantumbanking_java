@@ -6,7 +6,6 @@ import com.quantumbanking.infra.exception.PixKeyLimitException;
 import com.quantumbanking.modules.client.domain.Client;
 import com.quantumbanking.modules.pixKey.domain.PixKeyType;
 import com.quantumbanking.modules.pixKey.repository.PixKeyRepository;
-import com.quantumbanking.modules.shared.util.FormattingUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -25,7 +24,7 @@ public class PixKeyValidator {
     private void checkKeyOwnership(PixKeyType type, String normalizedKey, Client client) {
         switch (type) {
             case CPF -> {
-                if (!FormattingUtils.normalizeCpf(normalizedKey).equals(client.getCpf())) {
+                if (!normalizedKey.equals(client.getCpf())) {
                     throw new InvalidPixKeyTypeException("Não é permitido cadastrar o CPF de terceiros como chave Pix.");
                 }
             }
@@ -35,7 +34,7 @@ public class PixKeyValidator {
                 }
             }
             case PHONE -> {
-                if (!normalizedKey.equalsIgnoreCase(client.getPhone())) {
+                if (!normalizedKey.equals(client.getPhone())) {
                     throw new InvalidPixKeyTypeException("Não é permitido cadastrar o celular de terceiros como chave Pix.");
                 }
             }

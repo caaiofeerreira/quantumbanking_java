@@ -6,6 +6,7 @@ import com.quantumbanking.modules.bank.dto.AgencyAccountManagementDTO;
 import com.quantumbanking.modules.bank.dto.AgencyResponseDTO;
 import com.quantumbanking.modules.shared.mapper.AddressMapper;
 import com.quantumbanking.modules.shared.util.DataMaskingUtils;
+import com.quantumbanking.modules.shared.util.FormattingUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +21,7 @@ public class AgencyMapper {
                 agency.getId(),
                 agency.getAgencyName(),
                 agency.getAgencyNumber(),
-                agency.getPhone(),
+                FormattingUtils.formatPhone(agency.getPhone()),
                 addressMapper.toAddressDTO(agency.getAddress()),
                 agency.getBank().getName()
         );

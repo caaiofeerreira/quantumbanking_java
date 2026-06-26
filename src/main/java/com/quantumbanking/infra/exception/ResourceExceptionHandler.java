@@ -263,4 +263,22 @@ public class ResourceExceptionHandler {
         log.warn("Tentativa de cadastro com tipo de cliente inválido: {}", ex.getMessage());
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
     }
+
+    @ExceptionHandler(InvalidCpfException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCpfException(InvalidCpfException ex) {
+        log.warn("Tentativa de cadastro com CPF inválido: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(SamePhoneException.class)
+    public ResponseEntity<ErrorResponse> handleSamePhoneException(SamePhoneException ex) {
+        log.warn("Tentativa de atualizar telefone para o mesmo já cadastrado: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(SameEmailException.class)
+    public ResponseEntity<ErrorResponse> handleSameEmailException(SameEmailException ex) {
+        log.warn("Tentativa de atualizar email para o mesmo já cadastrado: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
+    }
 }

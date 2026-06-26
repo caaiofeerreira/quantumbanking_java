@@ -2,6 +2,7 @@ package com.quantumbanking.modules.transaction.factory;
 
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.bank.domain.bank.Bank;
+import com.quantumbanking.modules.pixKey.domain.PixKeyType;
 import com.quantumbanking.modules.transaction.domain.Transaction;
 import com.quantumbanking.modules.transaction.domain.TransactionType;
 import org.springframework.stereotype.Component;
@@ -102,7 +103,8 @@ public class TransactionFactory {
                 .build();
     }
 
-    public Transaction createPix(Account originAccount, Account destinationAccount, BigDecimal amount, String description, String pixKey) {
+    public Transaction createPix(Account originAccount, Account destinationAccount, BigDecimal amount,
+                                 String description, String pixKey, PixKeyType pixKeyType) {
         var builder = Transaction.builder()
                 .originAccount(originAccount)
                 .originName(originAccount.getClient().getName())
@@ -113,6 +115,7 @@ public class TransactionFactory {
 
                 .amount(amount)
                 .pixKey(pixKey)
+                .pixKeyType(pixKeyType)
                 .type(TransactionType.PIX)
                 .description(normalizeDescription(description));
 

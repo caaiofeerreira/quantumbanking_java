@@ -1,5 +1,7 @@
 package com.quantumbanking.modules.client.service;
 
+import com.quantumbanking.infra.exception.SameEmailException;
+import com.quantumbanking.infra.exception.SamePhoneException;
 import com.quantumbanking.infra.exception.UserNotFoundException;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.service.AccountService;
@@ -103,9 +105,16 @@ public class ClientService {
     @Transactional
     public void updatePhone(Long userId, String phone) {
 
+        Client client = userAuthenticated(userId);
+
         String normalizedPhone = userValidator.normalizePhone(phone);
 
-        Client client = userAuthenticated(userId);
+        if (normalizedPhone.equals(client.getPhone())) {
+            throw new SamePhoneException("O telefone informado é o mesmo já cadastrado.");
+        }
+
+        userValidator.checkPhoneNotRegistered(normalizedPhone);
+
         client.updatePhone(normalizedPhone);
         clientRepository.save(client);
     }
@@ -113,9 +122,15 @@ public class ClientService {
     @Transactional
     public void updateEmail(Long userId, String email) {
 
+        Client client = userAuthenticated(userId);
+
         String normalizedEmail = userValidator.normalizeEmail(email);
 
-        Client client = userAuthenticated(userId);
+        if (normalizedEmail.equals(client.getEmail())) {
+            throw new SameEmailException("O e-mail informado é o mesmo já cadastrado.");
+        }
+        userValidator.checkEmailNotRegistered(normalizedEmail);
+
         client.updateEmail(normalizedEmail);
         clientRepository.save(client);
     }

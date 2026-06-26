@@ -9,6 +9,7 @@ import com.quantumbanking.modules.bank.domain.bank.BankRegistry;
 import com.quantumbanking.modules.bank.service.AgencyService;
 import com.quantumbanking.modules.bank.service.BankRegistryService;
 import com.quantumbanking.modules.bank.service.BankService;
+import com.quantumbanking.modules.pixKey.detector.PixKeyDetector;
 import com.quantumbanking.modules.pixKey.domain.PixKey;
 import com.quantumbanking.modules.pixKey.service.PixKeyService;
 import com.quantumbanking.modules.shared.domain.user.User;
@@ -54,6 +55,21 @@ public class TransactionService {
 
     @Value("${transaction.timezone}")
     private String timezone;
+
+    /// Lock em ordem crescente de ID para evitar deadlock em transferências simultâneas entre as mesmas contas (ex: A→B e B→A)
+    private AccountPair lockAccountsInOrder(Long originId, Long destinationId) {
+
+        Long firstId = Math.min(originId, destinationId);
+        Long secondId = Math.max(originId, destinationId);
+
+        Account first = accountService.getByIdWithLock(firstId);
+        Account second = accountService.getByIdWithLock(secondId);
+
+        return new AccountPair(
+                originId.equals(firstId) ? first : second,
+                originId.equals(firstId) ? second : first
+        );
+    }
 
     @Transactional
     public DepositResponseDTO executeDeposit(Long userId, String accountNumber, DepositRequestDTO requestDTO) {
@@ -249,12 +265,13 @@ public class TransactionService {
 
         LocalTime transactionTime = LocalDateTime.now(ZoneId.of(timezone)).toLocalTime();
 
-        Optional<PixKey> pixKey = pixKeyService.getKey(requestDTO.key());
+        PixKeyDetector.PixKeyDetectionResult detection = PixKeyDetector.checkAndDetectKey(requestDTO.key());
+        String normalizedKey = detection.normalizedKey();
+
+        Optional<PixKey> pixKey = pixKeyService.getPixKey(normalizedKey);
 
         Account originAccount = accountService.getAccountByNumber(accountNumber);
-        Account destinationAccount = pixKey
-                .map(PixKey::getAccount)
-                .orElse(null);
+        Account destinationAccount = pixKey.map(PixKey::getAccount).orElse(null);
 
         if (destinationAccount != null) {
             AccountPair accounts = lockAccountsInOrder(originAccount.getId(), destinationAccount.getId());
@@ -276,7 +293,7 @@ public class TransactionService {
                 user.getId(),
                 TransactionType.PIX,
                 requestDTO.amount(),
-                requestDTO.key()
+                normalizedKey
         );
 
         Transaction transaction = transactionFactory
@@ -285,7 +302,8 @@ public class TransactionService {
                         destinationAccount,
                         requestDTO.amount(),
                         requestDTO.description(),
-                        requestDTO.key()
+                        normalizedKey,
+                        detection.type()
                 );
 
         Set<String> accountsToInvalidate = new HashSet<>();
@@ -316,21 +334,5 @@ public class TransactionService {
         transactionRepository.save(transaction);
 
         applicationEventPublisher.publishEvent(new TransactionCompletedEvent(accountsToInvalidate));
-    }
-
-
-    /// Lock em ordem crescente de ID para evitar deadlock em transferências simultâneas entre as mesmas contas (ex: A→B e B→A)
-    private AccountPair lockAccountsInOrder(Long originId, Long destinationId) {
-
-        Long firstId = Math.min(originId, destinationId);
-        Long secondId = Math.max(originId, destinationId);
-
-        Account first = accountService.getByIdWithLock(firstId);
-        Account second = accountService.getByIdWithLock(secondId);
-
-        return new AccountPair(
-                originId.equals(firstId) ? first : second,
-                originId.equals(firstId) ? second : first
-        );
     }
 }

@@ -1,6 +1,7 @@
 package com.quantumbanking.modules.transaction.mapper;
 
 import com.quantumbanking.modules.account.domain.Account;
+import com.quantumbanking.modules.pixKey.domain.PixKeyType;
 import com.quantumbanking.modules.shared.util.DataMaskingUtils;
 import com.quantumbanking.modules.shared.util.FormattingUtils;
 import com.quantumbanking.modules.transaction.domain.Transaction;
@@ -64,7 +65,8 @@ public class TransactionMapper {
                 transaction.getCreatedAt(),
                 transaction.getType(),
                 transaction.getAmount(),
-                transaction.getPixKey(),
+                maskPixKeyIfNeeded(transaction),
+                transaction.getPixKeyType(),
                 transaction.getDescription(),
                 pixDestinationInfo(transaction),
                 pixOriginInfo(transaction.getOriginAccount())
@@ -140,5 +142,12 @@ public class TransactionMapper {
                 defaultIfEmpty(transaction.getDestinationDocument(), "Documento não informado"),
                 defaultIfEmpty(transaction.getDestinationBankName(), "Instituição Externa")
         );
+    }
+
+    private String maskPixKeyIfNeeded(Transaction transaction) {
+        if (transaction.getPixKeyType() == PixKeyType.CPF) {
+            return DataMaskingUtils.maskCpf(transaction.getPixKey());
+        }
+        return transaction.getPixKey();
     }
 }

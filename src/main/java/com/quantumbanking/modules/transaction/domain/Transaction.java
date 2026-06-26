@@ -2,6 +2,7 @@ package com.quantumbanking.modules.transaction.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.quantumbanking.modules.account.domain.Account;
+import com.quantumbanking.modules.pixKey.domain.PixKeyType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -57,6 +58,10 @@ public class Transaction {
     private LocalDateTime createdAt;
 
     private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "pix_key_type")
+    private PixKeyType pixKeyType;
 
     @PrePersist
     public void prePersist() {

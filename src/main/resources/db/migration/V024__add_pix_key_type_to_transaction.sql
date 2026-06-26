@@ -1,0 +1,1 @@
+ALTER TABLE tb_transaction ADD COLUMN pix_key_type VARCHAR(20) NULL AFTER pix_key;

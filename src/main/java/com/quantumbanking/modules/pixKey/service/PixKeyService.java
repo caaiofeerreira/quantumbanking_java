@@ -4,14 +4,13 @@ import com.quantumbanking.infra.exception.ResourceNotFoundException;
 import com.quantumbanking.infra.exception.UnauthorizedAccessException;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.service.AccountService;
+import com.quantumbanking.modules.pixKey.detector.PixKeyDetector;
 import com.quantumbanking.modules.pixKey.domain.PixKey;
-import com.quantumbanking.modules.pixKey.domain.PixKeyType;
 import com.quantumbanking.modules.pixKey.dto.PixKeyRequestDTO;
 import com.quantumbanking.modules.pixKey.dto.PixKeyResponseDTO;
 import com.quantumbanking.modules.pixKey.mapper.PixKeyMapper;
 import com.quantumbanking.modules.pixKey.repository.PixKeyRepository;
 import com.quantumbanking.modules.pixKey.service.validation.PixKeyValidator;
-import com.quantumbanking.modules.shared.util.FormattingUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,24 +28,8 @@ public class PixKeyService {
     private final PixKeyMapper pixKeyMapper;
     private final PixKeyValidator pixKeyValidation;
 
-    public Optional<PixKey> getKey(String key) {
+    public Optional<PixKey> getPixKey(String key) {
         return pixKeyRepository.findByKey(key);
-    }
-
-    private String normalizeKey(String key) {
-        if (PixKeyType.CPF.matches(key)) {
-            return FormattingUtils.normalizeCpf(key);
-        }
-
-        if (PixKeyType.EMAIL.matches(key)) {
-            return key.toLowerCase();
-        }
-        return isPhoneCandidate(key) ? FormattingUtils.normalizePhone(key) : key.toLowerCase();
-    }
-
-    private boolean isPhoneCandidate(String key) {
-        String noFormatting = key.replaceAll("[()\\s-]", "");
-        return noFormatting.matches("^\\d{10,13}$");
     }
 
     @Transactional
@@ -54,24 +37,23 @@ public class PixKeyService {
 
         Account account = accountService.getAuthenticatedUserAccount(userId, accountNumber);
 
-        String normalizedKey = normalizeKey(requestDTO.key());
-
-        PixKeyType type = PixKeyType.detect(normalizedKey);
+        PixKeyDetector.PixKeyDetectionResult detectionResult = PixKeyDetector.checkAndDetectKey(requestDTO.key());
 
         pixKeyValidation.validatePixKey(
-                type,
-                normalizedKey,
+                detectionResult.type(),
+                detectionResult.normalizedKey(),
                 account.getClient(),
                 account.getId()
         );
 
         PixKey pixKey = new PixKey(
-                normalizedKey,
-                type,
+                detectionResult.normalizedKey(),
+                detectionResult.type(),
                 account
         );
 
         pixKeyRepository.save(pixKey);
+
         return pixKeyMapper.toPixKeyResponseDTO(pixKey);
     }
 

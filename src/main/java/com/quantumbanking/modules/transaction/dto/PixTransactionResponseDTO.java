@@ -1,6 +1,7 @@
 package com.quantumbanking.modules.transaction.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.quantumbanking.modules.pixKey.domain.PixKeyType;
 import com.quantumbanking.modules.transaction.domain.TransactionType;
 
 import java.math.BigDecimal;
@@ -13,6 +14,7 @@ public record PixTransactionResponseDTO(UUID id,
                                         TransactionType type,
                                         BigDecimal amount,
                                         String pixKey,
+                                        PixKeyType pixKeyType,
                                         String description,
                                         PixAccountInfoDTO destinationAccount,
                                         PixAccountInfoDTO originAccount) {
