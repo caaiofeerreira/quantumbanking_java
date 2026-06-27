@@ -11,7 +11,6 @@ public class AccountMapper {
 
     public AccountResponseDTO toAccountResponseDTO(Account account) {
         return new AccountResponseDTO(
-                account.getId(),
                 FormattingUtils.formatAccountNumber(account.getAccountNumber()),
                 account.getType(),
                 account.getBalance(),

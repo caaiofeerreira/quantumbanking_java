@@ -5,7 +5,6 @@ import com.quantumbanking.modules.shared.domain.user.UserStatus;
 import com.quantumbanking.modules.shared.dto.AddressDTO;
 
 public record ClientProfileResponseDTO(String name,
-                                       String cpf,
                                        String email,
                                        String phone,
                                        AddressDTO address,

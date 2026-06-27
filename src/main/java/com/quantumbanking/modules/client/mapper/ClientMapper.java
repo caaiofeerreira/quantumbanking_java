@@ -6,6 +6,7 @@ import com.quantumbanking.modules.client.domain.Client;
 import com.quantumbanking.modules.client.domain.Company;
 import com.quantumbanking.modules.client.dto.ClientProfileResponseDTO;
 import com.quantumbanking.modules.client.dto.ClientResponseDTO;
+import com.quantumbanking.modules.client.dto.CompanyResponseDTO;
 import com.quantumbanking.modules.shared.mapper.AddressMapper;
 import com.quantumbanking.modules.shared.util.DataMaskingUtils;
 import com.quantumbanking.modules.shared.util.FormattingUtils;
@@ -22,7 +23,6 @@ public class ClientMapper {
 
     public ClientResponseDTO toClientResponseDTO(Client client, Account account, Company company) {
         return new ClientResponseDTO(
-                client.getId(),
                 client.getName(),
                 DataMaskingUtils.maskCpf(client.getCpf()),
                 client.getEmail(),
@@ -30,7 +30,7 @@ public class ClientMapper {
                 client.getType(),
                 client.getStatus(),
                 accountMapper.toAccountResponseDTO(account),
-                company != null ? companyMapper.toCompanyResponseDTO(company) : null
+                mapCompany(company)
         );
     }
 
@@ -38,13 +38,19 @@ public class ClientMapper {
 
         return new ClientProfileResponseDTO(
                 client.getName(),
-                DataMaskingUtils.maskCpf(client.getCpf()),
                 client.getEmail(),
                 FormattingUtils.formatPhone(client.getPhone()),
                 addressMapper.toAddressDTO(client.getAddress()),
                 client.getType(),
                 client.getStatus(),
-                company != null ? companyMapper.toCompanyResponseDTO(company) : null
+                mapCompany(company)
         );
+    }
+
+    private CompanyResponseDTO mapCompany(Company company) {
+        if (company != null) {
+            return companyMapper.toCompanyResponseDTO(company);
+        }
+        return null;
     }
 }

@@ -5,8 +5,7 @@ import com.quantumbanking.modules.account.domain.AccountType;
 
 import java.math.BigDecimal;
 
-public record AccountResponseDTO(Long accountId,
-                                 String accountNumber,
+public record AccountResponseDTO(String accountNumber,
                                  AccountType accountType,
                                  BigDecimal balance,
                                  AccountStatus status,

@@ -1,6 +1,7 @@
 package com.quantumbanking.modules.bank.mapper;
 
 import com.quantumbanking.modules.account.domain.Account;
+import com.quantumbanking.modules.account.mapper.AccountMapper;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.bank.dto.AgencyAccountManagementDTO;
 import com.quantumbanking.modules.bank.dto.AgencyResponseDTO;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 public class AgencyMapper {
 
     private final AddressMapper addressMapper;
+    private final AccountMapper accountMapper;
 
     public AgencyResponseDTO toAgencyResponseDTO(Agency agency) {
         return new AgencyResponseDTO(
@@ -30,15 +32,9 @@ public class AgencyMapper {
     public AgencyAccountManagementDTO toAccountManagementDTO(Account account) {
         return new AgencyAccountManagementDTO(
                 account.getClient().getName(),
-                DataMaskingUtils.maskCpf(account.getClient().getCpf()),
                 account.getClient().getEmail(),
-                account.getClient().getPhone(),
+                FormattingUtils.formatPhone(account.getClient().getPhone()),
                 account.getClient().getType(),
-                account.getId(),
-                account.getAccountNumber(),
-                account.getType(),
-                account.getBalance(),
-                account.getStatus(),
-                account.getAgency().getAgencyNumber());
+                accountMapper.toAccountSummaryDTO(account));
     }
 }
