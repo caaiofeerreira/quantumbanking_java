@@ -1,17 +1,17 @@
-package com.quantumbanking.modules.bank.service;
+package com.quantumbanking.modules.manager.service;
 
 import com.quantumbanking.infra.exception.UserNotFoundException;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.service.AccountService;
-import com.quantumbanking.modules.bank.domain.agency.Agency;
-import com.quantumbanking.modules.bank.domain.manager.Manager;
+import com.quantumbanking.modules.bank.service.AgencyService;
+import com.quantumbanking.modules.manager.domain.Manager;
 import com.quantumbanking.modules.bank.dto.AgencyAccountManagementDTO;
-import com.quantumbanking.modules.bank.dto.ManagerProfileResponseDTO;
-import com.quantumbanking.modules.bank.dto.ManagerRegistrationDTO;
-import com.quantumbanking.modules.bank.factory.ManagerFactory;
+import com.quantumbanking.modules.manager.dto.ManagerProfileResponseDTO;
+import com.quantumbanking.modules.manager.dto.ManagerRegistrationDTO;
+import com.quantumbanking.modules.manager.factory.ManagerFactory;
 import com.quantumbanking.modules.bank.mapper.AgencyMapper;
-import com.quantumbanking.modules.bank.mapper.ManagerMapper;
-import com.quantumbanking.modules.bank.repository.ManagerRepository;
+import com.quantumbanking.modules.manager.mapper.ManagerMapper;
+import com.quantumbanking.modules.manager.repository.ManagerRepository;
 import com.quantumbanking.modules.loan.domain.LoanStatus;
 import com.quantumbanking.modules.loan.dto.LoanApprovedResponseDTO;
 import com.quantumbanking.modules.loan.dto.LoanManagerViewDTO;
@@ -51,17 +51,20 @@ public class ManagerService {
     private final PasswordEncoder passwordEncoder;
 
     public Manager getAuthenticatedUserManager(Long userId) {
-
         return managerRepository.findByUserId(userId)
                 .orElseThrow(() -> new UserNotFoundException("Gerente não encontrado."));
     }
 
+    @Transactional(readOnly = true)
     public List<Manager> getAllManagers() {
         return managerRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
     public List<Manager> getAllManagersByAgencyNumber(String agencyNumber) {
-        return managerRepository.findAllByAgency_AgencyNumber(agencyNumber);
+
+        Long agencyId = agencyService.getAgencyIdByNumber(agencyNumber);
+        return managerRepository.findAllByAgencyId(agencyId);
     }
 
     @Transactional
@@ -69,7 +72,6 @@ public class ManagerService {
 
         userValidator.checkCpfNotRegistered(dto.cpf());
         userValidator.checkEmailNotRegistered(dto.email());
-        userValidator.checkPhoneNotRegistered(dto.phone());
 
         NormalizedUserData data = new NormalizedUserData(
                 dto.name(),
@@ -86,9 +88,9 @@ public class ManagerService {
                 cepValidator.normalizeCep(dto.address().zipCode())
         );
 
-        Agency agency = agencyService.getAgencyByNumber(dto.agencyNumber());
+        Long agencyId = agencyService.getAgencyIdByNumber(dto.agencyNumber());
 
-        Manager manager = managerFactory.createManager(data, agency);
+        Manager manager = managerFactory.createManager(data, agencyId);
         managerRepository.save(manager);
 
         return manager;
@@ -147,7 +149,7 @@ public class ManagerService {
 
         Manager manager = getAuthenticatedUserManager(userId);
 
-        List<Account> accounts = accountService.getAccountsByAgencyId(manager.getAgency().getId());
+        List<Account> accounts = accountService.getAccountsByAgencyId(manager.getAgencyId());
 
         return accounts.stream()
                 .map(agencyMapper::toAccountManagementDTO)
@@ -159,7 +161,7 @@ public class ManagerService {
 
         Manager manager = getAuthenticatedUserManager(userId);
 
-        return loanService.getLoansByAgencyAndStatus(manager.getAgency().getId(), LoanStatus.REQUESTED)
+        return loanService.getLoansByAgencyAndStatus(manager.getAgencyId(), LoanStatus.REQUESTED)
                 .stream()
                 .map(loanMapper::toLoanManagerViewDTO)
                 .toList();

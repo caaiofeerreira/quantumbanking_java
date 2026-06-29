@@ -1,9 +1,12 @@
-package com.quantumbanking.modules.bank.mapper;
+package com.quantumbanking.modules.manager.mapper;
 
-import com.quantumbanking.modules.bank.domain.manager.Manager;
-import com.quantumbanking.modules.bank.dto.ManagerBasicViewDTO;
-import com.quantumbanking.modules.bank.dto.ManagerProfileResponseDTO;
-import com.quantumbanking.modules.bank.dto.ManagerResponseDTO;
+
+import com.quantumbanking.modules.bank.domain.agency.Agency;
+import com.quantumbanking.modules.bank.mapper.AgencyMapper;
+import com.quantumbanking.modules.manager.domain.Manager;
+import com.quantumbanking.modules.manager.dto.ManagerBasicViewDTO;
+import com.quantumbanking.modules.manager.dto.ManagerProfileResponseDTO;
+import com.quantumbanking.modules.manager.dto.ManagerResponseDTO;
 import com.quantumbanking.modules.shared.mapper.AddressMapper;
 import com.quantumbanking.modules.shared.util.DataMaskingUtils;
 import com.quantumbanking.modules.shared.util.FormattingUtils;
@@ -17,15 +20,14 @@ public class ManagerMapper {
     private final AgencyMapper agencyMapper;
     private final AddressMapper addressMapper;
 
-    public ManagerResponseDTO toManagerResponseDTO(Manager manager) {
+    public ManagerResponseDTO toManagerResponseDTO(Manager manager, Agency agency) {
         return new ManagerResponseDTO(
                 manager.getId(),
                 manager.getName(),
-                DataMaskingUtils.maskCpf(manager.getCpf()),
                 manager.getEmail(),
                 FormattingUtils.formatPhone(manager.getPhone()),
                 manager.getStatus(),
-                agencyMapper.toAgencyResponseDTO(manager.getAgency())
+                agencyMapper.toAgencyResponseDTO(agency)
         );
     }
 
@@ -33,7 +35,6 @@ public class ManagerMapper {
         return new ManagerBasicViewDTO(
                 manager.getId(),
                 manager.getName(),
-                DataMaskingUtils.maskCpf(manager.getCpf()),
                 manager.getEmail(),
                 FormattingUtils.formatPhone(manager.getPhone()),
                 manager.getStatus()
@@ -43,7 +44,6 @@ public class ManagerMapper {
     public ManagerProfileResponseDTO toProfileResponseDTO(Manager manager) {
         return new ManagerProfileResponseDTO(
                 manager.getName(),
-                DataMaskingUtils.maskCpf(manager.getCpf()),
                 manager.getEmail(),
                 FormattingUtils.formatPhone(manager.getPhone()),
                 addressMapper.toAddressDTO(manager.getAddress()),

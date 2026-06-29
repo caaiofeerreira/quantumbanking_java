@@ -1,10 +1,9 @@
-package com.quantumbanking.modules.bank.controller;
+package com.quantumbanking.modules.manager.controller;
 
 import com.quantumbanking.modules.bank.dto.AgencyAccountManagementDTO;
-import com.quantumbanking.modules.bank.service.ManagerService;
+import com.quantumbanking.modules.manager.service.ManagerService;
 import com.quantumbanking.modules.loan.dto.LoanApprovedResponseDTO;
 import com.quantumbanking.modules.loan.dto.LoanManagerViewDTO;
-import com.quantumbanking.modules.loan.dto.LoanResponseDTO;
 import com.quantumbanking.modules.shared.domain.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package com.quantumbanking.modules.bank.dto;
+package com.quantumbanking.modules.manager.dto;
 
 import com.quantumbanking.modules.shared.dto.AddressRequestDTO;
 import jakarta.validation.Valid;

@@ -1,7 +1,7 @@
-package com.quantumbanking.modules.bank.controller;
+package com.quantumbanking.modules.manager.controller;
 
-import com.quantumbanking.modules.bank.dto.ManagerProfileResponseDTO;
-import com.quantumbanking.modules.bank.service.ManagerService;
+import com.quantumbanking.modules.manager.dto.ManagerProfileResponseDTO;
+import com.quantumbanking.modules.manager.service.ManagerService;
 import com.quantumbanking.modules.shared.domain.user.User;
 import com.quantumbanking.modules.shared.dto.UpdateAddressRequestDTO;
 import com.quantumbanking.modules.shared.dto.UpdateEmailRequestDTO;

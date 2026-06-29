@@ -1,6 +1,6 @@
-package com.quantumbanking.modules.bank.repository;
+package com.quantumbanking.modules.manager.repository;
 
-import com.quantumbanking.modules.bank.domain.manager.Manager;
+import com.quantumbanking.modules.manager.domain.Manager;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,5 +13,5 @@ public interface ManagerRepository extends JpaRepository<Manager, Long> {
     @Query("SELECT m FROM Manager m WHERE m.id = :userId")
     Optional<Manager> findByUserId(@Param("userId") Long userId);
 
-    List<Manager> findAllByAgency_AgencyNumber(String agencyNumber);
+    List<Manager> findAllByAgencyId(Long agencyId);
 }
