@@ -2,14 +2,8 @@ package com.quantumbanking.modules.client.factory;
 
 import com.quantumbanking.modules.client.domain.Client;
 import com.quantumbanking.modules.client.domain.ClientType;
-import com.quantumbanking.modules.client.dto.ClientRegistrationDTO;
 import com.quantumbanking.modules.shared.domain.address.Address;
-import com.quantumbanking.modules.shared.dto.AddressRequestDTO;
 import com.quantumbanking.modules.shared.dto.NormalizedUserData;
-import com.quantumbanking.modules.shared.mapper.AddressMapper;
-import com.quantumbanking.modules.shared.service.validation.CepValidator;
-import com.quantumbanking.modules.shared.service.validation.UserValidator;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component

@@ -5,7 +5,6 @@ import com.quantumbanking.modules.client.domain.Client;
 import com.quantumbanking.modules.client.domain.ClientType;
 import com.quantumbanking.modules.client.domain.Company;
 import com.quantumbanking.modules.client.dto.ClientRegistrationDTO;
-import com.quantumbanking.modules.client.dto.CompanyRegistrationDTO;
 import com.quantumbanking.modules.client.factory.CompanyFactory;
 import com.quantumbanking.modules.client.repository.CompanyRepository;
 import lombok.RequiredArgsConstructor;

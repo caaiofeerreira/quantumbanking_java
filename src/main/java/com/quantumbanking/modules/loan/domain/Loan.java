@@ -1,7 +1,7 @@
 package com.quantumbanking.modules.loan.domain;
 
 import com.quantumbanking.modules.account.domain.Account;
-import com.quantumbanking.modules.bank.domain.manager.Manager;
+import com.quantumbanking.modules.manager.domain.Manager;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

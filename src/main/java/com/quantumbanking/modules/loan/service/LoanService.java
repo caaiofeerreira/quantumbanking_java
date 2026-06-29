@@ -2,7 +2,7 @@ package com.quantumbanking.modules.loan.service;
 
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.service.AccountService;
-import com.quantumbanking.modules.bank.domain.manager.Manager;
+import com.quantumbanking.modules.manager.domain.Manager;
 import com.quantumbanking.modules.loan.domain.Loan;
 import com.quantumbanking.modules.loan.domain.LoanStatus;
 import com.quantumbanking.modules.loan.dto.LoanApprovedResponseDTO;
@@ -43,7 +43,7 @@ public class LoanService {
         return loanRepository.findByAgencyIdAndStatus(agencyId, status);
     }
 
-    /// AÇÕES DO CLIENTE
+    // AÇÕES DO CLIENTE
 
     @Transactional
     public LoanResponseDTO processLoan(Long userId, String accountNumber, LoanRequestDTO requestDTO) {
@@ -91,7 +91,7 @@ public class LoanService {
                 .toList();
     }
 
-    /// AÇÕES DO GERENTE
+    // AÇÕES DO GERENTE
 
     @Transactional
     public LoanApprovedResponseDTO approveLoan(UUID loanId, Manager manager) {
@@ -133,7 +133,7 @@ public class LoanService {
             throw new IllegalStateException("O empréstimo não está em status de SOLICITADO.");
         }
 
-        if (!loan.getAccount().getAgency().getId().equals(manager.getAgency().getId())) {
+        if (!loan.getAccount().getAgency().getId().equals(manager.getAgencyId())) {
             throw new AccessDeniedException("O empréstimo não pertence à sua agência.");
         }
 
