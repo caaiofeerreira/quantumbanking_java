@@ -6,7 +6,6 @@ import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.bank.dto.AgencyAccountManagementDTO;
 import com.quantumbanking.modules.bank.dto.AgencyResponseDTO;
 import com.quantumbanking.modules.shared.mapper.AddressMapper;
-import com.quantumbanking.modules.shared.util.DataMaskingUtils;
 import com.quantumbanking.modules.shared.util.FormattingUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

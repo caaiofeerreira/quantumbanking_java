@@ -24,17 +24,38 @@ public class AgencyService {
 
     private final CepValidator cepValidator;
 
+    public void save(Agency agency) {
+        agencyRepository.save(agency);
+    }
+
+    @Transactional(readOnly = true)
     public Agency getAgencyByNumber(String agencyNumber) {
         return agencyRepository.findByAgencyNumber(agencyNumber)
                 .orElseThrow(() -> new AgencyNotFoundException("Agência não encontrada."));
     }
 
+
+    @Transactional(readOnly = true)
+    public Long getAgencyIdByNumber(String agencyNumber) {
+        return agencyRepository.findByAgencyNumber(agencyNumber)
+                .map(Agency::getId)
+                .orElseThrow(() -> new AgencyNotFoundException("Agência não encontrada."));
+    }
+
+    @Transactional(readOnly = true)
     public List<Agency> getAllAgencies() {
         return agencyRepository.findAll();
     }
 
-    public void save(Agency agency) {
-        agencyRepository.save(agency);
+    @Transactional(readOnly = true)
+    public Agency getAgencyById(Long id) {
+        return agencyRepository.findById(id)
+                .orElseThrow(() -> new AgencyNotFoundException("Agência não encontrada."));
+    }
+
+    @Transactional(readOnly = true)
+    public List<Agency> getAgenciesByIds(List<Long> ids) {
+        return agencyRepository.findAllById(ids);
     }
 
     @Transactional

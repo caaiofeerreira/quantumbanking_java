@@ -2,6 +2,9 @@ package com.quantumbanking.modules.admin.controller;
 
 import com.quantumbanking.modules.admin.service.AdminService;
 import com.quantumbanking.modules.bank.dto.*;
+import com.quantumbanking.modules.manager.dto.ManagerBasicViewDTO;
+import com.quantumbanking.modules.manager.dto.ManagerRegistrationDTO;
+import com.quantumbanking.modules.manager.dto.ManagerResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

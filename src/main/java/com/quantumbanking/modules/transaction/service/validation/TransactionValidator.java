@@ -108,13 +108,13 @@ public class TransactionValidator {
         account.ensureSufficientBalance(amount.add(feeAmount));
     }
 
-    public void validateInternal(Account originAccount, Account destinationAccount, Agency agency, BigDecimal amount, Long userId) {
+    public void validateInternal(Account originAccount, Account destinationAccount, Long agencyId, BigDecimal amount, Long userId) {
         checkAccountOwnership(originAccount, userId);
         checkDifferentAccounts(originAccount, destinationAccount);
         checkSavingsAccountInternal(originAccount, destinationAccount);
         checkMinimumTransactionAmount(amount);
 
-        if (!destinationAccount.getAgency().equals(agency)) {
+        if (!destinationAccount.getAgency().getId().equals(agencyId)) {
             throw new AgencyAccountMismatchException("A agência informada não coincide com a conta de destino.");
         }
     }

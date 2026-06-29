@@ -3,7 +3,6 @@ package com.quantumbanking.modules.bank.domain.agency;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.bank.domain.bank.Bank;
-import com.quantumbanking.modules.bank.domain.manager.Manager;
 import com.quantumbanking.modules.shared.domain.address.Address;
 import jakarta.persistence.*;
 import lombok.*;
@@ -22,24 +21,17 @@ public class Agency {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Setter
     @Column(name = "agency_name", nullable = false)
     private String agencyName;
 
     @Column(name = "agency_number", nullable = false)
     private String agencyNumber;
 
-    @Setter
     @Column(name = "phone", nullable = false)
     private String phone;
 
-    @Setter
     @Embedded
     private Address address;
-
-    @JsonManagedReference
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "agency")
-    private List<Manager> managers;
 
     @JsonManagedReference
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "agency")

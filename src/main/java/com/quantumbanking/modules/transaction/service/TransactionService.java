@@ -3,7 +3,6 @@ package com.quantumbanking.modules.transaction.service;
 import com.quantumbanking.infra.event.TransactionCompletedEvent;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.service.AccountService;
-import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.bank.domain.bank.Bank;
 import com.quantumbanking.modules.bank.domain.bank.BankRegistry;
 import com.quantumbanking.modules.bank.service.AgencyService;
@@ -56,7 +55,7 @@ public class TransactionService {
     @Value("${transaction.timezone}")
     private String timezone;
 
-    /// Lock em ordem crescente de ID para evitar deadlock em transferências simultâneas entre as mesmas contas (ex: A→B e B→A)
+    // Lock em ordem crescente de ID para evitar deadlock em transferências simultâneas entre as mesmas contas (ex: A→B e B→A)
     private AccountPair lockAccountsInOrder(Long originId, Long destinationId) {
 
         Long firstId = Math.min(originId, destinationId);
@@ -174,12 +173,12 @@ public class TransactionService {
         originAccount = accounts.originAccount();
         destinationAccount = accounts.destinationAccount();
 
-        Agency agency = agencyService.getAgencyByNumber(requestDTO.agencyNumber());
+        Long agencyId = agencyService.getAgencyIdByNumber(requestDTO.agencyNumber());
 
         transactionValidator.validateInternal(
                 originAccount,
                 destinationAccount,
-                agency,
+                agencyId,
                 requestDTO.amount(),
                 user.getId()
         );
