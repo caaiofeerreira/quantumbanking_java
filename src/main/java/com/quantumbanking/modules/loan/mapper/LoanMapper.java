@@ -44,15 +44,7 @@ public class LoanMapper {
                 loan.getAccount().getAccountNumber(),
                 loan.getAccount().getBalance(),
                 loan.getAccount().getType(),
-                loan.getId(),
-                loan.getAmount(),
-                loan.getInterestRate(),
-                loan.getInstallments(),
-                loan.getInstallmentAmount(),
-                loan.getTotalAmount(),
-                loan.getDescription(),
-                loan.getCreatedAt(),
-                loan.getStatus()
+                toLoanResponseDTO(loan)
         );
     }
 }

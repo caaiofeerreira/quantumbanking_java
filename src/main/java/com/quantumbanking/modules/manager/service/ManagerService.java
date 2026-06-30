@@ -4,6 +4,7 @@ import com.quantumbanking.infra.exception.UserNotFoundException;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.service.AccountService;
 import com.quantumbanking.modules.bank.service.AgencyService;
+import com.quantumbanking.modules.client.domain.Client;
 import com.quantumbanking.modules.manager.domain.Manager;
 import com.quantumbanking.modules.bank.dto.AgencyAccountManagementDTO;
 import com.quantumbanking.modules.manager.dto.ManagerProfileResponseDTO;
@@ -28,7 +29,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -52,6 +55,11 @@ public class ManagerService {
 
     public Manager getAuthenticatedUserManager(Long userId) {
         return managerRepository.findByUserId(userId)
+                .orElseThrow(() -> new UserNotFoundException("Gerente não encontrado."));
+    }
+
+    public Long getAuthenticatedUserAgencyId(Long userId) {
+        return managerRepository.findAgencyIdByUserId(userId)
                 .orElseThrow(() -> new UserNotFoundException("Gerente não encontrado."));
     }
 
@@ -147,21 +155,26 @@ public class ManagerService {
     @Transactional(readOnly = true)
     public List<AgencyAccountManagementDTO> getAccountsByAgency(Long userId) {
 
-        Manager manager = getAuthenticatedUserManager(userId);
+        Long agencyId = getAuthenticatedUserAgencyId(userId);
 
-        List<Account> accounts = accountService.getAccountsByAgencyId(manager.getAgencyId());
+        List<Account> accounts = accountService.getAccountsByAgencyId(agencyId);
 
-        return accounts.stream()
-                .map(agencyMapper::toAccountManagementDTO)
+        Map<Client, List<Account>> accountsByClient = accounts.stream()
+                .collect(Collectors.groupingBy(Account::getClient));
+
+        return accountsByClient
+                .entrySet()
+                .stream()
+                .map(entry -> agencyMapper.toAccountManagementDTO(entry.getKey(), entry.getValue()))
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public List<LoanManagerViewDTO> getLoanRequestsByAgency(Long userId) {
 
-        Manager manager = getAuthenticatedUserManager(userId);
+        Long agencyId = getAuthenticatedUserAgencyId(userId);
 
-        return loanService.getLoansByAgencyAndStatus(manager.getAgencyId(), LoanStatus.REQUESTED)
+        return loanService.getLoansByAgencyAndStatus(agencyId, LoanStatus.REQUESTED)
                 .stream()
                 .map(loanMapper::toLoanManagerViewDTO)
                 .toList();

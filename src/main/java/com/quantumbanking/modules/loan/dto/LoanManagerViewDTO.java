@@ -10,14 +10,7 @@ import java.util.UUID;
 public record LoanManagerViewDTO(String clientName,
                                  String accountNumber,
                                  BigDecimal balance,
-                                 AccountType accountType,
+                                 AccountType type,
+                                 LoanResponseDTO loan) {
 
-                                 UUID loanId,
-                                 BigDecimal amount,
-                                 BigDecimal interestRate,
-                                 Integer installments,
-                                 BigDecimal installmentAmount,
-                                 BigDecimal totalAmount,
-                                 String description,
-                                 LocalDateTime createdAt,
-                                 LoanStatus status) {}
+}

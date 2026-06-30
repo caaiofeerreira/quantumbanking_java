@@ -5,10 +5,13 @@ import com.quantumbanking.modules.account.mapper.AccountMapper;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.bank.dto.AgencyAccountManagementDTO;
 import com.quantumbanking.modules.bank.dto.AgencyResponseDTO;
+import com.quantumbanking.modules.client.domain.Client;
 import com.quantumbanking.modules.shared.mapper.AddressMapper;
 import com.quantumbanking.modules.shared.util.FormattingUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -28,12 +31,14 @@ public class AgencyMapper {
         );
     }
 
-    public AgencyAccountManagementDTO toAccountManagementDTO(Account account) {
+    public AgencyAccountManagementDTO toAccountManagementDTO(Client client, List<Account> accounts) {
         return new AgencyAccountManagementDTO(
-                account.getClient().getName(),
-                account.getClient().getEmail(),
-                FormattingUtils.formatPhone(account.getClient().getPhone()),
-                account.getClient().getType(),
-                accountMapper.toAccountSummaryDTO(account));
+                client.getName(),
+                client.getEmail(),
+                FormattingUtils.formatPhone(client.getPhone()),
+                client.getType(),
+                accounts.stream()
+                        .map(accountMapper::toAccountSummaryDTO)
+                        .toList());
     }
 }

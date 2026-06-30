@@ -13,5 +13,8 @@ public interface ManagerRepository extends JpaRepository<Manager, Long> {
     @Query("SELECT m FROM Manager m WHERE m.id = :userId")
     Optional<Manager> findByUserId(@Param("userId") Long userId);
 
+    @Query("SELECT m.agencyId FROM Manager m WHERE m.id = :userId")
+    Optional<Long> findAgencyIdByUserId(@Param("userId") Long userId);
+
     List<Manager> findAllByAgencyId(Long agencyId);
 }
