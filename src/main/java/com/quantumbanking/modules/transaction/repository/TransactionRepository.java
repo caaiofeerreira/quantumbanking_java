@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface TransactionRepository extends JpaRepository<Transaction, UUID> {
@@ -34,4 +35,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end
     );
+
+    @Query("""
+    SELECT t FROM Transaction t
+    WHERE t.id = :transactionId
+    AND (t.originAccount.id = :accountId OR t.destinationAccount.id = :accountId)
+    """)
+    Optional<Transaction> findByIdAndAccountInvolved(@Param("transactionId") UUID transactionId,
+                                                     @Param("accountId") Long accountId);
 }

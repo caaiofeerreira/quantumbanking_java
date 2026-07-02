@@ -12,5 +12,5 @@ public record WithdrawResponseDTO(UUID id,
                                   LocalDateTime createdAt,
                                   TransactionType type,
                                   BigDecimal amount,
-                                  FeeDetailDTO fee) {
+                                  FeeDetailDTO fee) implements TransactionDetailResponse {
 }

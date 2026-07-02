@@ -1,6 +1,7 @@
 package com.quantumbanking.modules.transaction.mapper;
 
 import com.quantumbanking.modules.account.domain.Account;
+import com.quantumbanking.modules.loan.domain.Loan;
 import com.quantumbanking.modules.pixKey.domain.PixKeyType;
 import com.quantumbanking.modules.shared.util.DataMaskingUtils;
 import com.quantumbanking.modules.shared.util.FormattingUtils;
@@ -37,6 +38,10 @@ public class TransactionMapper {
         );
     }
 
+    public WithdrawResponseDTO toWithdrawResponse(Transaction transaction) {
+        return toWithdrawResponse(transaction, null);
+    }
+
     public InternalTransactionResponseDTO toInternalResponse(Transaction transaction) {
         return new InternalTransactionResponseDTO(
                 transaction.getId(),
@@ -70,6 +75,24 @@ public class TransactionMapper {
                 transaction.getDescription(),
                 pixDestinationInfo(transaction),
                 pixOriginInfo(transaction.getOriginAccount())
+        );
+    }
+
+    public LoanTransactionDetailDTO toLoanTransactionDetail(Transaction transaction) {
+        Loan loan = transaction.getLoan();
+        return new LoanTransactionDetailDTO(
+                transaction.getId(),
+                transaction.getCreatedAt(),
+                transaction.getAmount(),
+                transaction.getDescription(),
+                loan.getTotalAmount(),
+                loan.getInstallmentAmount(),
+                loan.getInstallments(),
+                loan.getPaidInstallments(),
+                loan.getInterestRate(),
+                loan.getStartDate(),
+                loan.getEndDate(),
+                loan.getStatus()
         );
     }
 

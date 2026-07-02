@@ -13,5 +13,5 @@ public record ExternalTransactionResponseDTO(UUID id,
                                              TransactionType type,
                                              BigDecimal amount,
                                              AccountInfoDTO destinationAccount,
-                                             AccountInfoDTO originAccount) {
+                                             AccountInfoDTO originAccount) implements TransactionDetailResponse {
 }

@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/account/{accountNumber}/transaction")
@@ -49,5 +51,12 @@ public class TransactionController {
                                                          @PathVariable String accountNumber,
                                                          @RequestBody @Valid PixTransactionRequestDTO requestDTO) {
         return ResponseEntity.ok(transactionService.executePixTransaction(user, accountNumber, requestDTO));
+    }
+
+    @GetMapping("/{transactionId}")
+    public ResponseEntity<TransactionDetailResponse> getTransactionDetail(@AuthenticationPrincipal User user,
+                                                       @PathVariable String accountNumber,
+                                                       @PathVariable UUID transactionId) {
+        return ResponseEntity.ok(transactionService.getTransactionDetail(user.getId(), accountNumber, transactionId));
     }
 }

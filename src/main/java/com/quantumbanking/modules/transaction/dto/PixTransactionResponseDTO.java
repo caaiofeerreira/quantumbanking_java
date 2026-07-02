@@ -17,6 +17,6 @@ public record PixTransactionResponseDTO(UUID id,
                                         PixKeyType pixKeyType,
                                         String description,
                                         PixAccountInfoDTO destinationAccount,
-                                        PixAccountInfoDTO originAccount) {
+                                        PixAccountInfoDTO originAccount) implements TransactionDetailResponse {
 
 }
