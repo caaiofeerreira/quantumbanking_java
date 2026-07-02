@@ -281,4 +281,16 @@ public class ResourceExceptionHandler {
         log.warn("Tentativa de atualizar email para o mesmo já cadastrado: {}", ex.getMessage());
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
     }
+
+    @ExceptionHandler(TransactionDetailNotAvailableException.class)
+    public ResponseEntity<ErrorResponse> handleTransactionDetailNotAvailableException(TransactionDetailNotAvailableException ex) {
+        log.warn("Detalhamento de transação não disponível: {}", ex.getMessage());
+        return buildResponse(HttpStatus.NOT_IMPLEMENTED, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(TransactionNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleTransactionNotFoundException(TransactionNotFoundException ex) {
+        log.warn("Transação não encontrada: {}", ex.getMessage());
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), getPath());
+    }
 }
