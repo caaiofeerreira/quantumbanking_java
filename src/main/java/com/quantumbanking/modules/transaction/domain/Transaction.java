@@ -2,6 +2,8 @@ package com.quantumbanking.modules.transaction.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.quantumbanking.modules.account.domain.Account;
+import com.quantumbanking.modules.bank.domain.bank.BankAccount;
+import com.quantumbanking.modules.loan.domain.Loan;
 import com.quantumbanking.modules.pixKey.domain.PixKeyType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -62,6 +64,16 @@ public class Transaction {
     @Enumerated(EnumType.STRING)
     @Column(name = "pix_key_type")
     private PixKeyType pixKeyType;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bank_account_id")
+    private BankAccount bankAccount;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "loan_id")
+    private Loan loan;
 
     @PrePersist
     public void prePersist() {

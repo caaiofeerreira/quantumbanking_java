@@ -1,0 +1,3 @@
+ALTER TABLE tb_bank_account
+    ADD COLUMN account_number VARCHAR(20) NOT NULL DEFAULT '000000001',
+    ADD COLUMN agency_number VARCHAR(10) NOT NULL DEFAULT '0001';

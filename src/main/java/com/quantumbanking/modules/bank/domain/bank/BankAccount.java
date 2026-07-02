@@ -23,7 +23,17 @@ public class BankAccount {
     @Column(precision = 19, scale = 2)
     private BigDecimal balance;
 
+    @Column(name = "account_number", nullable = false)
+    private String accountNumber;
+
+    @Column(name = "agency_number", nullable = false)
+    private String agencyNumber;
+
     public void credit(BigDecimal amount) {
         this.balance = this.balance.add(amount);
+    }
+
+    public void debit(BigDecimal amount) {
+        this.balance = this.balance.subtract(amount);
     }
 }

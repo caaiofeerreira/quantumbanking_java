@@ -1,13 +1,17 @@
 package com.quantumbanking.modules.transaction.service;
 
 import com.quantumbanking.infra.event.TransactionCompletedEvent;
+import com.quantumbanking.infra.exception.TransactionDetailNotAvailableException;
+import com.quantumbanking.infra.exception.TransactionNotFoundException;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.service.AccountService;
 import com.quantumbanking.modules.bank.domain.bank.Bank;
+import com.quantumbanking.modules.bank.domain.bank.BankAccount;
 import com.quantumbanking.modules.bank.domain.bank.BankRegistry;
 import com.quantumbanking.modules.bank.service.AgencyService;
 import com.quantumbanking.modules.bank.service.BankRegistryService;
 import com.quantumbanking.modules.bank.service.BankService;
+import com.quantumbanking.modules.loan.domain.Loan;
 import com.quantumbanking.modules.pixKey.detector.PixKeyDetector;
 import com.quantumbanking.modules.pixKey.domain.PixKey;
 import com.quantumbanking.modules.pixKey.service.PixKeyService;
@@ -33,6 +37,7 @@ import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -55,7 +60,8 @@ public class TransactionService {
     @Value("${transaction.timezone}")
     private String timezone;
 
-    // Lock em ordem crescente de ID para evitar deadlock em transferências simultâneas entre as mesmas contas (ex: A→B e B→A)
+    // Lock em ordem crescente de ID para evitar deadlock em transferências simultâneas entre as mesmas contas
+    // (ex: A→B e B→A)
     private AccountPair lockAccountsInOrder(Long originId, Long destinationId) {
 
         Long firstId = Math.min(originId, destinationId);
@@ -118,7 +124,11 @@ public class TransactionService {
         int freeWithdrawals = account.getType().getFreeWithdrawals();
         boolean shouldChargeFee = withdrawalsThisMonth >= freeWithdrawals;
 
-        transactionValidator.validateWithdraw(account, requestDTO.amount(), shouldChargeFee);
+        transactionValidator.validateWithdraw(
+                account,
+                requestDTO.amount(),
+                shouldChargeFee
+        );
 
         duplicateTransactionService.checkAndRegister(
                 userId,
@@ -132,9 +142,14 @@ public class TransactionService {
         if (shouldChargeFee) {
 
             BigDecimal feeAmount = account.getType().getFeeAmount();
-            Transaction feeTransaction = transactionFactory.createFee(account, feeAmount);
+            Bank bank = bankService.getBank();
+            Transaction feeTransaction = transactionFactory.createFee(
+                    account, bank, feeAmount
+            );
             account.debit(feeAmount);
-            bankService.creditFee(feeAmount);
+            bank.getAccount().credit(feeAmount);
+
+            bankService.save(bank.getAccount());
             transactionRepository.save(feeTransaction);
 
             fee = new FeeDetailDTO(true, feeAmount,
@@ -325,13 +340,38 @@ public class TransactionService {
     }
 
     @Transactional
-    public void executeLoan(Bank bank, Account account, BigDecimal amount, String description) {
+    public void executeLoan(Loan loan) {
 
-        Set<String> accountsToInvalidate = Set.of(account.getAccountNumber());
+        Transaction transaction = transactionFactory.createLoan(loan);
 
-        Transaction transaction = transactionFactory.createLoan(bank, account, amount, description);
+        BankAccount bankAccount = loan.getAccount().getAgency().getBank().getAccount();
+        bankAccount.debit(loan.getAmount());
+        loan.getAccount().credit(loan.getAmount());
+
+        bankService.save(bankAccount);
+        accountService.save(loan.getAccount());
         transactionRepository.save(transaction);
 
-        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(accountsToInvalidate));
+        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(loan.getAccount().getAccountNumber()));
+    }
+
+    @Transactional(readOnly = true)
+    public TransactionDetailResponse getTransactionDetail(Long userId, String accountNumber, UUID transactionId) {
+
+        Account account = accountService.getAuthenticatedUserAccount(userId, accountNumber);
+
+        Transaction transaction = transactionRepository.findByIdAndAccountInvolved(transactionId, account.getId())
+                .orElseThrow(() -> new TransactionNotFoundException("Transação não encontrada: " + transactionId));
+
+        return switch (transaction.getType()) {
+            case DEPOSIT -> transactionMapper.toDepositResponse(transaction);
+            case WITHDRAWAL -> transactionMapper.toWithdrawResponse(transaction);
+            case INTERNAL_TRANSFER -> transactionMapper.toInternalResponse(transaction);
+            case EXTERNAL_TRANSFER -> transactionMapper.toExternalResponse(transaction);
+            case PIX -> transactionMapper.toPixResponse(transaction);
+            case LOAN -> transactionMapper.toLoanTransactionDetail(transaction);
+            case FEE -> throw new TransactionDetailNotAvailableException(
+                    "Detalhamento não disponível para transações do tipo: " + transaction.getType());
+        };
     }
 }

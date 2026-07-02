@@ -48,34 +48,25 @@ public enum TransactionType {
         public String getDisplayName(boolean isOrigin) {
             return isOrigin ? "Parcela de Empréstimo" : "Crédito de Empréstimo";
         }
-
-        @Override
-        public String getCounterpartName(Transaction t, boolean isOrigin) {
-            return "Quantum Banking";
-        }
     },
 
     FEE {
         @Override
         public String getDisplayName(boolean isOrigin) { return "Tarifa de Saque"; }
-
-        @Override
-        public String getCounterpartName(Transaction t, boolean isOrigin) {
-            return "Quantum Banking";
-        }
     };
 
     public abstract String getDisplayName(boolean isOrigin);
 
     public String getCounterpartName(Transaction t, boolean isOrigin) {
         if (isOrigin) {
-            return (t.getDestinationAccount() != null)
-                    ? t.getDestinationAccount().getClient().getName()
-                    : (t.getDestinationName() != null ? t.getDestinationName() : "Destinatário não identificado");
+            if (t.getDestinationAccount() != null) return t.getDestinationAccount().getClient().getName();
+            if (t.getDestinationBankName() != null) return t.getDestinationBankName();
+            if (t.getDestinationName() != null) return t.getDestinationName();
+            return "Destinatário não identificado";
         } else {
-            return (t.getOriginAccount() != null)
-                    ? t.getOriginAccount().getClient().getName()
-                    : (t.getOriginName() != null ? t.getOriginName() : "Origem Externa");
+            if (t.getOriginAccount() != null) return t.getOriginAccount().getClient().getName();
+            if (t.getOriginName() != null) return t.getOriginName();
+            return "Origem Externa";
         }
     }
 }

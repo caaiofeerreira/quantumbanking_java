@@ -2,6 +2,7 @@ package com.quantumbanking.modules.transaction.factory;
 
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.bank.domain.bank.Bank;
+import com.quantumbanking.modules.loan.domain.Loan;
 import com.quantumbanking.modules.pixKey.domain.PixKeyType;
 import com.quantumbanking.modules.transaction.domain.Transaction;
 import com.quantumbanking.modules.transaction.domain.TransactionType;
@@ -11,6 +12,10 @@ import java.math.BigDecimal;
 
 @Component
 public class TransactionFactory {
+
+    private String normalizeDescription(String description) {
+        return (description != null && !description.isBlank()) ? description.trim() : null;
+    }
 
     public Transaction createDeposit(Account account, BigDecimal amount, String description) {
         return Transaction.builder()
@@ -42,7 +47,7 @@ public class TransactionFactory {
                 .build();
     }
 
-    public Transaction createFee(Account account, BigDecimal amount) {
+    public Transaction createFee(Account account, Bank bank , BigDecimal amount) {
         return Transaction.builder()
                 .originAccount(account)
                 .originName(account.getClient().getName())
@@ -52,6 +57,11 @@ public class TransactionFactory {
                 .originDocument(account.getClient().getCpf())
                 .amount(amount)
                 .type(TransactionType.FEE)
+                .bankAccount(bank.getAccount())
+                .destinationBankName(bank.getName())
+                .destinationBankCompe(bank.getCompe())
+                .destinationAccountNumber(bank.getAccount().getAccountNumber())
+                .destinationAgency(bank.getAccount().getAgencyNumber())
                 .description("Tarifa por excesso de saques no mês")
                 .build();
     }
@@ -132,10 +142,17 @@ public class TransactionFactory {
         return builder.build();
     }
 
-    public Transaction createLoan(Bank bank, Account account, BigDecimal amount, String description) {
+    public Transaction createLoan(Loan loan) {
+
+        Bank bank = loan.getAccount().getAgency().getBank();
+        Account account = loan.getAccount();
+
         return Transaction.builder()
                 .originName(bank.getName())
                 .originBankCompe(bank.getCompe())
+                .originAccountNumber(bank.getAccount().getAccountNumber())
+                .originAgency(bank.getAccount().getAgencyNumber())
+                .bankAccount(bank.getAccount())
 
                 .destinationAccount(account)
                 .destinationName(account.getClient().getName())
@@ -144,13 +161,10 @@ public class TransactionFactory {
                 .destinationBankCompe(account.getAgency().getBank().getCompe())
                 .destinationDocument(account.getClient().getCpf())
 
-                .amount(amount)
+                .loan(loan)
+                .amount(loan.getAmount())
                 .type(TransactionType.LOAN)
-                .description(normalizeDescription(description))
+                .description(normalizeDescription(loan.getDescription()))
                 .build();
-    }
-
-    private String normalizeDescription(String description) {
-        return (description != null && !description.isBlank()) ? description.trim() : null;
     }
 }
