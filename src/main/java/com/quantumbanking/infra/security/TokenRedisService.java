@@ -22,12 +22,12 @@ public class TokenRedisService {
         return Duration.ofMinutes(expiration);
     }
 
-    public void saveActiveToken(Long userId, String token) {
-        redisTemplate.opsForValue().set(PREFIX + userId, token, ttl());
+    public void saveActiveToken(Long userId, String jti) {
+        redisTemplate.opsForValue().set(PREFIX + userId, jti, ttl());
     }
 
-    public boolean checkActiveToken(Long userId, String token) {
+    public boolean checkActiveToken(Long userId, String jti) {
         Object stored = redisTemplate.opsForValue().get(PREFIX + userId);
-        return token.equals(stored);
+        return jti.equals(stored);
     }
 }

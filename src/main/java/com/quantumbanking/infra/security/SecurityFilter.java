@@ -31,11 +31,11 @@ public class SecurityFilter extends OncePerRequestFilter {
 
         if (tokenJWT != null) {
             try {
-                var cpf = tokenService.getSubject(tokenJWT);
-                var user = userRepository.findByCpf(cpf)
+                var claims = tokenService.getClaims(tokenJWT);
+                var user = userRepository.findByCpf(claims.subject())
                         .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
 
-                if (!tokenRedisService.checkActiveToken(user.getId(), tokenJWT)) {
+                if (!tokenRedisService.checkActiveToken(user.getId(), claims.jti())) { // alterado
                     SecurityContextHolder.clearContext();
                     filterChain.doFilter(request, response);
                     return;

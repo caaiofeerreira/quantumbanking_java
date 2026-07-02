@@ -4,12 +4,15 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.quantumbanking.infra.security.dto.TokenClaims;
 import com.quantumbanking.modules.shared.domain.user.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.UUID;
 
 @Service
 public class TokenService {
@@ -26,6 +29,7 @@ public class TokenService {
             return JWT.create()
                     .withIssuer("QB_api")
                     .withSubject(user.getCpf())
+                    .withJWTId(UUID.randomUUID().toString())
                     .withExpiresAt(dataExpiration())
                     .sign(algorithm);
         } catch (JWTCreationException exception) {
@@ -33,14 +37,18 @@ public class TokenService {
         }
     }
 
-    public String getSubject(String tokenJWT) {
+    public TokenClaims getClaims(String tokenJWT) {
+        var decoded = decode(tokenJWT);
+        return new TokenClaims(decoded.getSubject(), decoded.getId());
+    }
+
+    private DecodedJWT decode(String tokenJWT) {
         try {
             var algorithm = Algorithm.HMAC256(secret);
             return JWT.require(algorithm)
                     .withIssuer("QB_api")
                     .build()
-                    .verify(tokenJWT)
-                    .getSubject();
+                    .verify(tokenJWT);
         } catch (JWTVerificationException exception) {
             throw new RuntimeException("Token JWT inválido ou expirado!");
         }
