@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,6 +40,22 @@ public class LoanService {
 
     public List<Loan> getLoansByAgencyAndStatus(Long agencyId, LoanStatus status) {
         return loanRepository.findByAgencyIdAndStatus(agencyId, status);
+    }
+
+    private Loan getLoanByIdAndAgency(UUID loanId, Manager manager) {
+
+        Loan loan = loanRepository.findByIdWithDetails(loanId)
+                .orElseThrow(() -> new EntityNotFoundException("Empréstimo não encontrado."));
+
+        if (loan.getStatus() != LoanStatus.REQUESTED) {
+            throw new IllegalStateException("O empréstimo não está em status de SOLICITADO.");
+        }
+
+        if (!loan.getAccount().getAgency().getId().equals(manager.getAgencyId())) {
+            throw new AccessDeniedException("O empréstimo não pertence à sua agência.");
+        }
+
+        return loan;
     }
 
     // AÇÕES DO CLIENTE
@@ -68,11 +83,10 @@ public class LoanService {
                 requestDTO.amount(),
                 interestRate,
                 requestDTO.installments(),
-                requestDTO.description()
+                requestDTO.description(),
+                installmentAmount,
+                totalAmount
         );
-
-        loan.setInstallmentAmount(installmentAmount);
-        loan.setTotalAmount(totalAmount);
 
         loanRepository.save(loan);
 
@@ -97,46 +111,16 @@ public class LoanService {
     public LoanApprovedResponseDTO approveLoan(UUID loanId, Manager manager) {
 
         Loan loan = getLoanByIdAndAgency(loanId, manager);
+        loan.approveLoan(manager);
+        transactionService.executeLoan(loan);
 
-        loan.setManager(manager);
-        loan.setStatus(LoanStatus.APPROVED);
-        loan.setStartDate(LocalDate.now());
-        loan.setEndDate(LocalDate.now().plusMonths(loan.getInstallments()));
-
-        loan.getAccount().credit(loan.getAmount());
-
-        transactionService.executeLoan(
-                loan.getAccount().getAgency().getBank(),
-                loan.getAccount(),
-                loan.getAmount(),
-                loan.getDescription()
-        );
-
-        return loanMapper.toLoanApproved(loan);
+        return loanMapper.toLoanApprovedDTO(loan);
     }
 
     @Transactional
     public void rejectLoan(UUID loanId, Manager manager) {
 
         Loan loan = getLoanByIdAndAgency(loanId, manager);
-
-        loan.setManager(manager);
-        loan.setStatus(LoanStatus.REJECTED);
-    }
-
-    private Loan getLoanByIdAndAgency(UUID loanId, Manager manager) {
-
-        Loan loan = loanRepository.findByIdWithDetails(loanId)
-                .orElseThrow(() -> new EntityNotFoundException("Empréstimo não encontrado."));
-
-        if (loan.getStatus() != LoanStatus.REQUESTED) {
-            throw new IllegalStateException("O empréstimo não está em status de SOLICITADO.");
-        }
-
-        if (!loan.getAccount().getAgency().getId().equals(manager.getAgencyId())) {
-            throw new AccessDeniedException("O empréstimo não pertence à sua agência.");
-        }
-
-        return loan;
+        loan.rejectLoan(manager);
     }
 }

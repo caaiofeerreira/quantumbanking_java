@@ -6,7 +6,6 @@ import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -37,38 +36,31 @@ public class Loan  {
     @Column(nullable = false)
     private Integer installments;
 
-    @Column(length = 255)
+    @Column
     private String description;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @Setter
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private LoanStatus status;
 
-    @Setter
     @Column(name = "paid_installments")
     private Integer paidInstallments;
 
-    @Setter
     @Column(name = "total_amount", precision = 19, scale = 2)
     private BigDecimal totalAmount;
 
-    @Setter
     @Column(name = "installment_amount", precision = 19, scale = 2)
     private BigDecimal installmentAmount;
 
-    @Setter
     @Column(name = "start_date")
     private LocalDate startDate;
 
-    @Setter
     @Column(name = "end_date")
     private LocalDate endDate;
 
-    @Setter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "manager_id")
     private Manager manager;
@@ -80,12 +72,27 @@ public class Loan  {
         this.paidInstallments = 0;
     }
 
-    public Loan (Account account, BigDecimal amount, BigDecimal interestRate,
-                 Integer installments, String description) {
+    public Loan(Account account, BigDecimal amount, BigDecimal interestRate,
+                Integer installments, String description,
+                BigDecimal installmentAmount, BigDecimal totalAmount) {
         this.account = account;
         this.amount = amount;
         this.interestRate = interestRate;
         this.installments = installments;
         this.description = description;
+        this.installmentAmount = installmentAmount;
+        this.totalAmount = totalAmount;
+    }
+
+    public void approveLoan(Manager manager) {
+        this.manager = manager;
+        this.status = LoanStatus.APPROVED;
+        this.startDate = LocalDate.now();
+        this.endDate = LocalDate.now().plusMonths(this.installments);
+    }
+
+    public void rejectLoan(Manager manager) {
+        this.manager = manager;
+        this.status = LoanStatus.REJECTED;
     }
 }

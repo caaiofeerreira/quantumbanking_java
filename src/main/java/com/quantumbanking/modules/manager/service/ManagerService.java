@@ -80,6 +80,7 @@ public class ManagerService {
 
         userValidator.checkCpfNotRegistered(dto.cpf());
         userValidator.checkEmailNotRegistered(dto.email());
+        userValidator.checkPhoneNotRegistered(dto.phone());
 
         NormalizedUserData data = new NormalizedUserData(
                 dto.name(),
@@ -169,7 +170,6 @@ public class ManagerService {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
     public List<LoanManagerViewDTO> getLoanRequestsByAgency(Long userId) {
 
         Long agencyId = getAuthenticatedUserAgencyId(userId);
@@ -180,14 +180,12 @@ public class ManagerService {
                 .toList();
     }
 
-    @Transactional
     public LoanApprovedResponseDTO approveLoan(Long userId, UUID loanId) {
 
         Manager manager = getAuthenticatedUserManager(userId);
         return loanService.approveLoan(loanId, manager);
     }
 
-    @Transactional
     public void rejectLoan(Long userId, UUID loanId) {
 
         Manager manager = getAuthenticatedUserManager(userId);

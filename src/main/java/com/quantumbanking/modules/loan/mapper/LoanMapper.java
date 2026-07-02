@@ -23,18 +23,21 @@ public class LoanMapper {
         );
     }
 
-    public LoanApprovedResponseDTO toLoanApproved(Loan loan) {
+    public LoanApprovedResponseDTO toLoanApprovedDTO(Loan loan) {
         return new LoanApprovedResponseDTO(
                 loan.getId(),
+                loan.getCreatedAt(),
                 loan.getAmount(),
                 loan.getInterestRate(),
                 loan.getInstallments(),
                 loan.getTotalAmount(),
                 loan.getInstallmentAmount(),
+                loan.getPaidInstallments(),
                 loan.getStartDate(),
                 loan.getEndDate(),
                 loan.getStatus(),
-                loan.getManager().getName()
+                loan.getManager().getName(),
+                loan.getDescription()
         );
     }
 
