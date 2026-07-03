@@ -2,7 +2,7 @@ package com.quantumbanking.infra.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -13,7 +13,7 @@ public class TokenRedisService {
 
     private static final String PREFIX = "token_ativo:";
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
     @Value("${api.security.token.expiration}")
     private long expiration;
@@ -27,7 +27,7 @@ public class TokenRedisService {
     }
 
     public boolean checkActiveToken(Long userId, String jti) {
-        Object stored = redisTemplate.opsForValue().get(PREFIX + userId);
+        String stored = redisTemplate.opsForValue().get(PREFIX + userId);
         return jti.equals(stored);
     }
 }

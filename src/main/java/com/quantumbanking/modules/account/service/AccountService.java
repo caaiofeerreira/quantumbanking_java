@@ -20,7 +20,7 @@ import com.quantumbanking.modules.transaction.mapper.TransactionMapper;
 import com.quantumbanking.modules.transaction.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,7 +43,7 @@ public class AccountService {
     private final TransactionMapper transactionMapper;
     private final ObjectMapper objectMapper;
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
     public Account getAccountByNumber(String accountNumber) {
         return accountRepository.findByAccountNumber(accountNumber)
@@ -89,7 +89,7 @@ public class AccountService {
     private StatementResponseDTO getFromCache(String key) {
 
         try {
-            String cachedJson = (String) redisTemplate.opsForValue().get(key);
+            String cachedJson = redisTemplate.opsForValue().get(key);
             if (cachedJson != null) {
                 return objectMapper.readValue(cachedJson, StatementResponseDTO.class);
             }
@@ -161,11 +161,11 @@ public class AccountService {
     public BigDecimal getBalance(Long userId, String accountNumber) {
 
         String cacheKey = "balance::" + accountNumber;
-        Object cached = redisTemplate.opsForValue().get(cacheKey);
+        String cached = redisTemplate.opsForValue().get(cacheKey);
 
         if (cached != null) {
             getAuthenticatedUserAccount(userId, accountNumber);
-            return new BigDecimal(cacheKey.toString());
+            return new BigDecimal(cached);
         }
 
         Account account = getAuthenticatedUserAccount(userId, accountNumber);

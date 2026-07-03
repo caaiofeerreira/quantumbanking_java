@@ -28,7 +28,7 @@ public class TokenService {
             var algorithm = Algorithm.HMAC256(secret);
             return JWT.create()
                     .withIssuer("QB_api")
-                    .withSubject(user.getCpf())
+                    .withSubject(user.getId().toString())
                     .withJWTId(UUID.randomUUID().toString())
                     .withExpiresAt(dataExpiration())
                     .sign(algorithm);
