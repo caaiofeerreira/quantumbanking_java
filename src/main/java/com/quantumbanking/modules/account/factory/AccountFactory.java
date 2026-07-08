@@ -23,8 +23,7 @@ public class AccountFactory {
 
     public Account createDefaultAccount(ClientType clientType, AccountType accountType, Agency agency, Client client) {
 
-        accountValidator.checkCompatibleAccountType(clientType, accountType);
-        accountValidator.checkDuplicateAccountType(client, accountType);
+        accountValidator.validateAccount(clientType, accountType, client);
 
         return Account.builder()
                 .accountNumber(generateAccountNumber())

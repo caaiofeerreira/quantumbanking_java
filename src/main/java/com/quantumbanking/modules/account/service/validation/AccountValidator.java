@@ -15,13 +15,18 @@ public class AccountValidator {
 
     private final AccountRepository accountRepository;
 
-    public void checkCompatibleAccountType(ClientType clientType, AccountType accountType) {
+    public void validateAccount(ClientType clientType, AccountType accountType, Client client) {
+        checkCompatibleAccountType(clientType, accountType);
+        checkDuplicateAccountType(client, accountType);
+    }
+
+    private void checkCompatibleAccountType(ClientType clientType, AccountType accountType) {
         if (clientType == ClientType.FISICA && accountType == AccountType.JURIDICA) {
             throw new IncompatibleAccountTypeException("Pessoa física não pode ter conta jurídica.");
         }
     }
 
-    public void checkDuplicateAccountType(Client client, AccountType accountType) {
+    private void checkDuplicateAccountType(Client client, AccountType accountType) {
         if (accountRepository.existsByClientIdAndType(client.getId(), accountType)) {
             throw new DuplicateAccountTypeException("Cliente já possui uma conta do tipo " + accountType.name() + ".");
         }

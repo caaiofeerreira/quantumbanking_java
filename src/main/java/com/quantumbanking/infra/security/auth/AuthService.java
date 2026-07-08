@@ -32,7 +32,7 @@ public class AuthService {
 
             User user = (User) authentication.getPrincipal();
             String tokenJWT = tokenService.generateToken(user);
-            tokenRedisService.saveActiveToken(user.getId(), tokenService.getClaims(tokenJWT).jti()); // alterado
+            tokenRedisService.saveActiveToken(user.getId(), tokenService.getClaims(tokenJWT).jti());
 
             return new DataToken(tokenJWT);
 

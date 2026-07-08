@@ -19,6 +19,13 @@ public class TransactionMapper {
 
     private final TransactionStatementFormatter transactionStatementFormatter;
 
+    private String maskPixKeyIfNeeded(Transaction transaction) {
+        if (transaction.getPixKeyType() == PixKeyType.CPF) {
+            return DataMaskingUtils.maskCpf(transaction.getPixKey());
+        }
+        return transaction.getPixKey();
+    }
+
     public DepositResponseDTO toDepositResponse(Transaction transaction) {
         return new DepositResponseDTO(
                 transaction.getId(),
@@ -165,12 +172,5 @@ public class TransactionMapper {
                 defaultIfEmpty(transaction.getDestinationDocument(), "Documento não informado"),
                 defaultIfEmpty(transaction.getDestinationBankName(), "Instituição Externa")
         );
-    }
-
-    private String maskPixKeyIfNeeded(Transaction transaction) {
-        if (transaction.getPixKeyType() == PixKeyType.CPF) {
-            return DataMaskingUtils.maskCpf(transaction.getPixKey());
-        }
-        return transaction.getPixKey();
     }
 }
