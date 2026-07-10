@@ -1,4 +1,12 @@
 package com.quantumbanking.infra.exception;
 
-public class RedisUnavailableException {
+public class RedisUnavailableException extends RuntimeException {
+
+    public RedisUnavailableException(String message) {
+        super(message);
+    }
+
+    public RedisUnavailableException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

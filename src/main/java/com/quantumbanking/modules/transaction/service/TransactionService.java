@@ -3,6 +3,7 @@ package com.quantumbanking.modules.transaction.service;
 import com.quantumbanking.infra.event.TransactionCompletedEvent;
 import com.quantumbanking.infra.exception.TransactionDetailNotAvailableException;
 import com.quantumbanking.infra.exception.TransactionNotFoundException;
+import com.quantumbanking.infra.resilience.RedisAvailabilityGuard;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.service.AccountService;
 import com.quantumbanking.modules.bank.domain.bank.Bank;
@@ -56,6 +57,7 @@ public class TransactionService {
     private final TransactionValidator transactionValidator;
 
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final RedisAvailabilityGuard redisAvailabilityGuard;
 
     @Value("${transaction.timezone}")
     private String timezone;
@@ -78,6 +80,8 @@ public class TransactionService {
 
     @Transactional
     public DepositResponseDTO executeDeposit(Long userId, String accountNumber, DepositRequestDTO requestDTO) {
+
+        redisAvailabilityGuard.ensureAvailable();
 
         Account account = accountService.getAccountForUpdate(userId, accountNumber);
 
@@ -109,6 +113,8 @@ public class TransactionService {
 
     @Transactional
     public WithdrawResponseDTO executeWithdraw(Long userId, String accountNumber, WithdrawRequestDTO requestDTO) {
+
+        redisAvailabilityGuard.ensureAvailable();
 
         Account account = accountService.getAccountForUpdate(userId, accountNumber);
 
@@ -181,6 +187,8 @@ public class TransactionService {
     @Transactional
     public InternalTransactionResponseDTO executeInternalTransaction(User user, String accountNumber, InternalTransactionRequestDTO requestDTO) {
 
+        redisAvailabilityGuard.ensureAvailable();
+
         Account originAccount = accountService.getAccountByNumber(accountNumber);
         Account destinationAccount = accountService.getAccountByNumber(requestDTO.destinationAccountNumber());
 
@@ -233,6 +241,8 @@ public class TransactionService {
     @Transactional
     public ExternalTransactionResponseDTO executeExternalTransaction(User user, String accountNumber, ExternalTransactionRequestDTO requestDTO) {
 
+        redisAvailabilityGuard.ensureAvailable();
+
         Account account = accountService.getAccountForUpdate(user.getId(), accountNumber);
 
         transactionValidator.validateExternal(
@@ -276,6 +286,8 @@ public class TransactionService {
 
     @Transactional
     public PixTransactionResponseDTO executePixTransaction(User user, String accountNumber, PixTransactionRequestDTO requestDTO) {
+
+        redisAvailabilityGuard.ensureAvailable();
 
         LocalTime transactionTime = LocalDateTime.now(ZoneId.of(timezone)).toLocalTime();
 
@@ -341,6 +353,8 @@ public class TransactionService {
 
     @Transactional
     public void executeLoan(Loan loan) {
+
+        redisAvailabilityGuard.ensureAvailable();
 
         Transaction transaction = transactionFactory.createLoan(loan);
 

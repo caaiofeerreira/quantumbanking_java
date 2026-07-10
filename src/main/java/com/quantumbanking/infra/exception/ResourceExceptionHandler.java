@@ -293,4 +293,10 @@ public class ResourceExceptionHandler {
         log.warn("Transação não encontrada: {}", ex.getMessage());
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), getPath());
     }
+
+    @ExceptionHandler(RedisUnavailableException.class)
+    public ResponseEntity<ErrorResponse> handleRedisUnavailableException(RedisUnavailableException ex) {
+        log.error("Redis indisponível ao processar movimentação: {}", ex.getMessage());
+        return buildResponse(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), getPath());
+    }
 }
