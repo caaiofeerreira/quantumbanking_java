@@ -94,7 +94,8 @@ public class AccountService {
                 return objectMapper.readValue(cachedJson, StatementResponseDTO.class);
             }
         } catch (Exception e) {
-            log.warn("Falha ao ler cache para a chave: {}. Seguindo para o banco. Erro: {}", key, e.getMessage());
+            log.warn("Falha ao ler cache para a chave: {}. " +
+                    "Seguindo para o banco. Erro: {}", key, e.getMessage());
         }
         return null;
     }
@@ -105,7 +106,8 @@ public class AccountService {
             String json = objectMapper.writeValueAsString(data);
             redisTemplate.opsForValue().set(key, json, Duration.ofMinutes(10));
         } catch (Exception e) {
-            log.error("Erro ao salvar cache para a chave: {}", key, e);
+            log.warn("Falha ao salvar cache para a chave {}. " +
+                    "Motivo: {}", key, e.getMessage());
         }
     }
 
@@ -161,16 +163,28 @@ public class AccountService {
     public BigDecimal getBalance(Long userId, String accountNumber) {
 
         String cacheKey = "balance::" + accountNumber;
-        String cached = redisTemplate.opsForValue().get(cacheKey);
 
-        if (cached != null) {
-            getAuthenticatedUserAccount(userId, accountNumber);
-            return new BigDecimal(cached);
+        try {
+            String cached = redisTemplate.opsForValue().get(cacheKey);
+
+            if (cached != null) {
+                getAuthenticatedUserAccount(userId, accountNumber);
+                return new BigDecimal(cached);
+            }
+        } catch (Exception e) {
+            log.warn("Redis indisponível ao buscar saldo da conta {}. " +
+                    "Buscando do banco de dados. Motivo: {}", accountNumber, e.getMessage());
         }
 
         Account account = getAuthenticatedUserAccount(userId, accountNumber);
         BigDecimal balance = account.getBalance();
-        redisTemplate.opsForValue().set(cacheKey, balance.toString(), Duration.ofMinutes(10));
+
+        try {
+            redisTemplate.opsForValue().set(cacheKey, balance.toString(), Duration.ofMinutes(10));
+        } catch (Exception e) {
+            log.warn("Redis indisponível ao salvar saldo da conta {} no cache. " +
+                    "Motivo: {}", accountNumber, e.getMessage());
+        }
 
         return balance;
     }
@@ -180,13 +194,19 @@ public class AccountService {
 
         Account account = getAuthenticatedUserAccount(userId, accountNumber);
 
+        if (account.getStatus() == AccountStatus.CLOSED) {
+            throw new TransactionNotAuthorizedException("Conta encerrada. Extrato não disponível.");
+        }
+
         String cacheKey = "statement:" + accountNumber + ":" + month + ":" + year;
 
-        StatementResponseDTO cached = getFromCache(cacheKey);
-        if (cached != null) return cached;
-
-        if (account.getStatus() != AccountStatus.ACTIVE) {
-            throw new TransactionNotAuthorizedException("Conta não está ativa.");
+        try {
+            StatementResponseDTO cached = getFromCache(cacheKey);
+            if (cached != null) return cached;
+        } catch (Exception e) {
+            log.warn("Redis indisponível ao buscar extrato no cache para a conta {} ({}/{}). " +
+                            "Buscando do banco de dados. Motivo: {}",
+                    accountNumber, month, year, e.getMessage());
         }
 
         List<Transaction> transactions = transactionRepository.findByAccountAndPeriod(
@@ -195,7 +215,7 @@ public class AccountService {
                 year
         );
 
-        StatementResponseDTO result = new StatementResponseDTO(
+        StatementResponseDTO statement = new StatementResponseDTO(
                 month,
                 year,
                 account.getBalance(),
@@ -204,8 +224,13 @@ public class AccountService {
                         .map(t -> transactionMapper.toStatementResponse(t, account)).toList()
         );
 
-        saveToCache(cacheKey, result);
+        try {
+            saveToCache(cacheKey, statement);
+        } catch (Exception e) {
+            log.warn("Redis indisponível ao salvar extrato no cache para a conta {}. " +
+                    "Motivo: {}", accountNumber, e.getMessage());
+        }
 
-        return result;
+        return statement;
     }
 }
