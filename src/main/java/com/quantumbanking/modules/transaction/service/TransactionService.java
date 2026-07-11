@@ -16,7 +16,6 @@ import com.quantumbanking.modules.loan.domain.Loan;
 import com.quantumbanking.modules.pixKey.detector.PixKeyDetector;
 import com.quantumbanking.modules.pixKey.domain.PixKey;
 import com.quantumbanking.modules.pixKey.service.PixKeyService;
-import com.quantumbanking.modules.shared.domain.user.User;
 import com.quantumbanking.modules.transaction.domain.Transaction;
 import com.quantumbanking.modules.transaction.domain.TransactionType;
 import com.quantumbanking.modules.transaction.dto.*;
@@ -185,11 +184,11 @@ public class TransactionService {
     }
 
     @Transactional
-    public InternalTransactionResponseDTO executeInternalTransaction(User user, String accountNumber, InternalTransactionRequestDTO requestDTO) {
+    public InternalTransactionResponseDTO executeInternalTransaction(Long userId, String accountNumber, InternalTransactionRequestDTO requestDTO) {
 
         redisAvailabilityGuard.ensureAvailable();
 
-        Account originAccount = accountService.getAccountByNumber(accountNumber);
+        Account originAccount = accountService.getAuthenticatedUserAccount(userId, accountNumber);
         Account destinationAccount = accountService.getAccountByNumber(requestDTO.destinationAccountNumber());
 
         AccountPair accounts = lockAccountsInOrder(originAccount.getId(), destinationAccount.getId());
@@ -203,11 +202,11 @@ public class TransactionService {
                 destinationAccount,
                 agencyId,
                 requestDTO.amount(),
-                user.getId()
+                userId
         );
 
         duplicateTransactionService.checkAndRegister(
-                user.getId(),
+                userId,
                 TransactionType.INTERNAL_TRANSFER,
                 requestDTO.amount(),
                 requestDTO.destinationAccountNumber()
@@ -239,23 +238,23 @@ public class TransactionService {
     }
 
     @Transactional
-    public ExternalTransactionResponseDTO executeExternalTransaction(User user, String accountNumber, ExternalTransactionRequestDTO requestDTO) {
+    public ExternalTransactionResponseDTO executeExternalTransaction(Long userId, String accountNumber, ExternalTransactionRequestDTO requestDTO) {
 
         redisAvailabilityGuard.ensureAvailable();
 
-        Account account = accountService.getAccountForUpdate(user.getId(), accountNumber);
+        Account account = accountService.getAccountForUpdate(userId, accountNumber);
 
         transactionValidator.validateExternal(
                 account,
                 requestDTO.compe(),
                 requestDTO.amount(),
-                user.getId()
+                userId
         );
 
         BankRegistry bankRegistry = bankRegistryService.getByCompe(requestDTO.compe());
 
         duplicateTransactionService.checkAndRegister(
-                user.getId(),
+                userId,
                 TransactionType.EXTERNAL_TRANSFER,
                 requestDTO.amount(),
                 requestDTO.destinationAccount()
@@ -285,7 +284,7 @@ public class TransactionService {
     }
 
     @Transactional
-    public PixTransactionResponseDTO executePixTransaction(User user, String accountNumber, PixTransactionRequestDTO requestDTO) {
+    public PixTransactionResponseDTO executePixTransaction(Long userId, String accountNumber, PixTransactionRequestDTO requestDTO) {
 
         redisAvailabilityGuard.ensureAvailable();
 
@@ -296,7 +295,7 @@ public class TransactionService {
 
         Optional<PixKey> pixKey = pixKeyService.getPixKey(normalizedKey);
 
-        Account originAccount = accountService.getAccountByNumber(accountNumber);
+        Account originAccount = accountService.getAuthenticatedUserAccount(userId, accountNumber);
         Account destinationAccount = pixKey.map(PixKey::getAccount).orElse(null);
 
         if (destinationAccount != null) {
@@ -312,11 +311,11 @@ public class TransactionService {
                 destinationAccount,
                 requestDTO.amount(),
                 transactionTime,
-                user.getId()
+                userId
         );
 
         duplicateTransactionService.checkAndRegister(
-                user.getId(),
+                userId,
                 TransactionType.PIX,
                 requestDTO.amount(),
                 normalizedKey

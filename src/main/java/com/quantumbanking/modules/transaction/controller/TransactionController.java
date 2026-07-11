@@ -36,21 +36,21 @@ public class TransactionController {
     public ResponseEntity<InternalTransactionResponseDTO> internalTransaction(@AuthenticationPrincipal User user,
                                                                               @PathVariable String accountNumber,
                                                                               @RequestBody @Valid InternalTransactionRequestDTO requestDTO) {
-        return ResponseEntity.ok(transactionService.executeInternalTransaction(user, accountNumber, requestDTO));
+        return ResponseEntity.ok(transactionService.executeInternalTransaction(user.getId(), accountNumber, requestDTO));
     }
 
     @PostMapping("/external")
     public ResponseEntity<ExternalTransactionResponseDTO> externalTransaction(@AuthenticationPrincipal User user,
                                                                               @PathVariable String accountNumber,
                                                                               @RequestBody @Valid ExternalTransactionRequestDTO requestDTO) {
-        return ResponseEntity.ok(transactionService.executeExternalTransaction(user, accountNumber, requestDTO));
+        return ResponseEntity.ok(transactionService.executeExternalTransaction(user.getId(), accountNumber, requestDTO));
     }
 
     @PostMapping("/pix")
     public ResponseEntity<PixTransactionResponseDTO> pix(@AuthenticationPrincipal User user,
                                                          @PathVariable String accountNumber,
                                                          @RequestBody @Valid PixTransactionRequestDTO requestDTO) {
-        return ResponseEntity.ok(transactionService.executePixTransaction(user, accountNumber, requestDTO));
+        return ResponseEntity.ok(transactionService.executePixTransaction(user.getId(), accountNumber, requestDTO));
     }
 
     @GetMapping("/{transactionId}")
