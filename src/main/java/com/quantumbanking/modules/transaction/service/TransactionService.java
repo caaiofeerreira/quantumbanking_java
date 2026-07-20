@@ -1,6 +1,6 @@
 package com.quantumbanking.modules.transaction.service;
 
-import com.quantumbanking.infra.event.TransactionCompletedEvent;
+import com.quantumbanking.infra.event.AccountBalanceChangedEvent;
 import com.quantumbanking.infra.exception.TransactionDetailNotAvailableException;
 import com.quantumbanking.infra.exception.TransactionNotFoundException;
 import com.quantumbanking.infra.resilience.RedisAvailabilityGuard;
@@ -14,13 +14,15 @@ import com.quantumbanking.modules.bank.service.BankRegistryService;
 import com.quantumbanking.modules.bank.service.BankService;
 import com.quantumbanking.modules.loan.domain.Loan;
 import com.quantumbanking.modules.pixKey.detector.PixKeyDetector;
-import com.quantumbanking.modules.pixKey.domain.PixKey;
-import com.quantumbanking.modules.pixKey.service.PixKeyService;
+import com.quantumbanking.modules.pixKey.resolver.PixKeyResolver;
 import com.quantumbanking.modules.transaction.domain.Transaction;
+import com.quantumbanking.modules.transaction.domain.TransactionOutbox;
+import com.quantumbanking.modules.transaction.domain.TransactionStatus;
 import com.quantumbanking.modules.transaction.domain.TransactionType;
 import com.quantumbanking.modules.transaction.dto.*;
 import com.quantumbanking.modules.transaction.factory.TransactionFactory;
 import com.quantumbanking.modules.transaction.mapper.TransactionMapper;
+import com.quantumbanking.modules.transaction.repository.TransactionOutboxRepository;
 import com.quantumbanking.modules.transaction.repository.TransactionRepository;
 import com.quantumbanking.modules.transaction.service.validation.TransactionValidator;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +37,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -44,7 +45,6 @@ import java.util.UUID;
 public class TransactionService {
 
     private final AccountService accountService;
-    private final PixKeyService pixKeyService;
     private final AgencyService agencyService;
     private final BankRegistryService bankRegistryService;
     private final DuplicateTransactionService duplicateTransactionService;
@@ -54,6 +54,9 @@ public class TransactionService {
     private final TransactionMapper transactionMapper;
     private final TransactionFactory transactionFactory;
     private final TransactionValidator transactionValidator;
+
+    private final PixKeyResolver pixKeyResolver;
+    private final TransactionOutboxRepository transactionOutboxRepository;
 
     private final ApplicationEventPublisher applicationEventPublisher;
     private final RedisAvailabilityGuard redisAvailabilityGuard;
@@ -105,7 +108,7 @@ public class TransactionService {
         accountService.save(account);
         transactionRepository.save(transaction);
 
-        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(account.getAccountNumber()));
+        applicationEventPublisher.publishEvent(new AccountBalanceChangedEvent(account.getAccountNumber()));
 
         return transactionMapper.toDepositResponse(transaction);
     }
@@ -178,7 +181,7 @@ public class TransactionService {
         accountService.save(account);
         transactionRepository.save(transaction);
 
-        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(account.getAccountNumber()));
+        applicationEventPublisher.publishEvent(new AccountBalanceChangedEvent(account.getAccountNumber()));
 
         return transactionMapper.toWithdrawResponse(transaction, fee);
     }
@@ -232,7 +235,7 @@ public class TransactionService {
                 originAccount.getAccountNumber(),
                 destinationAccount.getAccountNumber()
         );
-        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(accountsToInvalidate));
+        applicationEventPublisher.publishEvent(new AccountBalanceChangedEvent(accountsToInvalidate));
 
         return transactionMapper.toInternalResponse(transaction);
     }
@@ -278,7 +281,7 @@ public class TransactionService {
         accountService.save(account);
         transactionRepository.save(transaction);
 
-        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(account.getAccountNumber()));
+        applicationEventPublisher.publishEvent(new AccountBalanceChangedEvent(account.getAccountNumber()));
 
         return transactionMapper.toExternalResponse(transaction);
     }
@@ -293,10 +296,10 @@ public class TransactionService {
         PixKeyDetector.PixKeyDetectionResult detection = PixKeyDetector.checkAndDetectKey(requestDTO.key());
         String normalizedKey = detection.normalizedKey();
 
-        Optional<PixKey> pixKey = pixKeyService.getPixKey(normalizedKey);
+        PixKeyResolver.PixKeyResolution resolution = pixKeyResolver.resolveKey(normalizedKey);
 
-        Account originAccount = accountService.getAuthenticatedUserAccount(userId, accountNumber);
-        Account destinationAccount = pixKey.map(PixKey::getAccount).orElse(null);
+        Account originAccount = accountService.getAccountForUpdate(userId, accountNumber);
+        Account destinationAccount = resolution.internalAccount();
 
         if (destinationAccount != null) {
             AccountPair accounts = lockAccountsInOrder(originAccount.getId(), destinationAccount.getId());
@@ -321,31 +324,46 @@ public class TransactionService {
                 normalizedKey
         );
 
-        Transaction transaction = transactionFactory
-                .createPix(
-                        originAccount,
-                        destinationAccount,
-                        requestDTO.amount(),
-                        requestDTO.description(),
-                        normalizedKey,
-                        detection.type()
-                );
-
         Set<String> accountsToInvalidate = new HashSet<>();
         accountsToInvalidate.add(originAccount.getAccountNumber());
 
-        originAccount.debit(requestDTO.amount());
+        Transaction transaction;
 
-        if (destinationAccount != null) {
+        if (!resolution.external()) {
+            transaction = transactionFactory.createPix(
+                    originAccount, destinationAccount, requestDTO.amount(), requestDTO.description(),
+                    normalizedKey, detection.type(), TransactionStatus.COMPLETED,
+                    null, null, null, null
+            );
+
+            originAccount.debit(requestDTO.amount());
             destinationAccount.credit(requestDTO.amount());
             accountsToInvalidate.add(destinationAccount.getAccountNumber());
             accountService.save(destinationAccount);
+            accountService.save(originAccount);
+            transaction = transactionRepository.save(transaction);
+
+        } else {
+            transaction = transactionFactory.createPix(
+                    originAccount, null, requestDTO.amount(), requestDTO.description(),
+                    normalizedKey, detection.type(), TransactionStatus.PENDING,
+                    resolution.destinationBank().getCompe(),
+                    resolution.destinationBank().getName(),
+                    resolution.externalEntry().ownerDocument(),
+                    resolution.externalEntry().ownerName()
+            );
+
+            originAccount.reserve(requestDTO.amount());
+            accountService.save(originAccount);
+            transaction = transactionRepository.save(transaction);
+
+            TransactionOutbox outbox = TransactionOutbox.builder()
+                    .transaction(transaction)
+                    .build();
+            transactionOutboxRepository.save(outbox);
         }
 
-        accountService.save(originAccount);
-        transactionRepository.save(transaction);
-
-        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(accountsToInvalidate));
+        applicationEventPublisher.publishEvent(new AccountBalanceChangedEvent(accountsToInvalidate));
 
         return transactionMapper.toPixResponse(transaction);
     }
@@ -365,7 +383,7 @@ public class TransactionService {
         accountService.save(loan.getAccount());
         transactionRepository.save(transaction);
 
-        applicationEventPublisher.publishEvent(new TransactionCompletedEvent(loan.getAccount().getAccountNumber()));
+        applicationEventPublisher.publishEvent(new AccountBalanceChangedEvent(loan.getAccount().getAccountNumber()));
     }
 
     @Transactional(readOnly = true)

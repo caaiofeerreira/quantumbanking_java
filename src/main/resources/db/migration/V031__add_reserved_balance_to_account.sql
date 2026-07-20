@@ -1,0 +1,2 @@
+ALTER TABLE tb_account
+    ADD COLUMN reserved_balance DECIMAL(19,2) NOT NULL DEFAULT 0.00;

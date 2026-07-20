@@ -1,7 +1,8 @@
 package com.quantumbanking.infra.worker;
 
-import com.quantumbanking.infra.config.RedisStreamConfig;
-import com.quantumbanking.infra.listener.CacheInvalidationPublisher;
+import com.quantumbanking.infra.config.TransactionProcessingStreamConfig;
+import com.quantumbanking.infra.listener.TransactionOutboxPublisher;
+import com.quantumbanking.modules.transaction.service.TransactionProcessingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Range;
@@ -16,24 +17,25 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class CacheInvalidationReprocessor {
+public class TransactionProcessingReprocessor {
 
     private final StringRedisTemplate redisTemplate;
-    private final CacheInvalidationWorker worker;
+    private final TransactionProcessingService transactionProcessingService;
 
-    private static final String CONSUMER_NAME = "worker-instance-1";
+    private static final String CONSUMER_NAME = "transaction-worker-instance-1";
     private static final Duration MINIMUM_PENDING_TIME = Duration.ofMinutes(5);
 
     @Scheduled(fixedRate = 60_000)
     public void reprocessPendingMessages() {
 
         PendingMessages pendingMessages = redisTemplate.opsForStream().pending(
-                CacheInvalidationPublisher.STREAM_KEY,
-                Consumer.from(RedisStreamConfig.GROUP_NAME, CONSUMER_NAME),
+                TransactionOutboxPublisher.STREAM_KEY,
+                Consumer.from(TransactionProcessingStreamConfig.GROUP_NAME, CONSUMER_NAME),
                 Range.unbounded(),
                 100
         );
@@ -47,26 +49,27 @@ public class CacheInvalidationReprocessor {
 
         if (idsToClaim.isEmpty()) return;
 
-        log.info("Reivindicando {} mensagem(ns) pendente(s).", idsToClaim.size());
+        log.info("Reivindicando {} transação(ões) pendente(s).", idsToClaim.size());
 
         List<MapRecord<String, Object, Object>> messages = redisTemplate.opsForStream().claim(
-                CacheInvalidationPublisher.STREAM_KEY,
-                RedisStreamConfig.GROUP_NAME,
+                TransactionOutboxPublisher.STREAM_KEY,
+                TransactionProcessingStreamConfig.GROUP_NAME,
                 CONSUMER_NAME,
                 RedisStreamCommands.XClaimOptions.minIdle(MINIMUM_PENDING_TIME).ids(idsToClaim)
         );
 
         for (MapRecord<String, Object, Object> record : messages) {
             try {
-                String accounts = (String) record.getValue().get("accounts");
-                worker.processInvalidation(accounts);
+                String transactionIdRaw = (String) record.getValue().get("transactionId");
+
+                transactionProcessingService.processTransaction(UUID.fromString(transactionIdRaw));
 
                 redisTemplate.opsForStream()
-                        .acknowledge(RedisStreamConfig.GROUP_NAME, record);
+                        .acknowledge(TransactionProcessingStreamConfig.GROUP_NAME, record);
 
-                log.info("Mensagem pendente reprocessada com sucesso. ID: {}", record.getId());
+                log.info("Transação pendente reprocessada com sucesso. ID: {}", record.getId());
             } catch (Exception e) {
-                log.error("Falha ao reprocessar mensagem pendente. ID: {}", record.getId(), e);
+                log.error("Falha ao reprocessar transação pendente. ID: {}", record.getId(), e);
             }
         }
     }

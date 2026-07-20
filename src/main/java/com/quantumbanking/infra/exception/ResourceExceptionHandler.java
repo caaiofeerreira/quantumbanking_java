@@ -299,4 +299,10 @@ public class ResourceExceptionHandler {
         log.error("Redis indisponível ao processar movimentação: {}", ex.getMessage());
         return buildResponse(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), getPath());
     }
+
+    @ExceptionHandler(PixKeyNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handlePixKeyNotFoundException(PixKeyNotFoundException ex) {
+        log.warn("Chave pix não encontrada: {}", ex.getMessage());
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), getPath());
+    }
 }

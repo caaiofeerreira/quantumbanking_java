@@ -5,6 +5,7 @@ import com.quantumbanking.modules.bank.domain.bank.Bank;
 import com.quantumbanking.modules.loan.domain.Loan;
 import com.quantumbanking.modules.pixKey.domain.PixKeyType;
 import com.quantumbanking.modules.transaction.domain.Transaction;
+import com.quantumbanking.modules.transaction.domain.TransactionStatus;
 import com.quantumbanking.modules.transaction.domain.TransactionType;
 import org.springframework.stereotype.Component;
 
@@ -114,7 +115,10 @@ public class TransactionFactory {
     }
 
     public Transaction createPix(Account originAccount, Account destinationAccount, BigDecimal amount,
-                                 String description, String pixKey, PixKeyType pixKeyType) {
+                                 String description, String pixKey, PixKeyType pixKeyType,
+                                 TransactionStatus status, String externalBankCompe,
+                                 String externalBankName, String externalDocument, String externalName) {
+
         var builder = Transaction.builder()
                 .originAccount(originAccount)
                 .originName(originAccount.getClient().getName())
@@ -122,11 +126,11 @@ public class TransactionFactory {
                 .originAgency(originAccount.getAgency().getAgencyNumber())
                 .originBankCompe(originAccount.getAgency().getBank().getCompe())
                 .originDocument(originAccount.getClient().getCpf())
-
                 .amount(amount)
                 .pixKey(pixKey)
                 .pixKeyType(pixKeyType)
                 .type(TransactionType.PIX)
+                .status(status)
                 .description(normalizeDescription(description));
 
         if (destinationAccount != null) {
@@ -137,6 +141,11 @@ public class TransactionFactory {
                     .destinationBankCompe(destinationAccount.getAgency().getBank().getCompe())
                     .destinationDocument(destinationAccount.getClient().getCpf())
                     .destinationBankName(destinationAccount.getAgency().getBank().getName());
+        } else {
+            builder.destinationBankCompe(externalBankCompe)
+                    .destinationBankName(externalBankName)
+                    .destinationDocument(externalDocument)
+                    .destinationName(externalName);
         }
 
         return builder.build();

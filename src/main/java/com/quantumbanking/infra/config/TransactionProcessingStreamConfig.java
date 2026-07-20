@@ -1,7 +1,7 @@
 package com.quantumbanking.infra.config;
 
-import com.quantumbanking.infra.listener.CacheInvalidationPublisher;
-import com.quantumbanking.infra.worker.CacheInvalidationWorker;
+import com.quantumbanking.infra.listener.TransactionOutboxPublisher;
+import com.quantumbanking.infra.worker.TransactionProcessingWorker;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,27 +22,27 @@ import java.time.Duration;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-public class RedisStreamConfig {
+public class TransactionProcessingStreamConfig {
 
     private final StringRedisTemplate redisTemplate;
+    public static final String GROUP_NAME = "transaction-processing-group";
     private Subscription subscription;
     private StreamMessageListenerContainer<String, MapRecord<String, String, String>> container;
-
-    public static final String GROUP_NAME = "cache-invalidation-group";
 
     @PostConstruct
     public void createConsumerGroup() {
         try {
             redisTemplate.opsForStream().createGroup(
-                    CacheInvalidationPublisher.STREAM_KEY, GROUP_NAME);
+                    TransactionOutboxPublisher.STREAM_KEY, GROUP_NAME);
         } catch (Exception e) {
             log.info("Consumer group '{}' já existe ou stream ainda não tem dados.", GROUP_NAME);
         }
     }
 
     @Bean
-    public StreamMessageListenerContainer<String, MapRecord<String, String, String>> streamMessageListenerContainer(
-            @Qualifier("redisConnectionFactory") RedisConnectionFactory connectionFactory, CacheInvalidationWorker worker) {
+    public StreamMessageListenerContainer<String, MapRecord<String, String, String>> transactionProcessingListenerContainer(
+            @Qualifier("redisConnectionFactory") RedisConnectionFactory connectionFactory,
+            TransactionProcessingWorker worker) {
 
         var options = StreamMessageListenerContainer.StreamMessageListenerContainerOptions
                 .builder()
@@ -57,13 +57,13 @@ public class RedisStreamConfig {
         return container;
     }
 
-    public void subscribe(CacheInvalidationWorker worker) {
+    public void subscribe(TransactionProcessingWorker worker) {
         this.subscription = container.receive(
-                Consumer.from(GROUP_NAME, "worker-instance-1"),
-                StreamOffset.create(CacheInvalidationPublisher.STREAM_KEY, ReadOffset.lastConsumed()),
+                Consumer.from(GROUP_NAME, "transaction-worker-instance-1"),
+                StreamOffset.create(TransactionOutboxPublisher.STREAM_KEY, ReadOffset.lastConsumed()),
                 worker
         );
-        log.info("Subscription registrada no stream '{}'.", CacheInvalidationPublisher.STREAM_KEY);
+        log.info("Subscription registrada no stream '{}'.", TransactionOutboxPublisher.STREAM_KEY);
     }
 
     public boolean isSubscriptionActive() {

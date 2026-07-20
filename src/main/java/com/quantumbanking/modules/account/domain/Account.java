@@ -37,6 +37,10 @@ public class Account {
     @Column(precision = 19, scale = 2)
     private BigDecimal balance;
 
+    @Builder.Default
+    @Column(name = "reserved_balance", nullable = false, precision = 19, scale = 2)
+    private BigDecimal reservedBalance = BigDecimal.ZERO;
+
     @JsonBackReference
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id", nullable = false)
@@ -54,11 +58,35 @@ public class Account {
     @OneToMany(mappedBy = "account", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<PixKey> pixKeys = new ArrayList<>();
 
+    public BigDecimal getAvailableBalance() {
+        return balance.subtract(reservedBalance);
+    }
+
     public void ensureSufficientBalance(BigDecimal amount) {
-        if (amount.compareTo(this.balance) > 0) {
+        if (amount.compareTo(this.getAvailableBalance()) > 0) {
             throw new TransactionNotAuthorizedException(
                     "Saldo insuficiente. O valor total da operação excede o saldo disponível.");
         }
+    }
+
+    public void reserve(BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new TransactionNotAuthorizedException("O valor da reserva deve ser positivo");
+        }
+        ensureSufficientBalance(amount);
+        this.reservedBalance = this.reservedBalance.add(amount);
+    }
+
+    public void releaseReservation(BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new TransactionNotAuthorizedException("O valor da liberação deve ser positivo");
+        }
+        this.reservedBalance = this.reservedBalance.subtract(amount);
+    }
+
+    public void confirmReservedDebit(BigDecimal amount) {
+        this.releaseReservation(amount);
+        this.balance = this.balance.subtract(amount);
     }
 
     public void debit(BigDecimal amount) {

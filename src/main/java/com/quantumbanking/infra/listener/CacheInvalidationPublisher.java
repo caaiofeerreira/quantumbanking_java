@@ -1,6 +1,6 @@
 package com.quantumbanking.infra.listener;
 
-import com.quantumbanking.infra.event.TransactionCompletedEvent;
+import com.quantumbanking.infra.event.AccountBalanceChangedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.stream.RecordId;
@@ -21,7 +21,7 @@ public class CacheInvalidationPublisher {
     public static final String STREAM_KEY = "stream:cache-invalidation";
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleTransactionEvent(TransactionCompletedEvent event) {
+    public void handleTransactionEvent(AccountBalanceChangedEvent event) {
 
         if (event.accountNumbers() == null || event.accountNumbers().isEmpty()) return;
 

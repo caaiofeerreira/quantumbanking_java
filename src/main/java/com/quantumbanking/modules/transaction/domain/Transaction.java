@@ -17,7 +17,7 @@ import java.util.UUID;
         @Index(name = "idx_transaction_withdrawal", columnList = "origin_account_id, type, created_at")
 })
 @Getter
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
@@ -75,9 +75,16 @@ public class Transaction {
     @JoinColumn(name = "loan_id")
     private Loan loan;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private TransactionStatus status;
+
+    @Column(name = "failure_reason")
+    private String failureReason;
+
     @PrePersist
     public void prePersist() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now().withNano(0);
     }
 
     public boolean isSentBy(Long accountId) {
@@ -88,4 +95,29 @@ public class Transaction {
         return this.destinationAccount != null && this.destinationAccount.getId().equals(accountId);
     }
 
+
+    public void startProcessing() {
+        if (this.status != TransactionStatus.PENDING) {
+            throw new IllegalStateException(
+                    "Não é possível iniciar processamento: transação " + id + " está em status " + status);
+        }
+        this.status = TransactionStatus.PROCESSING;
+    }
+
+    public void complete() {
+        if (this.status != TransactionStatus.PROCESSING) {
+            throw new IllegalStateException(
+                    "Não é possível completar: transação " + id + " está em status " + status);
+        }
+        this.status = TransactionStatus.COMPLETED;
+    }
+
+    public void fail(String reason) {
+        if (this.status != TransactionStatus.PROCESSING) {
+            throw new IllegalStateException(
+                    "Não é possível marcar como falha: transação " + id + " está em status " + status);
+        }
+        this.status = TransactionStatus.FAILED;
+        this.failureReason = reason;
+    }
 }

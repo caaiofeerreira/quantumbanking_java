@@ -54,6 +54,8 @@ public class TransactionMapper {
                 transaction.getId(),
                 transaction.getCreatedAt(),
                 transaction.getType(),
+                transaction.getStatus(),
+                transaction.getFailureReason(),
                 transaction.getAmount(),
                 transferDestinationInfo(transaction),
                 transferOriginInfo(transaction.getOriginAccount())
@@ -65,6 +67,8 @@ public class TransactionMapper {
                 transaction.getId(),
                 transaction.getCreatedAt(),
                 transaction.getType(),
+                transaction.getStatus(),
+                transaction.getFailureReason(),
                 transaction.getAmount(),
                 transferDestinationInfo(transaction),
                 transferOriginInfo(transaction.getOriginAccount())
@@ -76,6 +80,8 @@ public class TransactionMapper {
                 transaction.getId(),
                 transaction.getCreatedAt(),
                 transaction.getType(),
+                transaction.getStatus(),
+                transaction.getFailureReason(),
                 transaction.getAmount(),
                 maskPixKeyIfNeeded(transaction),
                 transaction.getPixKeyType(),
@@ -112,6 +118,7 @@ public class TransactionMapper {
                 transaction.getId(),
                 transaction.getCreatedAt(),
                 transaction.getType(),
+                transaction.getStatus(),
                 isOrigin ? transaction.getAmount().negate() : transaction.getAmount(),
                 transactionStatementFormatter.getDisplayDescription(transaction, isOrigin),
                 transactionStatementFormatter.getCounterpartName(transaction, isOrigin)
@@ -169,7 +176,7 @@ public class TransactionMapper {
 
         return new PixAccountInfoDTO(
                 defaultIfEmpty(transaction.getDestinationName(), "Titular não identificado"),
-                defaultIfEmpty(transaction.getDestinationDocument(), "Documento não informado"),
+                defaultIfEmpty(DataMaskingUtils.maskCpf(transaction.getDestinationDocument()), "Documento não informado"),
                 defaultIfEmpty(transaction.getDestinationBankName(), "Instituição Externa")
         );
     }

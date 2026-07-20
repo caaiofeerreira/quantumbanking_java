@@ -6,6 +6,8 @@ public final class DataMaskingUtils {
 
     public static String maskCpf(String cpf) {
 
+        if (cpf == null || cpf.isBlank()) return null;
+
         String formatted = FormattingUtils.formatCpf(cpf);
 
         return formatted.replaceAll("^\\d{3}\\.", "***.")

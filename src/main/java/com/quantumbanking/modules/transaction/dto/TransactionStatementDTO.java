@@ -1,6 +1,7 @@
 package com.quantumbanking.modules.transaction.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.quantumbanking.modules.transaction.domain.TransactionStatus;
 import com.quantumbanking.modules.transaction.domain.TransactionType;
 
 import java.math.BigDecimal;
@@ -11,6 +12,7 @@ public record TransactionStatementDTO(UUID id,
                                       @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss")
                                       LocalDateTime createdAT,
                                       TransactionType type,
+                                      TransactionStatus status,
                                       BigDecimal amount,
                                       String description,
                                       String counterpartName) {

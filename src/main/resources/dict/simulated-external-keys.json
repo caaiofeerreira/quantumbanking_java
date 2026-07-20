@@ -1,0 +1,30 @@
+[
+  {
+    "pixKey": "11144477735",
+    "keyType": "CPF",
+    "ownerDocument": "11144477735",
+    "ownerName": "Roberto Almeida Costa",
+    "bankCompe": "341"
+  },
+  {
+    "pixKey": "82471936555",
+    "keyType": "CPF",
+    "ownerDocument": "82471936555",
+    "ownerName": "Marina Souza Lima",
+    "bankCompe": "237"
+  },
+  {
+    "pixKey": "joao.pereira@email.com",
+    "keyType": "EMAIL",
+    "ownerDocument": "63925718416",
+    "ownerName": "João Pereira",
+    "bankCompe": "033"
+  },
+  {
+    "pixKey": "+5511987654321",
+    "keyType": "PHONE",
+    "ownerDocument": "37195824691",
+    "ownerName": "Camila Ribeiro Santos",
+    "bankCompe": "104"
+  }
+]
