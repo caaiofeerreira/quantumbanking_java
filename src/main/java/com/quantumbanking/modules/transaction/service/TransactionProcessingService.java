@@ -52,7 +52,7 @@ public class TransactionProcessingService {
             transaction.complete();
         } else {
             originAccount.releaseReservation(transaction.getAmount());
-            transaction.fail("Não foi possível concluir o Pix. O valor foi estornado para sua conta.");
+            transaction.fail("Não foi possível concluir a transação. O valor foi estornado para sua conta.");
         }
 
         accountService.save(originAccount);

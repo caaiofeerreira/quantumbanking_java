@@ -100,7 +100,8 @@ public class TransactionService {
                 .createDeposit(
                         account,
                         requestDTO.amount(),
-                        requestDTO.description()
+                        requestDTO.description(),
+                        TransactionStatus.COMPLETED
                 );
 
         account.credit(requestDTO.amount());
@@ -173,7 +174,8 @@ public class TransactionService {
                 .createWithdrawal(
                         account,
                         requestDTO.amount(),
-                        requestDTO.description()
+                        requestDTO.description(),
+                        TransactionStatus.COMPLETED
                 );
 
         account.debit(requestDTO.amount());
@@ -221,7 +223,8 @@ public class TransactionService {
                         destinationAccount,
                         requestDTO.agencyNumber(),
                         requestDTO.amount(),
-                        requestDTO.description()
+                        requestDTO.description(),
+                        TransactionStatus.COMPLETED
                 );
 
         originAccount.debit(requestDTO.amount());
@@ -273,13 +276,20 @@ public class TransactionService {
                         requestDTO.destinationDocument(),
                         bankRegistry.getName(),
                         requestDTO.amount(),
-                        requestDTO.description()
+                        requestDTO.description(),
+                        TransactionStatus.PENDING
                 );
 
-        account.debit(requestDTO.amount());
-
+        account.reserve(requestDTO.amount());
         accountService.save(account);
-        transactionRepository.save(transaction);
+
+        transaction = transactionRepository.save(transaction);
+
+        TransactionOutbox transactionOutbox = TransactionOutbox.builder()
+                        .transaction(transaction)
+                                .build();
+
+        transactionOutboxRepository.save(transactionOutbox);
 
         applicationEventPublisher.publishEvent(new AccountBalanceChangedEvent(account.getAccountNumber()));
 

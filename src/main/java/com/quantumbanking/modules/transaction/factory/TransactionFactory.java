@@ -18,7 +18,7 @@ public class TransactionFactory {
         return (description != null && !description.isBlank()) ? description.trim() : null;
     }
 
-    public Transaction createDeposit(Account account, BigDecimal amount, String description) {
+    public Transaction createDeposit(Account account, BigDecimal amount, String description, TransactionStatus status) {
         return Transaction.builder()
                 .destinationAccount(account)
                 .destinationName(account.getClient().getName())
@@ -29,11 +29,12 @@ public class TransactionFactory {
 
                 .amount(amount)
                 .type(TransactionType.DEPOSIT)
+                .status(status)
                 .description(normalizeDescription(description))
                 .build();
     }
 
-    public Transaction createWithdrawal(Account account, BigDecimal amount, String description) {
+    public Transaction createWithdrawal(Account account, BigDecimal amount, String description, TransactionStatus status) {
         return Transaction.builder()
                 .originAccount(account)
                 .originName(account.getClient().getName())
@@ -44,6 +45,7 @@ public class TransactionFactory {
 
                 .amount(amount)
                 .type(TransactionType.WITHDRAWAL)
+                .status(status)
                 .description(normalizeDescription(description))
                 .build();
     }
@@ -67,7 +69,7 @@ public class TransactionFactory {
                 .build();
     }
 
-    public Transaction createInternalTransfer(Account originAccount, Account destinationAccount, String destinationAgencyNumber, BigDecimal amount, String description) {
+    public Transaction createInternalTransfer(Account originAccount, Account destinationAccount, String destinationAgencyNumber, BigDecimal amount, String description, TransactionStatus status) {
         return Transaction.builder()
                 .originAccount(originAccount)
                 .originName(originAccount.getClient().getName())
@@ -87,12 +89,13 @@ public class TransactionFactory {
 
                 .amount(amount)
                 .type(TransactionType.INTERNAL_TRANSFER)
+                .status(status)
                 .description(normalizeDescription(description))
                 .build();
     }
 
     public Transaction createExternalTransfer(Account originAccount, String destinationAccountNumber, String destinationName, String destinationAgency,
-                                              String compe, String destinationDocument, String bankName, BigDecimal amount, String description) {
+                                              String compe, String destinationDocument, String bankName, BigDecimal amount, String description, TransactionStatus status) {
         return Transaction.builder()
                 .originAccount(originAccount)
                 .originName(originAccount.getClient().getName())
@@ -110,6 +113,7 @@ public class TransactionFactory {
 
                 .amount(amount)
                 .type(TransactionType.EXTERNAL_TRANSFER)
+                .status(status)
                 .description(normalizeDescription(description))
                 .build();
     }

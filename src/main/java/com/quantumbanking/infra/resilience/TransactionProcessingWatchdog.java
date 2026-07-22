@@ -18,12 +18,11 @@ public class TransactionProcessingWatchdog {
     @Scheduled(fixedRate = 30_000)
     public void checkAndRecoverSubscription() {
 
-        if (transactionProcessingStreamConfig.isSubscriptionActive()) return; // segue... tudo normal
+        if (transactionProcessingStreamConfig.isSubscriptionActive()) return;
 
         log.warn("Subscription do stream de processamento de transações está inativa. Tentando recriar...");
 
         try {
-            // Idempotente: se o grupo já existe, apenas loga e segue.
             transactionProcessingStreamConfig.createConsumerGroup();
             transactionProcessingStreamConfig.subscribe(worker);
 
