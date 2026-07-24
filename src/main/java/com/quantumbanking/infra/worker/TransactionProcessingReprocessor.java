@@ -2,7 +2,6 @@ package com.quantumbanking.infra.worker;
 
 import com.quantumbanking.infra.config.TransactionProcessingStreamConfig;
 import com.quantumbanking.infra.listener.TransactionOutboxPublisher;
-import com.quantumbanking.modules.transaction.service.TransactionProcessingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Range;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 @Component
@@ -25,7 +23,7 @@ import java.util.UUID;
 public class TransactionProcessingReprocessor {
 
     private final StringRedisTemplate redisTemplate;
-    private final TransactionProcessingService transactionProcessingService;
+    private final TransactionStreamMessageProcessor transactionStream;
 
     private static final String CONSUMER_NAME = "transaction-worker-instance-1";
     private static final Duration MINIMUM_PENDING_TIME = Duration.ofMinutes(5);
@@ -59,18 +57,8 @@ public class TransactionProcessingReprocessor {
         );
 
         for (MapRecord<String, Object, Object> record : messages) {
-            try {
-                String transactionIdRaw = (String) record.getValue().get("transactionId");
-
-                transactionProcessingService.processTransaction(UUID.fromString(transactionIdRaw));
-
-                redisTemplate.opsForStream()
-                        .acknowledge(TransactionProcessingStreamConfig.GROUP_NAME, record);
-
-                log.info("Transação pendente reprocessada com sucesso. ID: {}", record.getId());
-            } catch (Exception e) {
-                log.error("Falha ao reprocessar transação pendente. ID: {}", record.getId(), e);
-            }
+            String transactionIdRaw = (String) record.getValue().get("transactionId");
+            transactionStream.process(transactionIdRaw, record);
         }
     }
 }
