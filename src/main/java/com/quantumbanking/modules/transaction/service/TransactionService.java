@@ -153,7 +153,10 @@ public class TransactionService {
             BigDecimal feeAmount = account.getType().getFeeAmount();
             Bank bank = bankService.getBank();
             Transaction feeTransaction = transactionFactory.createFee(
-                    account, bank, feeAmount
+                    account,
+                    bank,
+                    feeAmount,
+                    TransactionStatus.COMPLETED
             );
             account.debit(feeAmount);
             bank.getAccount().credit(feeAmount);
@@ -383,7 +386,7 @@ public class TransactionService {
 
         redisAvailabilityGuard.ensureAvailable();
 
-        Transaction transaction = transactionFactory.createLoan(loan);
+        Transaction transaction = transactionFactory.createLoan(loan, TransactionStatus.COMPLETED);
 
         BankAccount bankAccount = loan.getAccount().getAgency().getBank().getAccount();
         bankAccount.debit(loan.getAmount());

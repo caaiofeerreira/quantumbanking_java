@@ -50,7 +50,7 @@ public class TransactionFactory {
                 .build();
     }
 
-    public Transaction createFee(Account account, Bank bank , BigDecimal amount) {
+    public Transaction createFee(Account account, Bank bank , BigDecimal amount, TransactionStatus status) {
         return Transaction.builder()
                 .originAccount(account)
                 .originName(account.getClient().getName())
@@ -60,6 +60,7 @@ public class TransactionFactory {
                 .originDocument(account.getClient().getCpf())
                 .amount(amount)
                 .type(TransactionType.FEE)
+                .status(status)
                 .bankAccount(bank.getAccount())
                 .destinationBankName(bank.getName())
                 .destinationBankCompe(bank.getCompe())
@@ -155,7 +156,7 @@ public class TransactionFactory {
         return builder.build();
     }
 
-    public Transaction createLoan(Loan loan) {
+    public Transaction createLoan(Loan loan, TransactionStatus status) {
 
         Bank bank = loan.getAccount().getAgency().getBank();
         Account account = loan.getAccount();
@@ -177,6 +178,7 @@ public class TransactionFactory {
                 .loan(loan)
                 .amount(loan.getAmount())
                 .type(TransactionType.LOAN)
+                .status(status)
                 .description(normalizeDescription(loan.getDescription()))
                 .build();
     }

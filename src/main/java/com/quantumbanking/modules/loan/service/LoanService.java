@@ -1,5 +1,7 @@
 package com.quantumbanking.modules.loan.service;
 
+import com.quantumbanking.infra.exception.LoanStatusException;
+import com.quantumbanking.infra.exception.UnauthorizedAccessException;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.service.AccountService;
 import com.quantumbanking.modules.manager.domain.Manager;
@@ -48,11 +50,11 @@ public class LoanService {
                 .orElseThrow(() -> new EntityNotFoundException("Empréstimo não encontrado."));
 
         if (loan.getStatus() != LoanStatus.REQUESTED) {
-            throw new IllegalStateException("O empréstimo não está em status de SOLICITADO.");
+            throw new LoanStatusException("O empréstimo não está em status de SOLICITADO.");
         }
 
         if (!loan.getAccount().getAgency().getId().equals(manager.getAgencyId())) {
-            throw new AccessDeniedException("O empréstimo não pertence à sua agência.");
+            throw new UnauthorizedAccessException("O empréstimo não pertence à sua agência.");
         }
 
         return loan;

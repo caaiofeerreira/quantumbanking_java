@@ -140,7 +140,7 @@ public class ResourceExceptionHandler {
 
     @ExceptionHandler(AccountStatusException.class)
     public ResponseEntity<ErrorResponse> handleAccountStatusException(AccountStatusException ex) {
-        log.error("Transação bloqueada: A conta não possui status para operar. Detalhes: {}", ex.getMessage());
+        log.warn("Transação bloqueada: A conta não possui status para operar. Detalhes: {}", ex.getMessage());
         return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), getPath());
     }
 
@@ -304,5 +304,17 @@ public class ResourceExceptionHandler {
     public ResponseEntity<ErrorResponse> handlePixKeyNotFoundException(PixKeyNotFoundException ex) {
         log.warn("Chave pix não encontrada: {}", ex.getMessage());
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(TransactionOwnershipMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTransactionOwnershipMismatchException(TransactionOwnershipMismatchException ex) {
+        log.error("Inconsistência de dados: transação sem vínculo de origem/destino com a conta. {}", ex.getMessage());
+        return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(LoanStatusException.class)
+    public ResponseEntity<ErrorResponse> handleLoanStatusException(LoanStatusException ex) {
+        log.warn("Operação de empréstimo bloqueada por status inválido: {}", ex.getMessage());
+        return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), getPath());
     }
 }

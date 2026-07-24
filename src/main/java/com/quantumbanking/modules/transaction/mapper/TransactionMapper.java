@@ -1,5 +1,6 @@
 package com.quantumbanking.modules.transaction.mapper;
 
+import com.quantumbanking.infra.exception.TransactionOwnershipMismatchException;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.loan.domain.Loan;
 import com.quantumbanking.modules.pixKey.domain.PixKeyType;
@@ -113,6 +114,12 @@ public class TransactionMapper {
 
         Long accountId = account.getId();
         boolean isOrigin = transaction.isSentBy(accountId);
+        boolean isDestination = transaction.isReceivedBy(accountId);
+
+        if (!isOrigin && !isDestination) {
+            throw new TransactionOwnershipMismatchException("Transação " + transaction.getId() + " não pertence à conta " + accountId
+                    + " nem como origem, nem como destino");
+        }
 
         return new TransactionStatementDTO(
                 transaction.getId(),
