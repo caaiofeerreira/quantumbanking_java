@@ -16,8 +16,11 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -27,7 +30,7 @@ public class CacheInvalidationReprocessor {
     private final StringRedisTemplate redisTemplate;
     private final CacheInvalidationWorker worker;
 
-    private static final String CONSUMER_NAME = "worker-instance-1";
+    private static final String CONSUMER_NAME = resolveConsumerName();
 
     @Value("${cache.reprocessor.minimum-pending-time}")
     private Duration minimumPendingTime;
@@ -75,6 +78,14 @@ public class CacheInvalidationReprocessor {
             } catch (Exception e) {
                 log.error("Falha ao reprocessar mensagem pendente. ID: {}", record.getId(), e);
             }
+        }
+    }
+
+    private static String resolveConsumerName() {
+        try {
+            return "cache-worker-" + InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            return "cache-worker-" + UUID.randomUUID();
         }
     }
 }

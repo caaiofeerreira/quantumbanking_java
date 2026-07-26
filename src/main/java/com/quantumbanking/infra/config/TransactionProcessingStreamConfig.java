@@ -17,7 +17,10 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 import org.springframework.data.redis.stream.Subscription;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.Duration;
+import java.util.UUID;
 
 @Slf4j
 @Configuration
@@ -26,6 +29,9 @@ public class TransactionProcessingStreamConfig {
 
     private final StringRedisTemplate redisTemplate;
     public static final String GROUP_NAME = "transaction-processing-group";
+
+    private final String consumerName = resolveConsumerName();
+
     private Subscription subscription;
     private StreamMessageListenerContainer<String, MapRecord<String, String, String>> container;
 
@@ -59,14 +65,22 @@ public class TransactionProcessingStreamConfig {
 
     public void subscribe(TransactionProcessingWorker worker) {
         this.subscription = container.receive(
-                Consumer.from(GROUP_NAME, "transaction-worker-instance-1"),
+                Consumer.from(GROUP_NAME, consumerName),
                 StreamOffset.create(TransactionOutboxPublisher.STREAM_KEY, ReadOffset.lastConsumed()),
                 worker
         );
-        log.info("Subscription registrada no stream '{}'.", TransactionOutboxPublisher.STREAM_KEY);
+        log.info("Subscription registrada no stream '{}' com consumer '{}'.", TransactionOutboxPublisher.STREAM_KEY, consumerName);
     }
 
     public boolean isSubscriptionActive() {
         return subscription != null && subscription.isActive();
+    }
+
+    private static String resolveConsumerName() {
+        try {
+            return "transaction-worker-" + InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            return "transaction-worker-" + UUID.randomUUID();
+        }
     }
 }

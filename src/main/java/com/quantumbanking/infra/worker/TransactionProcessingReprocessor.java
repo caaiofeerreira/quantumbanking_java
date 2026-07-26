@@ -15,8 +15,11 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -26,7 +29,7 @@ public class TransactionProcessingReprocessor {
     private final StringRedisTemplate redisTemplate;
     private final TransactionStreamMessageProcessor transactionStream;
 
-    private static final String CONSUMER_NAME = "transaction-worker-instance-1";
+    private static final String CONSUMER_NAME = resolveConsumerName();
 
     @Value("${transaction.reprocessor.minimum-pending-time}")
     private Duration minimumPendingTime;
@@ -65,6 +68,14 @@ public class TransactionProcessingReprocessor {
         for (MapRecord<String, Object, Object> record : messages) {
             String transactionIdRaw = (String) record.getValue().get("transactionId");
             transactionStream.process(transactionIdRaw, record);
+        }
+    }
+
+    private static String resolveConsumerName() {
+        try {
+            return "transaction-worker-" + InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            return "transaction-worker-" + UUID.randomUUID();
         }
     }
 }
