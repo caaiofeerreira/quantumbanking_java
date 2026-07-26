@@ -1,5 +1,6 @@
 package com.quantumbanking.infra.listener;
 
+import com.quantumbanking.infra.worker.TransactionOutboxPublisherWorker;
 import com.quantumbanking.modules.transaction.domain.OutboxStatus;
 import com.quantumbanking.modules.transaction.domain.TransactionOutbox;
 import com.quantumbanking.modules.transaction.repository.TransactionOutboxRepository;
@@ -20,44 +21,18 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class TransactionOutboxPublisher {
 
-    private final StringRedisTemplate redisTemplate;
     private final TransactionOutboxRepository transactionOutboxRepository;
+    private final TransactionOutboxPublisherWorker worker;
 
     public static final String STREAM_KEY = "stream:transaction-processing";
 
-    @Value("${transaction.outbox.publisher.max-retry-attempts}")
-    private int maxRetryAttempts;
-
     @Scheduled(fixedRateString = "${transaction.outbox.publisher.fixed-rate-ms}")
-    @Transactional
     public void publishPendingOutbox() {
 
         List<TransactionOutbox> pending = transactionOutboxRepository.findByStatusOrderByCreatedAtAsc(OutboxStatus.PENDING_PUBLISH);
 
         if (pending.isEmpty()) return;
 
-        for (TransactionOutbox outbox : pending) publishSingle(outbox);
-    }
-
-    private void publishSingle(TransactionOutbox outbox) {
-        try {
-
-            Map<String, String> payload = Map.of("transactionId", outbox.getTransaction().getId().toString());
-
-            RecordId recordId = redisTemplate.opsForStream().add(STREAM_KEY, payload);
-
-            outbox.markPublished(recordId.toString());
-            transactionOutboxRepository.save(outbox);
-
-            log.info("Transação enviada para processamento (outboxId={}, streamId={}): {}",
-                    outbox.getId(), recordId, outbox.getTransaction().getId());
-
-        } catch (Exception e) {
-            outbox.registerFailedAttempt(e.getMessage(), maxRetryAttempts);
-            transactionOutboxRepository.save(outbox);
-
-            log.error("Erro ao publicar outbox (id={}) no stream de processamento. Tentativa {}/{}",
-                    outbox.getId(), outbox.getRetryCount(), maxRetryAttempts, e);
-        }
+        for (TransactionOutbox outbox : pending) worker.publishSingle(outbox);
     }
 }

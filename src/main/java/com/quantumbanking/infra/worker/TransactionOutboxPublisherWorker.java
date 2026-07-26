@@ -1,0 +1,49 @@
+package com.quantumbanking.infra.worker;
+
+import com.quantumbanking.infra.listener.TransactionOutboxPublisher;
+import com.quantumbanking.modules.transaction.domain.TransactionOutbox;
+import com.quantumbanking.modules.transaction.repository.TransactionOutboxRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.connection.stream.RecordId;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Map;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class TransactionOutboxPublisherWorker {
+
+    private final StringRedisTemplate redisTemplate;
+    private final TransactionOutboxRepository transactionOutboxRepository;
+
+    @Value("${transaction.outbox.publisher.max-retry-attempts}")
+    private int maxRetryAttempts;
+
+    @Transactional
+    public void publishSingle(TransactionOutbox outbox) {
+
+        try {
+            Map<String, String> payload = Map.of("transactionId", outbox.getTransaction().getId().toString());
+
+            RecordId recordId = redisTemplate.opsForStream().add(TransactionOutboxPublisher.STREAM_KEY, payload);
+
+            outbox.markPublished(recordId.toString());
+            transactionOutboxRepository.save(outbox);
+
+            log.info("Transação enviada para processamento (outboxId={}, streamId={}): {}",
+                    outbox.getId(), recordId, outbox.getTransaction().getId());
+
+        } catch (Exception e) {
+            outbox.registerFailedAttempt(e.getMessage(), maxRetryAttempts);
+            transactionOutboxRepository.save(outbox);
+
+            log.error("Erro ao publicar outbox (id={}) no stream de processamento. Tentativa {}/{}",
+                    outbox.getId(), outbox.getRetryCount(), maxRetryAttempts, e);
+        }
+    }
+}
