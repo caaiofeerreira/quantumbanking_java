@@ -24,6 +24,8 @@ bank:
   compe: ${BANK_CODE:999}
   ispb: ${BANK_ISPB:00000010}
   cnpj: ${BANK_CNPJ:00000000000191}
+  accountNumber: ${BANK_ACCOUNT_NUMBER:000000001}
+  agencyNumber: ${BANK_AGENCY_NUMBER:0001}
 
 admin:
   cpf: ${ADMIN_CPF:00000000000}
@@ -37,12 +39,30 @@ transaction:
   timezone: ${TRANSACTION_TIMEZONE:America/Sao_Paulo}
   nighttime-limit: ${NIGHTTIME_LIMIT:1000.00}
   max-atm-amount: ${MAX_ATM_AMOUNT:5000.00}
+  reprocessor:
+    fixed-rate-ms: ${TRANSACTION_REPROCESSOR_RATE_MS:60000}
+    minimum-pending-time: ${TRANSACTION_REPROCESSOR_MIN_PENDING:5m}
+    batch-size: ${TRANSACTION_REPROCESSOR_BATCH_SIZE:100}
+  watchdog:
+    check-rate-ms: ${TRANSACTION_WATCHDOG_RATE_MS:30000}
+  outbox:
+    publisher:
+      fixed-rate-ms: ${TRANSACTION_OUTBOX_RATE_MS:5000}
+      max-retry-attempts: ${TRANSACTION_OUTBOX_MAX_RETRIES:5}
 
 loan:
   interest-rate: 2.5
 
-logging:
-  level:
-    org:
-      springframework:
-        cache: DEBUG
+cache:
+  reprocessor:
+    fixed-rate-ms: ${CACHE_REPROCESSOR_RATE_MS:60000}
+    minimum-pending-time: ${CACHE_REPROCESSOR_MIN_PENDING:5m}
+    batch-size: ${CACHE_REPROCESSOR_BATCH_SIZE:100}
+  watchdog:
+    check-rate-ms: ${CACHE_WATCHDOG_RATE_MS:30000}
+
+simulation:
+  external-liquidation:
+    success-rate: ${LIQUIDATION_SUCCESS_RATE:0.9}
+    min-delay-ms: ${LIQUIDATION_MIN_DELAY_MS:200}
+    max-delay-ms: ${LIQUIDATION_MAX_DELAY_MS:1500}

@@ -51,6 +51,11 @@ public class DataSeeder implements ApplicationRunner {
     @Value("${bank.cnpj}")
     private String cnpj;
 
+    @Value("${bank.accountNumber}")
+    private String accountNumber;
+
+    @Value("${bank.agencyNumber}")
+    private String agencyNumber;
 
     @Override
     public void run(ApplicationArguments args) {
@@ -72,7 +77,9 @@ public class DataSeeder implements ApplicationRunner {
 
         if (!bankRepository.existsByCompe(compe)) {
             BankAccount bankAccount = BankAccount.builder()
+                    .accountNumber(accountNumber)
                     .balance(BigDecimal.ZERO)
+                    .agencyNumber(agencyNumber)
                     .build();
 
             Bank bank = Bank.builder()

@@ -15,11 +15,10 @@ public class StreamSubscriptionWatchdog {
     private final RedisStreamConfig redisStreamConfig;
     private final CacheInvalidationWorker worker;
 
-    @Scheduled(fixedRate = 30_000)
+    @Scheduled(fixedRateString = "${cache.watchdog.check-rate-ms}")
     public void checkAndRecoverSubscription() {
 
         if (redisStreamConfig.isSubscriptionActive()) return;
-
 
         log.warn("Subscription do stream de invalidação de cache está inativa. Tentando recriar...");
 
@@ -27,7 +26,7 @@ public class StreamSubscriptionWatchdog {
             redisStreamConfig.createConsumerGroup();
             redisStreamConfig.subscribe(worker);
         } catch (Exception e) {
-            log.error("Falha ao tentar recriar a subscription. Nova tentativa em 30s.", e);
+            log.error("Falha ao tentar recriar a subscription. Nova tentativa no próximo ciclo.", e);
         }
     }
 }

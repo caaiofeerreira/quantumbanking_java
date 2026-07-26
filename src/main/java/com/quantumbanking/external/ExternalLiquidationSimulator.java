@@ -1,5 +1,6 @@
 package com.quantumbanking.external;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Random;
@@ -7,22 +8,25 @@ import java.util.Random;
 @Component
 public class ExternalLiquidationSimulator {
 
-
-    private static final double SUCCESS_RATE = 0.9;
-
-    private static final long MIN_DELAY_MS = 200;
-    private static final long MAX_DELAY_MS = 1500;
-
     private final Random random = new Random();
+
+    @Value("${simulation.external-liquidation.success-rate}")
+    private double successRate;
+
+    @Value("${simulation.external-liquidation.min-delay-ms}")
+    private long minDelayMs;
+
+    @Value("${simulation.external-liquidation.max-delay-ms}")
+    private long maxDelayMs;
 
     public boolean simulate() {
         simulateNetworkLatency();
-        return random.nextDouble() < SUCCESS_RATE;
+        return random.nextDouble() < successRate;
     }
 
     private void simulateNetworkLatency() {
         try {
-            long delay = MIN_DELAY_MS + (long) (random.nextDouble() * (MAX_DELAY_MS - MIN_DELAY_MS));
+            long delay = minDelayMs + (long) (random.nextDouble() * (maxDelayMs - minDelayMs));
             Thread.sleep(delay);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

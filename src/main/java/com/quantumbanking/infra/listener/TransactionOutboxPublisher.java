@@ -5,6 +5,7 @@ import com.quantumbanking.modules.transaction.domain.TransactionOutbox;
 import com.quantumbanking.modules.transaction.repository.TransactionOutboxRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,10 +22,13 @@ public class TransactionOutboxPublisher {
 
     private final StringRedisTemplate redisTemplate;
     private final TransactionOutboxRepository transactionOutboxRepository;
-    private static final int MAX_RETRY_ATTEMPTS = 5;
+
     public static final String STREAM_KEY = "stream:transaction-processing";
 
-    @Scheduled(fixedRate = 5000)
+    @Value("${transaction.outbox.publisher.max-retry-attempts}")
+    private int maxRetryAttempts;
+
+    @Scheduled(fixedRateString = "${transaction.outbox.publisher.fixed-rate-ms}")
     @Transactional
     public void publishPendingOutbox() {
 
@@ -49,11 +53,11 @@ public class TransactionOutboxPublisher {
                     outbox.getId(), recordId, outbox.getTransaction().getId());
 
         } catch (Exception e) {
-            outbox.registerFailedAttempt(e.getMessage(), MAX_RETRY_ATTEMPTS);
+            outbox.registerFailedAttempt(e.getMessage(), maxRetryAttempts);
             transactionOutboxRepository.save(outbox);
 
             log.error("Erro ao publicar outbox (id={}) no stream de processamento. Tentativa {}/{}",
-                    outbox.getId(), outbox.getRetryCount(), MAX_RETRY_ATTEMPTS, e);
+                    outbox.getId(), outbox.getRetryCount(), maxRetryAttempts, e);
         }
     }
 }

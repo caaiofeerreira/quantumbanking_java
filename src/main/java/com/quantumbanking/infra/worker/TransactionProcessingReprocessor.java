@@ -4,6 +4,7 @@ import com.quantumbanking.infra.config.TransactionProcessingStreamConfig;
 import com.quantumbanking.infra.listener.TransactionOutboxPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Range;
 import org.springframework.data.redis.connection.RedisStreamCommands;
 import org.springframework.data.redis.connection.stream.Consumer;
@@ -26,22 +27,27 @@ public class TransactionProcessingReprocessor {
     private final TransactionStreamMessageProcessor transactionStream;
 
     private static final String CONSUMER_NAME = "transaction-worker-instance-1";
-    private static final Duration MINIMUM_PENDING_TIME = Duration.ofMinutes(5);
 
-    @Scheduled(fixedRate = 60_000)
+    @Value("${transaction.reprocessor.minimum-pending-time}")
+    private Duration minimumPendingTime;
+
+    @Value("${transaction.reprocessor.batch-size}")
+    private int batchSize;
+
+    @Scheduled(fixedRateString = "${transaction.reprocessor.fixed-rate-ms}")
     public void reprocessPendingMessages() {
 
         PendingMessages pendingMessages = redisTemplate.opsForStream().pending(
                 TransactionOutboxPublisher.STREAM_KEY,
                 Consumer.from(TransactionProcessingStreamConfig.GROUP_NAME, CONSUMER_NAME),
                 Range.unbounded(),
-                100
+                batchSize
         );
 
         if (pendingMessages.isEmpty()) return;
 
         List<String> idsToClaim = pendingMessages.stream()
-                .filter(msg -> msg.getElapsedTimeSinceLastDelivery().compareTo(MINIMUM_PENDING_TIME) >= 0)
+                .filter(msg -> msg.getElapsedTimeSinceLastDelivery().compareTo(minimumPendingTime) >= 0)
                 .map(PendingMessage::getIdAsString)
                 .toList();
 
@@ -53,7 +59,7 @@ public class TransactionProcessingReprocessor {
                 TransactionOutboxPublisher.STREAM_KEY,
                 TransactionProcessingStreamConfig.GROUP_NAME,
                 CONSUMER_NAME,
-                RedisStreamCommands.XClaimOptions.minIdle(MINIMUM_PENDING_TIME).ids(idsToClaim)
+                RedisStreamCommands.XClaimOptions.minIdle(minimumPendingTime).ids(idsToClaim)
         );
 
         for (MapRecord<String, Object, Object> record : messages) {

@@ -15,7 +15,7 @@ public class TransactionProcessingWatchdog {
     private final TransactionProcessingStreamConfig transactionProcessingStreamConfig;
     private final TransactionProcessingWorker worker;
 
-    @Scheduled(fixedRate = 30_000)
+    @Scheduled(fixedRateString = "${transaction.watchdog.check-rate-ms}")
     public void checkAndRecoverSubscription() {
 
         if (transactionProcessingStreamConfig.isSubscriptionActive()) return;
@@ -28,7 +28,7 @@ public class TransactionProcessingWatchdog {
 
             log.info("Subscription recriada com sucesso. Worker voltou a processar transações.");
         } catch (Exception e) {
-            log.error("Falha ao tentar recriar a subscription. Nova tentativa em 30s.", e);
+            log.error("Falha ao tentar recriar a subscription. Nova tentativa no próximo ciclo.", e);
         }
     }
 }
