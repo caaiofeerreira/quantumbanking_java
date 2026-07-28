@@ -21,6 +21,7 @@ public class CompanyService {
     private final CompanyFactory companyFactory;
     private final CompanyRepository companyRepository;
     private final CompanyValidator companyValidator;
+    private final CepValidator cepValidator;
 
     public Optional<Company> findByClient(Client client) {
         return companyRepository.findByClient(client);
@@ -33,7 +34,13 @@ public class CompanyService {
 
         if (dto.clientType() != ClientType.JURIDICA) return null;
 
-        Company company = companyFactory.createCompany(dto.company(), client);
+        String normalizedCep = cepValidator.normalizeCep(dto.company().address().zipCode());
+
+        Company company = companyFactory.createCompany(
+                dto.company(),
+                normalizedCep,
+                client
+        );
         companyRepository.save(company);
         return company;
     }

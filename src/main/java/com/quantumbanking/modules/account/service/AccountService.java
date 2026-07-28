@@ -9,6 +9,7 @@ import com.quantumbanking.modules.account.dto.AccountResponseDTO;
 import com.quantumbanking.modules.account.dto.AccountSummaryDTO;
 import com.quantumbanking.modules.account.dto.StatementResponseDTO;
 import com.quantumbanking.modules.account.factory.AccountFactory;
+import com.quantumbanking.modules.account.generator.AccountNumberGenerator;
 import com.quantumbanking.modules.account.mapper.AccountMapper;
 import com.quantumbanking.modules.account.repository.AccountRepository;
 import com.quantumbanking.modules.account.service.validation.AccountValidator;
@@ -37,6 +38,7 @@ public class AccountService {
 
     private final AccountFactory accountFactory;
     private final AccountValidator accountValidator;
+    private final AccountNumberGenerator accountNumberGenerator;
 
     private final ClientRepository clientRepository;
     private final AccountRepository accountRepository;
@@ -119,7 +121,10 @@ public class AccountService {
 
         accountValidator.validateAccount(clientType, accountType, client, company);
 
+        String accountNumber = accountNumberGenerator.generate();
+
         Account account = accountFactory.createDefaultAccount(
+                accountNumber,
                 accountType,
                 agency,
                 client
@@ -145,7 +150,10 @@ public class AccountService {
 
         Agency agency = existingAccounts.get(0).getAgency();
 
+        String accountNumber = accountNumberGenerator.generate();
+
         Account account = accountFactory.createDefaultAccount(
+                accountNumber,
                 accountType,
                 agency,
                 client

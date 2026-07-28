@@ -6,7 +6,6 @@ import com.quantumbanking.modules.client.dto.CompanyRegistrationDTO;
 import com.quantumbanking.modules.shared.domain.address.Address;
 import com.quantumbanking.modules.shared.dto.AddressRequestDTO;
 import com.quantumbanking.modules.shared.mapper.AddressMapper;
-import com.quantumbanking.modules.shared.service.validation.CepValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -15,11 +14,8 @@ import org.springframework.stereotype.Component;
 public class CompanyFactory {
 
     private final AddressMapper addressMapper;
-    private final CepValidator cepValidator;
 
-    public Company createCompany(CompanyRegistrationDTO dto, Client client) {
-
-        String normalizedCep = cepValidator.normalizeCep(dto.address().zipCode());
+    public Company createCompany(CompanyRegistrationDTO dto, String normalizedCep, Client client) {
 
         AddressRequestDTO normalizedAddress = new AddressRequestDTO(
                 dto.address().street(),
