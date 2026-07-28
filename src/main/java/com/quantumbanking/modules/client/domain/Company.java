@@ -1,17 +1,17 @@
 package com.quantumbanking.modules.client.domain;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.quantumbanking.modules.client.dto.CompanyRegistrationDTO;
 import com.quantumbanking.modules.shared.domain.address.Address;
 import jakarta.persistence.*;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity(name = "Company")
 @Table(name = "tb_company")
 @Getter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(of = "id")
 public class Company {
 
@@ -37,7 +37,8 @@ public class Company {
     @Embedded
     private Address address;
 
-    @OneToOne
+    @JsonBackReference
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 

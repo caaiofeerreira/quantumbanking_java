@@ -317,4 +317,11 @@ public class ResourceExceptionHandler {
         log.warn("Operação de empréstimo bloqueada por status inválido: {}", ex.getMessage());
         return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), getPath());
     }
+
+    @ExceptionHandler(InvalidCompanyDataException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCompanyDataException(InvalidCompanyDataException ex) {
+        log.warn("Dados da empresa inválidos: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
+    }
+
 }

@@ -28,6 +28,10 @@ public class Client extends User {
     @OneToMany(mappedBy = "client", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Account> accounts = new ArrayList<>();
 
+    @JsonManagedReference
+    @OneToMany(mappedBy = "client", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private List<Company> companies = new ArrayList<>();
+
     public Client(String name, String cpf, String phone, String email,
                   String password, Address address, ClientType clientType) {
         super(name, cpf, phone, email, password, UserRole.CLIENT, address);

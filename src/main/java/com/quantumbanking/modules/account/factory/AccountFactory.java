@@ -4,10 +4,8 @@ import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.domain.AccountStatus;
 import com.quantumbanking.modules.account.domain.AccountType;
 import com.quantumbanking.modules.account.repository.AccountRepository;
-import com.quantumbanking.modules.account.service.validation.AccountValidator;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.client.domain.Client;
-import com.quantumbanking.modules.client.domain.ClientType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -19,11 +17,8 @@ import java.util.Random;
 public class AccountFactory {
 
     private final AccountRepository accountRepository;
-    private final AccountValidator accountValidator;
 
-    public Account createDefaultAccount(ClientType clientType, AccountType accountType, Agency agency, Client client) {
-
-        accountValidator.validateAccount(clientType, accountType, client);
+    public Account createDefaultAccount(AccountType accountType, Agency agency, Client client) {
 
         return Account.builder()
                 .accountNumber(generateAccountNumber())

@@ -42,11 +42,11 @@ public class AccountController {
 
     @PostMapping("/create/corrente")
     public ResponseEntity<AccountResponseDTO> createCorrente(@AuthenticationPrincipal User user) {
-        return ResponseEntity.status(201).body(accountService.openAccount(user.getId(), AccountType.CORRENTE));
+        return ResponseEntity.status(201).body(accountService.openComplementaryAccount(user.getId(), AccountType.CORRENTE));
     }
 
     @PostMapping("/create/poupanca")
     public ResponseEntity<AccountResponseDTO> createPoupanca(@AuthenticationPrincipal User user) {
-        return ResponseEntity.status(201).body(accountService.openAccount(user.getId(), AccountType.POUPANCA));
+        return ResponseEntity.status(201).body(accountService.openComplementaryAccount(user.getId(), AccountType.POUPANCA));
     }
 }

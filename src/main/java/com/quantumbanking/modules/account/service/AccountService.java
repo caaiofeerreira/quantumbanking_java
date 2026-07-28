@@ -11,9 +11,11 @@ import com.quantumbanking.modules.account.dto.StatementResponseDTO;
 import com.quantumbanking.modules.account.factory.AccountFactory;
 import com.quantumbanking.modules.account.mapper.AccountMapper;
 import com.quantumbanking.modules.account.repository.AccountRepository;
+import com.quantumbanking.modules.account.service.validation.AccountValidator;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.client.domain.Client;
 import com.quantumbanking.modules.client.domain.ClientType;
+import com.quantumbanking.modules.client.domain.Company;
 import com.quantumbanking.modules.client.repository.ClientRepository;
 import com.quantumbanking.modules.transaction.domain.Transaction;
 import com.quantumbanking.modules.transaction.mapper.TransactionMapper;
@@ -34,6 +36,7 @@ import java.util.List;
 public class AccountService {
 
     private final AccountFactory accountFactory;
+    private final AccountValidator accountValidator;
 
     private final ClientRepository clientRepository;
     private final AccountRepository accountRepository;
@@ -112,10 +115,11 @@ public class AccountService {
     }
 
     @Transactional
-    public Account openInitialAccount(ClientType clientType, AccountType accountType, Agency agency, Client client) {
+    public Account openInitialAccount(ClientType clientType, AccountType accountType, Agency agency, Client client, Company company) {
+
+        accountValidator.validateAccount(clientType, accountType, client, company);
 
         Account account = accountFactory.createDefaultAccount(
-                clientType,
                 accountType,
                 agency,
                 client
@@ -126,20 +130,22 @@ public class AccountService {
     }
 
     @Transactional
-    public AccountResponseDTO openAccount(Long userId, AccountType accountType) {
+    public AccountResponseDTO openComplementaryAccount(Long userId, AccountType accountType) {
 
         Client client = clientRepository.findById(userId)
                 .orElseThrow(() -> new ClientNotFoundException("Cliente não encontrado."));
 
         List<Account> existingAccounts = accountRepository.findByClientId(userId);
+
         if (existingAccounts.isEmpty()) {
             throw new AccountNotFoundException("Nenhuma conta encontrada para o cliente.");
         }
 
+        accountValidator.validateAccount(client.getType(),accountType, client, null);
+
         Agency agency = existingAccounts.get(0).getAgency();
 
         Account account = accountFactory.createDefaultAccount(
-                client.getType(),
                 accountType,
                 agency,
                 client

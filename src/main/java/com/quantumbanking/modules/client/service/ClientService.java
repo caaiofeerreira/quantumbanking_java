@@ -88,7 +88,8 @@ public class ClientService {
                 client.getType(),
                 dto.accountType(),
                 agency,
-                client
+                client,
+                company
         );
 
         return clientMapper.toClientResponseDTO(client, account, company);
