@@ -5,6 +5,7 @@ import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.domain.AccountStatus;
 import com.quantumbanking.modules.account.domain.AccountType;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
+import com.quantumbanking.modules.shared.util.FormattingUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -95,6 +96,14 @@ public class TransactionValidator {
         }
     }
 
+    private void checkDestinationDocument(String document) {
+        boolean isValid = FormattingUtils.isValidCpf(document) || FormattingUtils.isValidCnpj(document);
+
+        if (!isValid) {
+            throw new InvalidDocumentException("O documento informado para a conta de destino é inválido. Verifique o número digitado e tente novamente.");
+        }
+    }
+
     public void validateDeposit(Account account, BigDecimal amount) {
         checkAccountActive(account);
         checkATMMaximumAmount(amount);
@@ -119,10 +128,11 @@ public class TransactionValidator {
         }
     }
 
-    public void validateExternal(Account account, String bankingCode, BigDecimal amount, Long userId) {
+    public void validateExternal(Account account, String bankingCode, BigDecimal amount, Long userId, String document) {
         checkAccountOwnership(account, userId);
         checkSavingsAccountExternal(account);
         checkMinimumTransactionAmount(amount);
+        checkDestinationDocument(document);
 
         if (bankingCode.equals(compe)) {
             throw new TransactionNotAuthorizedException(

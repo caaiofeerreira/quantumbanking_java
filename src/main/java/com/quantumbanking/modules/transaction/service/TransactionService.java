@@ -14,6 +14,7 @@ import com.quantumbanking.modules.bank.service.BankRegistryService;
 import com.quantumbanking.modules.bank.service.BankService;
 import com.quantumbanking.modules.loan.domain.Loan;
 import com.quantumbanking.modules.pixKey.detector.PixKeyDetector;
+import com.quantumbanking.modules.pixKey.dto.PixKeyResolution;
 import com.quantumbanking.modules.pixKey.resolver.PixKeyResolver;
 import com.quantumbanking.modules.transaction.domain.Transaction;
 import com.quantumbanking.modules.transaction.domain.TransactionOutbox;
@@ -257,7 +258,8 @@ public class TransactionService {
                 account,
                 requestDTO.compe(),
                 requestDTO.amount(),
-                userId
+                userId,
+                requestDTO.destinationDocument()
         );
 
         BankRegistry bankRegistry = bankRegistryService.getByCompe(requestDTO.compe());
@@ -289,8 +291,8 @@ public class TransactionService {
         transaction = transactionRepository.save(transaction);
 
         TransactionOutbox transactionOutbox = TransactionOutbox.builder()
-                        .transaction(transaction)
-                                .build();
+                .transaction(transaction)
+                .build();
 
         transactionOutboxRepository.save(transactionOutbox);
 
@@ -309,7 +311,7 @@ public class TransactionService {
         PixKeyDetector.PixKeyDetectionResult detection = PixKeyDetector.checkAndDetectKey(requestDTO.key());
         String normalizedKey = detection.normalizedKey();
 
-        PixKeyResolver.PixKeyResolution resolution = pixKeyResolver.resolveKey(normalizedKey);
+        PixKeyResolution resolution = pixKeyResolver.resolveKey(normalizedKey);
 
         Account originAccount = accountService.getAccountForUpdate(userId, accountNumber);
         Account destinationAccount = resolution.internalAccount();

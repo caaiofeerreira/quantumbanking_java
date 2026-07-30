@@ -15,7 +15,7 @@ public class CompanyFactory {
 
     private final AddressMapper addressMapper;
 
-    public Company createCompany(CompanyRegistrationDTO dto, String normalizedCep, Client client) {
+    public Company createCompany(CompanyRegistrationDTO dto, String normalizedCep, String normalizedCnpj, Client client) {
 
         AddressRequestDTO normalizedAddress = new AddressRequestDTO(
                 dto.address().street(),
@@ -29,6 +29,6 @@ public class CompanyFactory {
 
         Address address = addressMapper.toAddress(normalizedAddress);
 
-        return new Company(dto, address, client);
+        return new Company(dto, address, client, normalizedCnpj);
     }
 }

@@ -43,7 +43,7 @@ public class PixKeyService {
                 detectionResult.type(),
                 detectionResult.normalizedKey(),
                 account.getClient(),
-                account.getId()
+                account
         );
 
         PixKey pixKey = new PixKey(

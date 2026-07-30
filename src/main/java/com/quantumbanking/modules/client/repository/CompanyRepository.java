@@ -10,4 +10,5 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
 
     Optional<Company> findByClient(Client client);
 
+    boolean existsByCnpj(String cnpj);
 }

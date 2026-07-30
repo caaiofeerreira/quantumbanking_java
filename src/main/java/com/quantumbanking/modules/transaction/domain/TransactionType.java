@@ -1,5 +1,7 @@
 package com.quantumbanking.modules.transaction.domain;
 
+import java.util.Optional;
+
 public enum TransactionType {
 
     DEPOSIT {
@@ -7,8 +9,8 @@ public enum TransactionType {
         public String getDisplayName(boolean isOrigin) { return "Depósito"; }
 
         @Override
-        public String getCounterpartName(Transaction t, boolean isOrigin) {
-            return "Origem Externa";
+        public Optional<String> getFixedCounterpartName(boolean isOrigin) {
+            return Optional.of("Origem Externa");
         }
     },
 
@@ -17,8 +19,8 @@ public enum TransactionType {
         public String getDisplayName(boolean isOrigin) { return "Saque"; }
 
         @Override
-        public String getCounterpartName(Transaction t, boolean isOrigin) {
-            return "Retirada em Espécie";
+        public Optional<String> getFixedCounterpartName(boolean isOrigin) {
+            return Optional.of("Retirada em Espécie");
         }
     },
 
@@ -57,16 +59,7 @@ public enum TransactionType {
 
     public abstract String getDisplayName(boolean isOrigin);
 
-    public String getCounterpartName(Transaction t, boolean isOrigin) {
-        if (isOrigin) {
-            if (t.getDestinationAccount() != null) return t.getDestinationAccount().getClient().getName();
-            if (t.getDestinationName() != null) return t.getDestinationName();
-            if (t.getDestinationBankName() != null) return t.getDestinationBankName();
-            return "Destinatário não identificado";
-        } else {
-            if (t.getOriginAccount() != null) return t.getOriginAccount().getClient().getName();
-            if (t.getOriginName() != null) return t.getOriginName();
-            return "Origem Externa";
-        }
+    public Optional<String> getFixedCounterpartName(boolean isOrigin) {
+        return Optional.empty();
     }
 }

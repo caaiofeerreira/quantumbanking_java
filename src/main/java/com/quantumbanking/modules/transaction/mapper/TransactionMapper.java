@@ -9,6 +9,7 @@ import com.quantumbanking.modules.shared.util.FormattingUtils;
 import com.quantumbanking.modules.transaction.domain.Transaction;
 import com.quantumbanking.modules.transaction.dto.*;
 import com.quantumbanking.modules.transaction.formater.TransactionStatementFormatter;
+import com.quantumbanking.modules.transaction.resolver.AccountHolderInfoResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +20,7 @@ import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 public class TransactionMapper {
 
     private final TransactionStatementFormatter transactionStatementFormatter;
+    private final AccountHolderInfoResolver accountHolderInfoResolver;
 
     private String maskPixKeyIfNeeded(Transaction transaction) {
         if (transaction.getPixKeyType() == PixKeyType.CPF) {
@@ -133,9 +135,10 @@ public class TransactionMapper {
     }
 
     private AccountInfoDTO transferOriginInfo(Account originAccount) {
+        AccountHolderInfo holder = accountHolderInfoResolver.resolve(originAccount);
         return new AccountInfoDTO(
-                originAccount.getClient().getName(),
-                DataMaskingUtils.maskCpf(originAccount.getClient().getCpf()),
+                holder.name(),
+                holder.document(),
                 originAccount.getAgency().getBank().getName(),
                 originAccount.getAgency().getAgencyNumber(),
                 FormattingUtils.formatAccountNumber(originAccount.getAccountNumber()),
@@ -145,9 +148,10 @@ public class TransactionMapper {
 
     private AccountInfoDTO transferDestinationInfo(Transaction transaction) {
         if (transaction.getDestinationAccount() != null) {
+            AccountHolderInfo holder = accountHolderInfoResolver.resolve(transaction.getDestinationAccount());
             return new AccountInfoDTO(
-                    transaction.getDestinationAccount().getClient().getName(),
-                    DataMaskingUtils.maskCpf(transaction.getDestinationAccount().getClient().getCpf()),
+                    holder.name(),
+                    holder.document(),
                     transaction.getDestinationAccount().getAgency().getBank().getName(),
                     transaction.getDestinationAccount().getAgency().getAgencyNumber(),
                     FormattingUtils.formatAccountNumber(transaction.getDestinationAccount().getAccountNumber()),
@@ -165,18 +169,20 @@ public class TransactionMapper {
     }
 
     private PixAccountInfoDTO pixOriginInfo(Account originAccount) {
+        AccountHolderInfo holder = accountHolderInfoResolver.resolve(originAccount);
         return new PixAccountInfoDTO(
-                originAccount.getClient().getName(),
-                DataMaskingUtils.maskCpf(originAccount.getClient().getCpf()),
+                holder.name(),
+                holder.document(),
                 originAccount.getAgency().getBank().getName()
         );
     }
 
     private PixAccountInfoDTO pixDestinationInfo(Transaction transaction) {
         if (transaction.getDestinationAccount() != null) {
+            AccountHolderInfo holder = accountHolderInfoResolver.resolve(transaction.getDestinationAccount());
             return new PixAccountInfoDTO(
-                    transaction.getDestinationAccount().getClient().getName(),
-                    DataMaskingUtils.maskCpf(transaction.getDestinationAccount().getClient().getCpf()),
+                    holder.name(),
+                    holder.document(),
                     transaction.getDestinationAccount().getAgency().getBank().getName()
             );
         }

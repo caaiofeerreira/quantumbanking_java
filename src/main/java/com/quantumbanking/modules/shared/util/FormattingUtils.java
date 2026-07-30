@@ -5,6 +5,8 @@ import java.util.regex.Pattern;
 
 public final class FormattingUtils {
 
+    private static final int[] CNPJ_FIRST_DV_WEIGHTS = {5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2};
+    private static final int[] CNPJ_SECOND_DV_WEIGHTS = {6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2};
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[\\w.+\\-]+@[\\w\\-]+(\\.[a-zA-Z]{2,})+$");
 
     private static final Set<String> DDDS_VALIDOS = Set.of(
@@ -63,6 +65,12 @@ public final class FormattingUtils {
     public static String normalizeCpf(String cpf) {
         if (cpf == null) return null;
         return cpf.replaceAll("[^0-9]", "");
+    }
+
+    public static String normalizeCnpj(String cnpj) {
+        if (cnpj == null) return null;
+
+        return cnpj.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
     }
 
 
@@ -134,6 +142,43 @@ public final class FormattingUtils {
     }
 
 
+    public static boolean isValidCnpj(String cnpj) {
+
+        if (cnpj == null) return false;
+
+        String normalized = normalizeCnpj(cnpj);
+
+        if (normalized.length() != 14) return false;
+
+        for (int i = 0; i < 12; i++) {
+            char c = normalized.charAt(i);
+            if (!Character.isDigit(c) && !(c >= 'A' && c <= 'Z')) {
+                return false;
+            }
+        }
+
+        if (!Character.isDigit(normalized.charAt(12)) || !Character.isDigit(normalized.charAt(13))) {
+            return false;
+        }
+
+        if (normalized.chars().distinct().count() == 1) return false;
+
+        int firstDv = calculateCnpjCheckDigit(normalized.substring(0, 12), CNPJ_FIRST_DV_WEIGHTS);
+        int secondDv = calculateCnpjCheckDigit(normalized.substring(0, 12) + firstDv, CNPJ_SECOND_DV_WEIGHTS);
+
+        return (normalized.charAt(12) - '0') == firstDv && (normalized.charAt(13) - '0') == secondDv;
+    }
+
+    private static int calculateCnpjCheckDigit(String base, int[] weights) {
+
+        int sum = 0;
+        for (int i = 0; i < base.length(); i++) {
+            int value = base.charAt(i) - 48;
+            sum += value * weights[i];
+        }
+        int remainder = sum % 11;
+        return remainder < 2 ? 0 : 11 - remainder;
+    }
 
     // ***** FORMATAÇÃO *****
     public static String formatAccountNumber(String number) {
@@ -183,6 +228,22 @@ public final class FormattingUtils {
         if (cpf == null) return null;
 
         String digits = normalizeCpf(cpf);
+
+        if (digits.length() != 11) return digits;
+
         return digits.replaceAll("(\\d{3})(\\d{3})(\\d{3})(\\d{2})", "$1.$2.$3-$4");
+    }
+
+    public static String formatCnpj(String cnpj) {
+
+        if (cnpj == null) return null;
+
+        String normalized = normalizeCnpj(cnpj);
+
+        if (normalized.length() != 14) {
+            return normalized;
+        }
+
+        return normalized.replaceAll("(.{2})(.{3})(.{3})(.{4})(.{2})", "$1.$2.$3/$4-$5");
     }
 }

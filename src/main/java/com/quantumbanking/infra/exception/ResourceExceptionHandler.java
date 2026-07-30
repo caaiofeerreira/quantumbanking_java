@@ -176,7 +176,7 @@ public class ResourceExceptionHandler {
 
     @ExceptionHandler(CpfAlreadyRegisteredException.class)
     public ResponseEntity<ErrorResponse> handleCpfAlreadyRegisteredException(CpfAlreadyRegisteredException ex) {
-        log.warn("Conflito de CPF no cadastro de gerente: {}", ex.getMessage());
+        log.warn("Conflito de CPF no cadastro: {}", ex.getMessage());
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), getPath());
     }
 
@@ -324,4 +324,15 @@ public class ResourceExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
     }
 
+    @ExceptionHandler(CnpjAlreadyRegisteredException.class)
+    public ResponseEntity<ErrorResponse> handleCnpjAlreadyRegisteredException(CnpjAlreadyRegisteredException ex) {
+        log.warn("Conflito de CNPJ no cadastro: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), getPath());
+    }
+
+    @ExceptionHandler(InvalidDocumentException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidDocumentException(InvalidDocumentException ex) {
+        log.warn("Documento inválido informado na transação: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
+    }
 }

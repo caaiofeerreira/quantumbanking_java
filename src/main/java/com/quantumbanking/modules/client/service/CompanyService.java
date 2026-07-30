@@ -8,6 +8,7 @@ import com.quantumbanking.modules.client.factory.CompanyFactory;
 import com.quantumbanking.modules.client.repository.CompanyRepository;
 import com.quantumbanking.modules.client.service.validator.CompanyValidator;
 import com.quantumbanking.modules.shared.service.validation.CepValidator;
+import com.quantumbanking.modules.shared.util.FormattingUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,9 +37,14 @@ public class CompanyService {
 
         String normalizedCep = cepValidator.normalizeCep(dto.company().address().zipCode());
 
+        String normalizedCnpj = FormattingUtils.normalizeCnpj(dto.company().cnpj());
+        companyValidator.checkCnpjValid(normalizedCnpj);
+        companyValidator.checkCnpjNotRegistered(normalizedCnpj);
+
         Company company = companyFactory.createCompany(
                 dto.company(),
                 normalizedCep,
+                normalizedCnpj,
                 client
         );
         companyRepository.save(company);

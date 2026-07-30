@@ -21,6 +21,10 @@ public class PixKeyDetector {
             return new PixKeyDetectionResult(PixKeyType.CPF, FormattingUtils.normalizeCpf(key));
         }
 
+        if (FormattingUtils.isValidCnpj(key)) {
+            return new PixKeyDetectionResult(PixKeyType.CNPJ, FormattingUtils.normalizeCnpj(key));
+        }
+
         if (FormattingUtils.isValidMobilePhone(key)) {
             return new PixKeyDetectionResult(PixKeyType.PHONE, FormattingUtils.normalizePhone(key));
         }
