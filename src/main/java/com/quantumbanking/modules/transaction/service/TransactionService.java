@@ -81,6 +81,38 @@ public class TransactionService {
         );
     }
 
+    private FeeDetailDTO applyWithdrawalFee(Account account, boolean shouldChargeFee, WithdrawalFeeContext context) {
+
+        if (!shouldChargeFee) {
+            return new FeeDetailDTO(
+                    false,
+                    BigDecimal.ZERO,
+                    "Dentro do limite mensal de saques gratuitos (%d/%d utilizados)"
+                            .formatted(context.withdrawalsThisMonth() + 1, context.freeWithdrawals())
+            );
+        }
+
+        BigDecimal feeAmount = account.getType().getFeeAmount();
+        Bank bank = bankService.getBank();
+        Transaction transactionFee = transactionFactory.createFee(
+                account,
+                bank,
+                feeAmount,
+                TransactionStatus.COMPLETED
+        );
+
+        account.debit(feeAmount);
+        bank.getAccount().credit(feeAmount);
+
+        bankService.save(bank.getAccount());
+        transactionRepository.save(transactionFee);
+
+        return new FeeDetailDTO(true, feeAmount,
+                "Limite mensal de saques gratuitos atingido (%d/%d utilizados)"
+                        .formatted(context.withdrawalsThisMonth() + 1, context.freeWithdrawals())
+        );
+    }
+
     @Transactional
     public DepositResponseDTO executeDeposit(Long userId, String accountNumber, DepositRequestDTO requestDTO) {
 
@@ -132,47 +164,14 @@ public class TransactionService {
                 end
         );
         int freeWithdrawals = account.getType().getFreeWithdrawals();
+
+        WithdrawalFeeContext feeContext = new WithdrawalFeeContext(withdrawalsThisMonth, freeWithdrawals);
         boolean shouldChargeFee = withdrawalsThisMonth >= freeWithdrawals;
 
-        transactionValidator.validateWithdraw(
-                account,
-                requestDTO.amount(),
-                shouldChargeFee
-        );
+        transactionValidator.validateWithdraw(account, requestDTO.amount(), shouldChargeFee);
+        duplicateTransactionService.checkAndRegister(userId, TransactionType.WITHDRAWAL, requestDTO.amount(), "self");
 
-        duplicateTransactionService.checkAndRegister(
-                userId,
-                TransactionType.WITHDRAWAL,
-                requestDTO.amount(),
-                "self"
-        );
-
-        FeeDetailDTO fee;
-
-        if (shouldChargeFee) {
-
-            BigDecimal feeAmount = account.getType().getFeeAmount();
-            Bank bank = bankService.getBank();
-            Transaction feeTransaction = transactionFactory.createFee(
-                    account,
-                    bank,
-                    feeAmount,
-                    TransactionStatus.COMPLETED
-            );
-            account.debit(feeAmount);
-            bank.getAccount().credit(feeAmount);
-
-            bankService.save(bank.getAccount());
-            transactionRepository.save(feeTransaction);
-
-            fee = new FeeDetailDTO(true, feeAmount,
-                    "Limite mensal de saques gratuitos atingido (%d/%d utilizados)"
-                            .formatted(withdrawalsThisMonth + 1, freeWithdrawals));
-        } else {
-            fee = new FeeDetailDTO(false, BigDecimal.ZERO,
-                    "Dentro do limite mensal de saques gratuitos (%d/%d utilizados)"
-                            .formatted(withdrawalsThisMonth + 1, freeWithdrawals));
-        }
+        FeeDetailDTO fee = applyWithdrawalFee(account, shouldChargeFee, feeContext);
 
         Transaction transaction = transactionFactory
                 .createWithdrawal(
