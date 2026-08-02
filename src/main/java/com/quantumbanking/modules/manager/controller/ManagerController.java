@@ -1,6 +1,7 @@
 package com.quantumbanking.modules.manager.controller;
 
 import com.quantumbanking.modules.bank.dto.AgencyAccountManagementDTO;
+import com.quantumbanking.modules.manager.dto.ManagerStatementResponseDTO;
 import com.quantumbanking.modules.manager.service.ManagerService;
 import com.quantumbanking.modules.loan.dto.LoanApprovedResponseDTO;
 import com.quantumbanking.modules.loan.dto.LoanManagerViewDTO;
@@ -39,5 +40,14 @@ public class ManagerController {
     public ResponseEntity<Void> rejectLoan(@AuthenticationPrincipal User user, @PathVariable UUID loanId) {
         managerService.rejectLoan(user.getId(), loanId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{accountNumber}/statement")
+    public ResponseEntity<ManagerStatementResponseDTO> getClientStatementForManager(@AuthenticationPrincipal User user,
+                                                                                    @PathVariable String accountNumber,
+                                                                                    @RequestParam Integer month,
+                                                                                    @RequestParam Integer year) {
+        ManagerStatementResponseDTO responseDTO = managerService.getClientStatement(user.getId(), accountNumber, month, year);
+        return ResponseEntity.ok(responseDTO);
     }
 }

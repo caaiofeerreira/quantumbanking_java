@@ -1,14 +1,17 @@
 package com.quantumbanking.modules.manager.service;
 
+import com.quantumbanking.infra.exception.UnauthorizedAccessException;
 import com.quantumbanking.infra.exception.UserNotFoundException;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.service.AccountService;
 import com.quantumbanking.modules.bank.service.AgencyService;
 import com.quantumbanking.modules.client.domain.Client;
+import com.quantumbanking.modules.client.dto.ClientSummaryDTO;
 import com.quantumbanking.modules.manager.domain.Manager;
 import com.quantumbanking.modules.bank.dto.AgencyAccountManagementDTO;
 import com.quantumbanking.modules.manager.dto.ManagerProfileResponseDTO;
 import com.quantumbanking.modules.manager.dto.ManagerRegistrationDTO;
+import com.quantumbanking.modules.manager.dto.ManagerStatementResponseDTO;
 import com.quantumbanking.modules.manager.factory.ManagerFactory;
 import com.quantumbanking.modules.bank.mapper.AgencyMapper;
 import com.quantumbanking.modules.manager.mapper.ManagerMapper;
@@ -23,6 +26,8 @@ import com.quantumbanking.modules.shared.dto.NormalizedUserData;
 import com.quantumbanking.modules.shared.dto.UpdateAddressRequestDTO;
 import com.quantumbanking.modules.shared.service.validation.CepValidator;
 import com.quantumbanking.modules.shared.service.validation.UserValidator;
+import com.quantumbanking.modules.shared.util.DataMaskingUtils;
+import com.quantumbanking.modules.transaction.resolver.AccountHolderInfoResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -50,6 +55,8 @@ public class ManagerService {
 
     private final UserValidator userValidator;
     private final CepValidator cepValidator;
+
+    private final AccountHolderInfoResolver accountHolderInfoResolver;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -190,5 +197,37 @@ public class ManagerService {
 
         Manager manager = getAuthenticatedUserManager(userId);
         loanService.rejectLoan(loanId, manager);
+    }
+
+    @Transactional(readOnly = true)
+    public ManagerStatementResponseDTO getClientStatement(Long userId, String accountNumber, Integer month, Integer year) {
+
+        Manager manager = getAuthenticatedUserManager(userId);
+
+        Account account = accountService.getAccountByNumber(accountNumber);
+
+        if (!account.getAgency().getId().equals(manager.getAgencyId())) {
+            throw new UnauthorizedAccessException("Gerente não tem permissão para acessar contas de outra agência");
+        }
+
+        var clientStatement = accountService.getStatementForManager(account.getAccountNumber(), month, year);
+
+        var holderInfo = accountHolderInfoResolver.resolve(account);
+
+        ClientSummaryDTO clientSummary = new ClientSummaryDTO(
+                holderInfo.name(),
+                DataMaskingUtils.maskDocument(holderInfo.document()),
+                account.getClient().getType()
+        );
+
+        return new ManagerStatementResponseDTO(
+                clientSummary,
+                account.getAccountNumber(),
+                account.getType(),
+                account.getStatus(),
+                account.getBalance(),
+                clientStatement.summary(),
+                clientStatement.transactions()
+        );
     }
 }

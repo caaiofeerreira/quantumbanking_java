@@ -8,6 +8,7 @@ import com.quantumbanking.modules.account.domain.AccountType;
 import com.quantumbanking.modules.account.dto.AccountResponseDTO;
 import com.quantumbanking.modules.account.dto.AccountSummaryDTO;
 import com.quantumbanking.modules.account.dto.StatementResponseDTO;
+import com.quantumbanking.modules.account.dto.StatementSummaryDTO;
 import com.quantumbanking.modules.account.factory.AccountFactory;
 import com.quantumbanking.modules.account.generator.AccountNumberGenerator;
 import com.quantumbanking.modules.account.mapper.AccountMapper;
@@ -19,6 +20,8 @@ import com.quantumbanking.modules.client.domain.ClientType;
 import com.quantumbanking.modules.client.domain.Company;
 import com.quantumbanking.modules.client.repository.ClientRepository;
 import com.quantumbanking.modules.transaction.domain.Transaction;
+import com.quantumbanking.modules.transaction.domain.TransactionStatus;
+import com.quantumbanking.modules.transaction.dto.TransactionStatementDTO;
 import com.quantumbanking.modules.transaction.mapper.TransactionMapper;
 import com.quantumbanking.modules.transaction.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
@@ -204,15 +207,27 @@ public class AccountService {
     }
 
     @Transactional(readOnly = true)
-    public StatementResponseDTO getStatement(Long userId, String accountNumber, Integer month, Integer year) {
+    public StatementResponseDTO getStatement(Long userId, String accountNumber, Integer month, Integer year ) {
 
         Account account = getAuthenticatedUserAccount(userId, accountNumber);
+        return buildStatementResponse(account, month, year);
+    }
+
+    @Transactional(readOnly = true)
+    public StatementResponseDTO getStatementForManager(String accountNumber, Integer month, Integer year) {
+
+        Account account = getAccountByNumber(accountNumber);
+        return buildStatementResponse(account, month, year);
+    }
+
+    @Transactional(readOnly = true)
+    public StatementResponseDTO buildStatementResponse(Account account, Integer month, Integer year) {
 
         if (account.getStatus() == AccountStatus.CLOSED) {
             throw new TransactionNotAuthorizedException("Conta encerrada. Extrato não disponível.");
         }
 
-        String cacheKey = "statement:" + accountNumber + ":" + month + ":" + year;
+        String cacheKey = "statement:" + account.getAccountNumber() + ":" + month + ":" + year;
 
         try {
             StatementResponseDTO cached = getFromCache(cacheKey);
@@ -220,7 +235,7 @@ public class AccountService {
         } catch (Exception e) {
             log.warn("Redis indisponível ao buscar extrato no cache para a conta {} ({}/{}). " +
                             "Buscando do banco de dados. Motivo: {}",
-                    accountNumber, month, year, e.getMessage());
+                    account.getAccountNumber(), month, year, e.getMessage());
         }
 
         List<Transaction> transactions = transactionRepository.findByAccountAndPeriod(
@@ -229,22 +244,48 @@ public class AccountService {
                 year
         );
 
+        List<TransactionStatementDTO> mappedTransactions = transactions.stream()
+                .map(t -> transactionMapper.toStatementResponse(t, account))
+                .toList();
+
+        StatementSummaryDTO summary = calculateSummary(mappedTransactions);
+
         StatementResponseDTO statement = new StatementResponseDTO(
                 month,
                 year,
                 account.getBalance(),
-                transactions
-                        .stream()
-                        .map(t -> transactionMapper.toStatementResponse(t, account)).toList()
+                summary,
+                mappedTransactions
         );
 
         try {
             saveToCache(cacheKey, statement);
         } catch (Exception e) {
             log.warn("Redis indisponível ao salvar extrato no cache para a conta {}. " +
-                    "Motivo: {}", accountNumber, e.getMessage());
+                    "Motivo: {}", account.getAccountNumber(), e.getMessage());
         }
 
         return statement;
+    }
+
+    private StatementSummaryDTO calculateSummary(List<TransactionStatementDTO> transactions) {
+
+        List<TransactionStatementDTO> completed = transactions.stream()
+                .filter(t -> t.status() == TransactionStatus.COMPLETED)
+                .toList();
+
+        BigDecimal totalIn = completed.stream()
+                .map(TransactionStatementDTO::amount)
+                .filter(amount -> amount.signum() >0)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+
+        BigDecimal totalOut = completed.stream()
+                .map(TransactionStatementDTO::amount)
+                .filter(amount -> amount.signum() < 0)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .abs();
+
+        return new StatementSummaryDTO(totalIn, totalOut);
     }
 }

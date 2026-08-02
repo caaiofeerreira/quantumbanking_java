@@ -8,5 +8,6 @@ import java.util.List;
 public record StatementResponseDTO(Integer month,
                                    Integer year,
                                    BigDecimal currentBalance,
+                                   StatementSummaryDTO summary,
                                    List<TransactionStatementDTO> transactions) {
 }
