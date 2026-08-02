@@ -22,11 +22,20 @@ public class TransactionMapper {
     private final TransactionStatementFormatter transactionStatementFormatter;
     private final AccountHolderInfoResolver accountHolderInfoResolver;
 
-    private String maskPixKeyIfNeeded(Transaction transaction) {
-        if (transaction.getPixKeyType() == PixKeyType.CPF) {
-            return DataMaskingUtils.maskCpf(transaction.getPixKey());
-        }
-        return transaction.getPixKey();
+    private String maskIdentifierIfNeeded(Transaction transaction) {
+
+        if (transaction.getPixKeyType() == null) return null;
+
+        PixKeyType type = transaction.getPixKeyType();
+        String key = transaction.getPixKey();
+
+        return switch (type) {
+            case CPF -> DataMaskingUtils.maskCpf(key);
+            case CNPJ -> DataMaskingUtils.maskCnpj(key);
+            case PHONE -> DataMaskingUtils.maskPhone(key);
+            case EMAIL -> DataMaskingUtils.maskEmail(key);
+            case RANDOM -> key;
+        };
     }
 
     public DepositResponseDTO toDepositResponse(Transaction transaction) {
@@ -86,7 +95,7 @@ public class TransactionMapper {
                 transaction.getStatus(),
                 transaction.getFailureReason(),
                 transaction.getAmount(),
-                maskPixKeyIfNeeded(transaction),
+                maskIdentifierIfNeeded(transaction),
                 transaction.getPixKeyType(),
                 transaction.getDescription(),
                 pixDestinationInfo(transaction),
@@ -138,7 +147,7 @@ public class TransactionMapper {
         AccountHolderInfo holder = accountHolderInfoResolver.resolve(originAccount);
         return new AccountInfoDTO(
                 holder.name(),
-                holder.document(),
+                DataMaskingUtils.maskDocument(holder.document()),
                 originAccount.getAgency().getBank().getName(),
                 originAccount.getAgency().getAgencyNumber(),
                 FormattingUtils.formatAccountNumber(originAccount.getAccountNumber()),
@@ -151,7 +160,7 @@ public class TransactionMapper {
             AccountHolderInfo holder = accountHolderInfoResolver.resolve(transaction.getDestinationAccount());
             return new AccountInfoDTO(
                     holder.name(),
-                    holder.document(),
+                    DataMaskingUtils.maskDocument(holder.document()),
                     transaction.getDestinationAccount().getAgency().getBank().getName(),
                     transaction.getDestinationAccount().getAgency().getAgencyNumber(),
                     FormattingUtils.formatAccountNumber(transaction.getDestinationAccount().getAccountNumber()),
@@ -160,7 +169,7 @@ public class TransactionMapper {
         }
         return new AccountInfoDTO(
                 transaction.getDestinationName(),
-                DataMaskingUtils.maskCpf(transaction.getDestinationDocument()),
+                DataMaskingUtils.maskDocument(transaction.getDestinationDocument()),
                 transaction.getDestinationBankName(),
                 transaction.getDestinationAgency(),
                 FormattingUtils.formatAccountNumber(transaction.getDestinationAccountNumber()),
@@ -172,7 +181,7 @@ public class TransactionMapper {
         AccountHolderInfo holder = accountHolderInfoResolver.resolve(originAccount);
         return new PixAccountInfoDTO(
                 holder.name(),
-                holder.document(),
+                DataMaskingUtils.maskDocument(holder.document()),
                 originAccount.getAgency().getBank().getName()
         );
     }
@@ -182,14 +191,14 @@ public class TransactionMapper {
             AccountHolderInfo holder = accountHolderInfoResolver.resolve(transaction.getDestinationAccount());
             return new PixAccountInfoDTO(
                     holder.name(),
-                    holder.document(),
+                    DataMaskingUtils.maskDocument(holder.document()),
                     transaction.getDestinationAccount().getAgency().getBank().getName()
             );
         }
 
         return new PixAccountInfoDTO(
                 defaultIfEmpty(transaction.getDestinationName(), "Titular não identificado"),
-                defaultIfEmpty(DataMaskingUtils.maskCpf(transaction.getDestinationDocument()), "Documento não informado"),
+                defaultIfEmpty(DataMaskingUtils.maskDocument(transaction.getDestinationDocument()), "Documento não informado"),
                 defaultIfEmpty(transaction.getDestinationBankName(), "Instituição Externa")
         );
     }

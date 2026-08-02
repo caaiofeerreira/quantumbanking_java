@@ -4,7 +4,6 @@ import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.domain.AccountType;
 import com.quantumbanking.modules.client.domain.Client;
 import com.quantumbanking.modules.client.repository.CompanyRepository;
-import com.quantumbanking.modules.shared.util.DataMaskingUtils;
 import com.quantumbanking.modules.transaction.dto.AccountHolderInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -20,11 +19,11 @@ public class AccountHolderInfoResolver {
         Client client = account.getClient();
 
         if (account.getType() != AccountType.JURIDICA) {
-            return new AccountHolderInfo(client.getName(), DataMaskingUtils.maskCpf(client.getCpf()));
+            return new AccountHolderInfo(client.getName(), client.getCpf());
         }
 
         return companyRepository.findByClient(client)
                 .map(company -> new AccountHolderInfo(company.getTradeName(), company.getCnpj()))
-                .orElseGet(() -> new AccountHolderInfo(client.getName(), DataMaskingUtils.maskCpf(client.getCpf())));
+                .orElseGet(() -> new AccountHolderInfo(client.getName(), client.getCpf()));
     }
 }
