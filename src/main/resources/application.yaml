@@ -40,7 +40,7 @@ admin:
 transaction:
   withdrawal-reprocessor:
     fixed-rate-ms: ${WITHDRAWAL_REPROCESSOR_RATE_MS:60000}
-  duplicate-seconds: ${DUPLICATE_WINDOW_SECONDS:30}
+  duplicate-window: ${DUPLICATE_WINDOW_SECONDS:30s}
   timezone: ${TRANSACTION_TIMEZONE:America/Sao_Paulo}
   nighttime-limit: ${NIGHTTIME_LIMIT:1000.00}
   max-atm-amount: ${MAX_ATM_AMOUNT:5000.00}

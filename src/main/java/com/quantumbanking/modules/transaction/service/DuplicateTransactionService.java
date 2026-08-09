@@ -9,7 +9,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
@@ -17,15 +17,15 @@ public class DuplicateTransactionService {
 
     private final StringRedisTemplate redisTemplate;
 
-    @Value("${transaction.duplicate-seconds}")
-    private int duplicateSeconds;
+    @Value("${transaction.duplicate-window}")
+    private Duration duplicateWindow;
 
     public void checkAndRegister(Long userId, TransactionType type, BigDecimal amount, String target) {
 
         String hash = buildHash(userId, type.name(), amount, target);
 
         Boolean isNew = redisTemplate.opsForValue()
-                .setIfAbsent(hash, "1", duplicateSeconds, TimeUnit.SECONDS);
+                .setIfAbsent(hash, "1", duplicateWindow);
 
         if (Boolean.FALSE.equals(isNew)) {
             throw new DuplicateTransactionException("Transação duplicada detectada. Aguarde alguns segundos.");
