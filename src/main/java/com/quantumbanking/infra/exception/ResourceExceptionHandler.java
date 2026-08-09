@@ -335,4 +335,10 @@ public class ResourceExceptionHandler {
         log.warn("Documento inválido informado na transação: {}", ex.getMessage());
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
     }
+
+    @ExceptionHandler(InvalidTransactionStatusException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidTransactionStateException(InvalidTransactionStatusException ex) {
+        log.warn("Estado inválido da transação: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), getPath());
+    }
 }

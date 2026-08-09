@@ -5,12 +5,12 @@ import com.quantumbanking.modules.transaction.domain.TransactionStatus;
 import com.quantumbanking.modules.transaction.domain.TransactionType;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 public record TransactionStatementDTO(UUID id,
-                                      @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss")
-                                      LocalDateTime createdAT,
+                                      @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss", timezone = "America/Sao_Paulo")
+                                      Instant createdAT,
                                       TransactionType type,
                                       TransactionStatus status,
                                       BigDecimal amount,

@@ -1,0 +1,2 @@
+ALTER TABLE tb_loan
+    MODIFY COLUMN created_at TIMESTAMP NULL;

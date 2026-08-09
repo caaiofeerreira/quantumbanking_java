@@ -1,9 +1,10 @@
 package com.quantumbanking.modules.loan.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.quantumbanking.modules.loan.domain.LoanStatus;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 public record LoanResponseDTO(UUID id,
@@ -14,5 +15,6 @@ public record LoanResponseDTO(UUID id,
                               Integer installments,
                               String description,
                               LoanStatus status,
-                              LocalDateTime createdAt) {
+                              @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss", timezone = "America/Sao_Paulo")
+                              Instant createdAt) {
 }

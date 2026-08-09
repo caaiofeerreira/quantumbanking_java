@@ -1,6 +1,7 @@
 package com.quantumbanking.modules.transaction.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.quantumbanking.infra.exception.InvalidTransactionStatusException;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.bank.domain.bank.BankAccount;
 import com.quantumbanking.modules.loan.domain.Loan;
@@ -9,7 +10,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Entity(name = "Transaction")
@@ -57,7 +59,7 @@ public class Transaction {
     private TransactionType type;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     private String description;
 
@@ -82,9 +84,14 @@ public class Transaction {
     @Column(name = "failure_reason")
     private String failureReason;
 
+    @Column(name = "available_at")
+    private Instant availableAt;
+
     @PrePersist
     public void prePersist() {
-        this.createdAt = LocalDateTime.now().withNano(0);
+        if (createdAt == null) {
+            this.createdAt = Instant.now().truncatedTo(ChronoUnit.SECONDS);
+        }
     }
 
     public boolean isSentBy(Long accountId) {
@@ -95,10 +102,9 @@ public class Transaction {
         return this.destinationAccount != null && this.destinationAccount.getId().equals(accountId);
     }
 
-
     public void startProcessing() {
         if (this.status != TransactionStatus.PENDING) {
-            throw new IllegalStateException(
+            throw new InvalidTransactionStatusException(
                     "Não é possível iniciar processamento: transação " + id + " está em status " + status);
         }
         this.status = TransactionStatus.PROCESSING;
@@ -106,7 +112,7 @@ public class Transaction {
 
     public void complete() {
         if (this.status != TransactionStatus.PROCESSING) {
-            throw new IllegalStateException(
+            throw new InvalidTransactionStatusException(
                     "Não é possível completar: transação " + id + " está em status " + status);
         }
         this.status = TransactionStatus.COMPLETED;
@@ -114,10 +120,20 @@ public class Transaction {
 
     public void fail(String reason) {
         if (this.status != TransactionStatus.PROCESSING) {
-            throw new IllegalStateException(
+            throw new InvalidTransactionStatusException(
                     "Não é possível marcar como falha: transação " + id + " está em status " + status);
         }
+
         this.status = TransactionStatus.FAILED;
         this.failureReason = reason;
+    }
+
+    public boolean isPending() {
+        return this.status == TransactionStatus.PENDING;
+    }
+
+
+    public boolean isReadyForProcessing(Instant now) {
+        return isPending() && availableAt != null && !availableAt.isAfter(now);
     }
 }

@@ -33,10 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -65,6 +62,12 @@ public class TransactionService {
     @Value("${transaction.timezone}")
     private String timezone;
 
+    @Value("${transaction.max-atm-amount}")
+    private BigDecimal maxAtmAmount;
+
+    @Value("${transaction.hold-duration}")
+    private Duration holdDuration;
+
     // Lock em ordem crescente de ID para evitar deadlock em transferências simultâneas entre as mesmas contas
     // (ex: A→B e B→A)
     private AccountPair lockAccountsInOrder(Long originId, Long destinationId) {
@@ -79,6 +82,34 @@ public class TransactionService {
                 originId.equals(firstId) ? first : second,
                 originId.equals(firstId) ? second : first
         );
+    }
+
+    private Transaction executeImmediateWithdraw(Account account, WithdrawRequestDTO requestDTO) {
+
+        Transaction transaction = transactionFactory.createWithdrawal(
+                account,
+                requestDTO.amount(),
+                requestDTO.description(),
+                TransactionStatus.COMPLETED
+        );
+
+        account.debit(requestDTO.amount());
+        return transaction;
+    }
+
+    private Transaction executeDelayedWithdraw(Account account, WithdrawRequestDTO requestDTO) {
+
+        Instant availableAt = Instant.now().plus(holdDuration);
+        Transaction transaction = transactionFactory.createWithdrawal(
+                account,
+                requestDTO.amount(),
+                requestDTO.description(),
+                TransactionStatus.PENDING,
+                availableAt
+        );
+
+        account.reserve(requestDTO.amount());
+        return transaction;
     }
 
     private FeeDetailDTO applyWithdrawalFee(Account account, boolean shouldChargeFee, WithdrawalFeeContext context) {
@@ -154,8 +185,18 @@ public class TransactionService {
 
         Account account = accountService.getAccountForUpdate(userId, accountNumber);
 
-        LocalDateTime start = LocalDate.now().withDayOfMonth(1).atStartOfDay();
-        LocalDateTime end = start.plusMonths(1);
+        ZoneId zoneId = ZoneId.of(timezone);
+
+        Instant start = LocalDate
+                .now(zoneId)
+                .withDayOfMonth(1)
+                .atStartOfDay(zoneId)
+                .toInstant();
+
+        Instant end = start
+                .atZone(zoneId)
+                .plusMonths(1)
+                .toInstant();
 
         long withdrawalsThisMonth = transactionRepository.countByOriginAccountAndTypeAndPeriod(
                 account.getId(),
@@ -163,28 +204,35 @@ public class TransactionService {
                 start,
                 end
         );
+
         int freeWithdrawals = account.getType().getFreeWithdrawals();
 
         WithdrawalFeeContext feeContext = new WithdrawalFeeContext(withdrawalsThisMonth, freeWithdrawals);
         boolean shouldChargeFee = withdrawalsThisMonth >= freeWithdrawals;
 
-        transactionValidator.validateWithdraw(account, requestDTO.amount(), shouldChargeFee);
-        duplicateTransactionService.checkAndRegister(userId, TransactionType.WITHDRAWAL, requestDTO.amount(), "self");
+        transactionValidator.validateWithdraw(
+                account,
+                requestDTO.amount(),
+                shouldChargeFee
+        );
+
+        duplicateTransactionService.checkAndRegister(
+                userId,
+                TransactionType.WITHDRAWAL,
+                requestDTO.amount(),
+                "self"
+        );
 
         FeeDetailDTO fee = applyWithdrawalFee(account, shouldChargeFee, feeContext);
 
-        Transaction transaction = transactionFactory
-                .createWithdrawal(
-                        account,
-                        requestDTO.amount(),
-                        requestDTO.description(),
-                        TransactionStatus.COMPLETED
-                );
+        boolean isDelayed = requestDTO.amount().compareTo(maxAtmAmount) > 0;
 
-        account.debit(requestDTO.amount());
+        Transaction transaction = isDelayed
+                ? executeDelayedWithdraw(account, requestDTO)
+                : executeImmediateWithdraw(account, requestDTO);
 
-        accountService.save(account);
         transactionRepository.save(transaction);
+        accountService.save(account);
 
         applicationEventPublisher.publishEvent(new AccountBalanceChangedEvent(account.getAccountNumber()));
 

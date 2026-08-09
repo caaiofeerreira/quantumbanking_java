@@ -4,12 +4,13 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.quantumbanking.modules.transaction.domain.TransactionType;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
+
 import java.util.UUID;
 
 public record DepositResponseDTO(UUID id,
-                                 @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss")
-                                 LocalDateTime createdAt,
+                                 @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss", timezone = "America/Sao_Paulo")
+                                 Instant createdAt,
                                  TransactionType type,
                                  BigDecimal amount) implements TransactionDetailResponse {
 }

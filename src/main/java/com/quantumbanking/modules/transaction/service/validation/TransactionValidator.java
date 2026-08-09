@@ -4,7 +4,6 @@ import com.quantumbanking.infra.exception.*;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.domain.AccountStatus;
 import com.quantumbanking.modules.account.domain.AccountType;
-import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.shared.util.FormattingUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -111,7 +110,10 @@ public class TransactionValidator {
 
     public void validateWithdraw(Account account, BigDecimal amount, boolean shouldChargeFee) {
         checkAccountActive(account);
-        checkATMMaximumAmount(amount);
+
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidTransactionValueException("O valor é obrigatório e deve ser positivo.");
+        }
 
         BigDecimal feeAmount = shouldChargeFee ? account.getType().getFeeAmount() : BigDecimal.ZERO;
         account.ensureSufficientBalance(amount.add(feeAmount));

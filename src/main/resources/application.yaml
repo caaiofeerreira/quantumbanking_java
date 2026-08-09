@@ -2,10 +2,13 @@ spring:
   jackson:
     mapper:
       accept-case-insensitive-enums: true
+    time-zone: America/Sao_Paulo
   jpa:
     properties:
       hibernate:
         format_sql: true
+        jdbc:
+          time_zone: UTC
   flyway:
     baseline-on-migrate: true
 
@@ -35,10 +38,14 @@ admin:
   email: ${ADMIN_EMAIL:admin@quantumbank.com.br}
 
 transaction:
+  withdrawal-reprocessor:
+    fixed-rate-ms: ${WITHDRAWAL_REPROCESSOR_RATE_MS:60000}
   duplicate-seconds: ${DUPLICATE_WINDOW_SECONDS:30}
   timezone: ${TRANSACTION_TIMEZONE:America/Sao_Paulo}
   nighttime-limit: ${NIGHTTIME_LIMIT:1000.00}
   max-atm-amount: ${MAX_ATM_AMOUNT:5000.00}
+  hold-duration: ${WITHDRAWAL_HOLD_DURATION:1d}
+
   reprocessor:
     fixed-rate-ms: ${TRANSACTION_REPROCESSOR_RATE_MS:60000}
     minimum-pending-time: ${TRANSACTION_REPROCESSOR_MIN_PENDING:5m}

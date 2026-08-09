@@ -8,8 +8,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Entity(name = "Loan")
@@ -40,7 +41,7 @@ public class Loan  {
     private String description;
 
     @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -67,7 +68,9 @@ public class Loan  {
 
     @PrePersist
     public void prePersist() {
-        this.createdAt = LocalDateTime.now();
+        if (createdAt == null) {
+            this.createdAt = Instant.now().truncatedTo(ChronoUnit.SECONDS);
+        }
         this.status = LoanStatus.REQUESTED;
         this.paidInstallments = 0;
     }

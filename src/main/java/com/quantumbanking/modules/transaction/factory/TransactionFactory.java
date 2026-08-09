@@ -10,6 +10,7 @@ import com.quantumbanking.modules.transaction.domain.TransactionType;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 @Component
 public class TransactionFactory {
@@ -35,6 +36,10 @@ public class TransactionFactory {
     }
 
     public Transaction createWithdrawal(Account account, BigDecimal amount, String description, TransactionStatus status) {
+        return createWithdrawal(account, amount, description, status, null);
+    }
+
+    public Transaction createWithdrawal(Account account, BigDecimal amount, String description, TransactionStatus status, Instant availableAt) {
         return Transaction.builder()
                 .originAccount(account)
                 .originName(account.getClient().getName())
@@ -47,6 +52,7 @@ public class TransactionFactory {
                 .type(TransactionType.WITHDRAWAL)
                 .status(status)
                 .description(normalizeDescription(description))
+                .availableAt(availableAt)
                 .build();
     }
 
