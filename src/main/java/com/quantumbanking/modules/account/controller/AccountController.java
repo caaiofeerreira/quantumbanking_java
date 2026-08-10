@@ -3,6 +3,7 @@ package com.quantumbanking.modules.account.controller;
 import com.quantumbanking.modules.account.domain.AccountType;
 import com.quantumbanking.modules.account.dto.AccountResponseDTO;
 import com.quantumbanking.modules.account.dto.AccountSummaryDTO;
+import com.quantumbanking.modules.account.dto.MultiMonthStatementResponseDTO;
 import com.quantumbanking.modules.account.dto.StatementResponseDTO;
 import com.quantumbanking.modules.account.service.AccountService;
 import com.quantumbanking.modules.shared.domain.user.User;
@@ -28,10 +29,16 @@ public class AccountController {
     }
 
     @GetMapping("/{accountNumber}/statement")
-    public ResponseEntity<StatementResponseDTO> statement(@AuthenticationPrincipal User user,
-                                                          @PathVariable String accountNumber,
-                                                          @RequestParam Integer month,
-                                                          @RequestParam Integer year) {
+    public ResponseEntity<MultiMonthStatementResponseDTO> statement(@AuthenticationPrincipal User user,
+                                                                    @PathVariable String accountNumber) {
+        return ResponseEntity.ok(accountService.buildLastThreeMonthsStatement(user.getId(), accountNumber));
+    }
+
+    @GetMapping("/{accountNumber}/statement/period")
+    public ResponseEntity<StatementResponseDTO> statementByPeriod(@AuthenticationPrincipal User user,
+                                                                  @PathVariable String accountNumber,
+                                                                  @RequestParam Integer month,
+                                                                  @RequestParam Integer year) {
         return ResponseEntity.ok(accountService.getStatement(user.getId(), accountNumber, month, year));
     }
 

@@ -5,10 +5,7 @@ import com.quantumbanking.infra.exception.*;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.domain.AccountStatus;
 import com.quantumbanking.modules.account.domain.AccountType;
-import com.quantumbanking.modules.account.dto.AccountResponseDTO;
-import com.quantumbanking.modules.account.dto.AccountSummaryDTO;
-import com.quantumbanking.modules.account.dto.StatementResponseDTO;
-import com.quantumbanking.modules.account.dto.StatementSummaryDTO;
+import com.quantumbanking.modules.account.dto.*;
 import com.quantumbanking.modules.account.factory.AccountFactory;
 import com.quantumbanking.modules.account.generator.AccountNumberGenerator;
 import com.quantumbanking.modules.account.mapper.AccountMapper;
@@ -32,6 +29,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -266,6 +266,34 @@ public class AccountService {
         }
 
         return statement;
+    }
+
+    @Transactional(readOnly = true)
+    public MultiMonthStatementResponseDTO buildLastThreeMonthsStatement(Long userId, String accountNumber) {
+
+        Account account = getAuthenticatedUserAccount(userId, accountNumber);
+
+        LocalDate today = LocalDate.now();
+
+        List<MonthlyStatementDTO> months = new ArrayList<>();
+
+        for (int i = 0; i < 3; i++) {
+            LocalDate date = today.minusMonths(i);
+            YearMonth yearMonth = YearMonth.from(date);
+
+            int month = yearMonth.getMonthValue();
+            int year = yearMonth.getYear();
+
+            StatementResponseDTO monthlyStatement = buildStatementResponse(account, month, year);
+
+            months.add(new MonthlyStatementDTO(
+                    month,
+                    year,
+                    monthlyStatement.summary(),
+                    monthlyStatement.transactions())
+            );
+        }
+        return new MultiMonthStatementResponseDTO(account.getBalance(), months);
     }
 
     private StatementSummaryDTO calculateSummary(List<TransactionStatementDTO> transactions) {
