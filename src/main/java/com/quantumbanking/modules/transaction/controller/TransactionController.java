@@ -55,8 +55,8 @@ public class TransactionController {
 
     @GetMapping("/{transactionId}")
     public ResponseEntity<TransactionDetailResponse> getTransactionDetail(@AuthenticationPrincipal User user,
-                                                       @PathVariable String accountNumber,
-                                                       @PathVariable UUID transactionId) {
+                                                                          @PathVariable String accountNumber,
+                                                                          @PathVariable UUID transactionId) {
         return ResponseEntity.ok(transactionService.getTransactionDetail(user.getId(), accountNumber, transactionId));
     }
 }

@@ -6,6 +6,7 @@ import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.service.AccountService;
 import com.quantumbanking.modules.pixKey.detector.PixKeyDetector;
 import com.quantumbanking.modules.pixKey.domain.PixKey;
+import com.quantumbanking.modules.pixKey.dto.PixKeyDetectionResult;
 import com.quantumbanking.modules.pixKey.dto.PixKeyRequestDTO;
 import com.quantumbanking.modules.pixKey.dto.PixKeyResponseDTO;
 import com.quantumbanking.modules.pixKey.mapper.PixKeyMapper;
@@ -37,7 +38,7 @@ public class PixKeyService {
 
         Account account = accountService.getAuthenticatedUserAccount(userId, accountNumber);
 
-        PixKeyDetector.PixKeyDetectionResult detectionResult = PixKeyDetector.checkAndDetectKey(requestDTO.key());
+        PixKeyDetectionResult detectionResult = PixKeyDetector.checkAndDetectKey(requestDTO.key());
 
         pixKeyValidation.validatePixKey(
                 detectionResult.type(),

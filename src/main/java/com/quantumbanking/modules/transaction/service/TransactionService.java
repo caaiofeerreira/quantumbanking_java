@@ -14,6 +14,7 @@ import com.quantumbanking.modules.bank.service.BankRegistryService;
 import com.quantumbanking.modules.bank.service.BankService;
 import com.quantumbanking.modules.loan.domain.Loan;
 import com.quantumbanking.modules.pixKey.detector.PixKeyDetector;
+import com.quantumbanking.modules.pixKey.dto.PixKeyDetectionResult;
 import com.quantumbanking.modules.pixKey.dto.PixKeyResolution;
 import com.quantumbanking.modules.pixKey.resolver.PixKeyResolver;
 import com.quantumbanking.modules.transaction.domain.Transaction;
@@ -355,7 +356,7 @@ public class TransactionService {
 
         LocalTime transactionTime = LocalDateTime.now(ZoneId.of(timezone)).toLocalTime();
 
-        PixKeyDetector.PixKeyDetectionResult detection = PixKeyDetector.checkAndDetectKey(requestDTO.key());
+        PixKeyDetectionResult detection = PixKeyDetector.checkAndDetectKey(requestDTO.key());
         String normalizedKey = detection.normalizedKey();
 
         PixKeyResolution resolution = pixKeyResolver.resolveKey(normalizedKey);
