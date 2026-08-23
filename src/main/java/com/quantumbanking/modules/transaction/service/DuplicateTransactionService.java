@@ -17,7 +17,7 @@ public class DuplicateTransactionService {
 
     private final StringRedisTemplate redisTemplate;
 
-    @Value("${transaction.duplicate-window}")
+    @Value("${transaction.duplicate-windows}")
     private Duration duplicateWindow;
 
     public void checkAndRegister(Long userId, TransactionType type, BigDecimal amount, String target) {

@@ -1,4 +1,4 @@
-package com.quantumbanking.infra.worker;
+package com.quantumbanking.infra.async.cache;
 
 import com.quantumbanking.infra.config.RedisStreamConfig;
 import lombok.RequiredArgsConstructor;
@@ -17,15 +17,15 @@ import java.util.Set;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class CacheInvalidationWorker implements StreamListener<String, MapRecord<String, String, String>> {
+public class CacheInvalidationListener implements StreamListener<String, MapRecord<String, String, String>> {
 
     private final StringRedisTemplate redisTemplate;
 
     @Override
     public void onMessage(MapRecord<String, String, String> record) {
 
-        String message = record.getValue().get("accounts");
-        processInvalidation(message);
+        String accounts = record.getValue().get("accounts");
+        processInvalidation(accounts);
 
         redisTemplate.opsForStream().acknowledge(RedisStreamConfig.GROUP_NAME, record);
     }
@@ -33,7 +33,7 @@ public class CacheInvalidationWorker implements StreamListener<String, MapRecord
     public void processInvalidation(String message) {
 
         try {
-            log.info("Worker iniciou o processamento da mensagem: {}", message);
+            log.info("Listener iniciou o processamento da mensagem: {}", message);
 
             String[] accountArray = message.split(",");
 
@@ -45,9 +45,9 @@ public class CacheInvalidationWorker implements StreamListener<String, MapRecord
                     clearCacheKey("balance::" + trimmedAccount);
                 }
             }
-            log.info("Worker finalizou a invalidação de cache com sucesso.");
+            log.info("Listener finalizou a invalidação de cache com sucesso.");
         } catch (Exception e) {
-            log.error("Erro no processamento do Worker para a mensagem: {}", message, e);
+            log.error("Erro no processamento do Listener para a mensagem: {}", message, e);
             throw e;
         }
     }

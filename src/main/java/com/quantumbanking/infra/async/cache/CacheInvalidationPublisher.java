@@ -1,4 +1,4 @@
-package com.quantumbanking.infra.listener;
+package com.quantumbanking.infra.async.cache;
 
 import com.quantumbanking.infra.event.AccountBalanceChangedEvent;
 import lombok.RequiredArgsConstructor;

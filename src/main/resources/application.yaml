@@ -40,16 +40,15 @@ admin:
 transaction:
   withdrawal-reprocessor:
     fixed-rate-ms: ${WITHDRAWAL_REPROCESSOR_RATE_MS:60000}
-  duplicate-window: ${DUPLICATE_WINDOW_SECONDS:30s}
+  duplicate-windows: ${DUPLICATE_WINDOW_SECONDS:30s}
   timezone: ${TRANSACTION_TIMEZONE:America/Sao_Paulo}
   nighttime-limit: ${NIGHTTIME_LIMIT:1000.00}
   max-atm-amount: ${MAX_ATM_AMOUNT:5000.00}
   hold-duration: ${WITHDRAWAL_HOLD_DURATION:1d}
-
-  reprocessor:
-    fixed-rate-ms: ${TRANSACTION_REPROCESSOR_RATE_MS:60000}
-    minimum-pending-time: ${TRANSACTION_REPROCESSOR_MIN_PENDING:5m}
-    batch-size: ${TRANSACTION_REPROCESSOR_BATCH_SIZE:100}
+  stream-recovery:
+    fixed-rate-ms: ${TRANSACTION_STREAM_RECOVERY_RATE_MS:60000}
+    minimum-pending-time: ${TRANSACTION_STREAM_RECOVERY_MIN_PENDING:5m}
+    batch-size: ${TRANSACTION_STREAM_RECOVERY_BATCH_SIZE:100}
   watchdog:
     check-rate-ms: ${TRANSACTION_WATCHDOG_RATE_MS:30000}
   outbox:
@@ -61,10 +60,10 @@ loan:
   interest-rate: 2.5
 
 cache:
-  reprocessor:
-    fixed-rate-ms: ${CACHE_REPROCESSOR_RATE_MS:60000}
-    minimum-pending-time: ${CACHE_REPROCESSOR_MIN_PENDING:5m}
-    batch-size: ${CACHE_REPROCESSOR_BATCH_SIZE:100}
+  stream-recovery:
+    fixed-rate-ms: ${CACHE_STREAM_RECOVERY_RATE_MS:60000}
+    minimum-pending-time: ${CACHE_STREAM_RECOVERY_MIN_PENDING:5m}
+    batch-size: ${CACHE_STREAM_RECOVERY_BATCH_SIZE:100}
   watchdog:
     check-rate-ms: ${CACHE_WATCHDOG_RATE_MS:30000}
 

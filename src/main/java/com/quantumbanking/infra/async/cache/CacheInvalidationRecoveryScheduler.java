@@ -1,8 +1,8 @@
-package com.quantumbanking.infra.worker;
+package com.quantumbanking.infra.async.cache;
 
-import com.quantumbanking.infra.config.TransactionProcessingStreamConfig;
-import com.quantumbanking.infra.listener.TransactionOutboxPublisher;
+import com.quantumbanking.infra.config.RedisStreamConfig;
 import lombok.RequiredArgsConstructor;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Range;
@@ -24,25 +24,33 @@ import java.util.UUID;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class TransactionProcessingReprocessor {
+public class CacheInvalidationRecoveryScheduler {
 
     private final StringRedisTemplate redisTemplate;
-    private final TransactionStreamMessageProcessor transactionStream;
+    private final CacheInvalidationListener cacheInvalidationListener;
 
     private static final String CONSUMER_NAME = resolveConsumerName();
 
-    @Value("${transaction.reprocessor.minimum-pending-time}")
+    @Value("${cache.stream-recovery.minimum-pending-time}")
     private Duration minimumPendingTime;
 
-    @Value("${transaction.reprocessor.batch-size}")
+    @Value("${cache.stream-recovery.batch-size}")
     private int batchSize;
 
-    @Scheduled(fixedRateString = "${transaction.reprocessor.fixed-rate-ms}")
-    public void reprocessPendingMessages() {
+    private static String resolveConsumerName() {
+        try {
+            return "cache-recovery-" + InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            return "cache-recovery-" + UUID.randomUUID();
+        }
+    }
+
+    @Scheduled(fixedRateString = "${cache.stream-recovery.fixed-rate-ms}")
+    public void recoverPendingMessages() {
 
         PendingMessages pendingMessages = redisTemplate.opsForStream().pending(
-                TransactionOutboxPublisher.STREAM_KEY,
-                Consumer.from(TransactionProcessingStreamConfig.GROUP_NAME, CONSUMER_NAME),
+                CacheInvalidationPublisher.STREAM_KEY,
+                Consumer.from(RedisStreamConfig.GROUP_NAME, CONSUMER_NAME),
                 Range.unbounded(),
                 batchSize
         );
@@ -56,26 +64,27 @@ public class TransactionProcessingReprocessor {
 
         if (idsToClaim.isEmpty()) return;
 
-        log.info("Reivindicando {} transação(ões) pendente(s).", idsToClaim.size());
+        log.info("Reivindicando {} mensagem(ns) pendente(s).", idsToClaim.size());
 
         List<MapRecord<String, Object, Object>> messages = redisTemplate.opsForStream().claim(
-                TransactionOutboxPublisher.STREAM_KEY,
-                TransactionProcessingStreamConfig.GROUP_NAME,
+                CacheInvalidationPublisher.STREAM_KEY,
+                RedisStreamConfig.GROUP_NAME,
                 CONSUMER_NAME,
                 RedisStreamCommands.XClaimOptions.minIdle(minimumPendingTime).ids(idsToClaim)
         );
 
         for (MapRecord<String, Object, Object> record : messages) {
-            String transactionIdRaw = (String) record.getValue().get("transactionId");
-            transactionStream.process(transactionIdRaw, record);
-        }
-    }
+            try {
+                String accounts = (String) record.getValue().get("accounts");
+                cacheInvalidationListener.processInvalidation(accounts);
 
-    private static String resolveConsumerName() {
-        try {
-            return "transaction-worker-" + InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-            return "transaction-worker-" + UUID.randomUUID();
+                redisTemplate.opsForStream()
+                        .acknowledge(RedisStreamConfig.GROUP_NAME, record);
+
+                log.info("Mensagem pendente reprocessada com sucesso. ID: {}", record.getId());
+            } catch (Exception e) {
+                log.error("Falha ao reprocessar mensagem pendente. ID: {}", record.getId(), e);
+            }
         }
     }
 }

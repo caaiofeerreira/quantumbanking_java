@@ -1,4 +1,4 @@
-package com.quantumbanking.infra.worker;
+package com.quantumbanking.modules.transaction.service;
 
 import com.quantumbanking.infra.event.AccountBalanceChangedEvent;
 import com.quantumbanking.infra.exception.TransactionNotFoundException;
@@ -18,14 +18,14 @@ import java.util.UUID;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class WithdrawalReprocessorWorker {
+public class WithdrawalProcessingService {
 
     private final TransactionRepository transactionRepository;
     private final AccountService accountService;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     @Transactional
-    public void processOne(UUID transactionId) {
+    public void processWithdrawal(UUID transactionId) {
 
         Transaction transaction = transactionRepository.findByIdWithLock(transactionId)
                 .orElseThrow(() -> new TransactionNotFoundException("Transação não encontrada: " + transactionId));

@@ -1,7 +1,7 @@
 package com.quantumbanking.infra.config;
 
-import com.quantumbanking.infra.listener.TransactionOutboxPublisher;
-import com.quantumbanking.infra.worker.TransactionProcessingWorker;
+import com.quantumbanking.infra.async.transaction.TransactionOutboxPublisher;
+import com.quantumbanking.infra.async.transaction.TransactionProcessingListener;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +48,7 @@ public class TransactionProcessingStreamConfig {
     @Bean
     public StreamMessageListenerContainer<String, MapRecord<String, String, String>> transactionProcessingListenerContainer(
             @Qualifier("redisConnectionFactory") RedisConnectionFactory connectionFactory,
-            TransactionProcessingWorker worker) {
+            TransactionProcessingListener worker) {
 
         var options = StreamMessageListenerContainer.StreamMessageListenerContainerOptions
                 .builder()
@@ -63,7 +63,7 @@ public class TransactionProcessingStreamConfig {
         return container;
     }
 
-    public void subscribe(TransactionProcessingWorker worker) {
+    public void subscribe(TransactionProcessingListener worker) {
         this.subscription = container.receive(
                 Consumer.from(GROUP_NAME, consumerName),
                 StreamOffset.create(TransactionOutboxPublisher.STREAM_KEY, ReadOffset.lastConsumed()),

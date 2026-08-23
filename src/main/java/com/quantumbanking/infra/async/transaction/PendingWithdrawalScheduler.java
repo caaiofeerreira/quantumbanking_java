@@ -1,5 +1,6 @@
-package com.quantumbanking.infra.worker;
+package com.quantumbanking.infra.async.transaction;
 
+import com.quantumbanking.modules.transaction.service.WithdrawalProcessingService;
 import com.quantumbanking.modules.transaction.domain.Transaction;
 import com.quantumbanking.modules.transaction.domain.TransactionStatus;
 import com.quantumbanking.modules.transaction.domain.TransactionType;
@@ -15,10 +16,10 @@ import java.util.List;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class WithdrawalReprocessor {
+public class PendingWithdrawalScheduler {
 
     private final TransactionRepository transactionRepository;
-    private final WithdrawalReprocessorWorker worker;
+    private final WithdrawalProcessingService withdrawalProcessingService;
 
     @Scheduled(fixedRateString = "${transaction.withdrawal-reprocessor.fixed-rate-ms}")
     public void reprocessPendingWithdrawals() {
@@ -32,7 +33,7 @@ public class WithdrawalReprocessor {
 
         for (Transaction transaction : pending) {
             try {
-                worker.processOne(transaction.getId());
+                withdrawalProcessingService.processWithdrawal(transaction.getId());
             } catch (Exception e) {
                 log.error("Falha ao reprocessar saque pendente, transactionId={}", transaction.getId(), e);
             }

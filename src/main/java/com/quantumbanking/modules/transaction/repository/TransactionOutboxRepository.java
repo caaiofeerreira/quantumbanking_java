@@ -8,5 +8,5 @@ import java.util.List;
 
 public interface TransactionOutboxRepository extends JpaRepository<TransactionOutbox, Long> {
 
-    List<TransactionOutbox> findByStatusOrderByCreatedAtAsc(OutboxStatus status);
+    List<TransactionOutbox> findByStatusAndRetryCountLessThanOrderByCreatedAtAsc(OutboxStatus status, int retryCount);
 }

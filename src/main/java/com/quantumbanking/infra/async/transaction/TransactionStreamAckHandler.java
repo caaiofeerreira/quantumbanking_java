@@ -1,4 +1,4 @@
-package com.quantumbanking.infra.worker;
+package com.quantumbanking.infra.async.transaction;
 
 import com.quantumbanking.infra.config.TransactionProcessingStreamConfig;
 import com.quantumbanking.modules.transaction.service.TransactionProcessingService;
@@ -13,7 +13,7 @@ import java.util.UUID;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class TransactionStreamMessageProcessor {
+public class TransactionStreamAckHandler {
 
     private final StringRedisTemplate redisTemplate;
     private final TransactionProcessingService transactionProcessingService;

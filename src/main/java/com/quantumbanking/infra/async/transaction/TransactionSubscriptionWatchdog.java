@@ -1,7 +1,6 @@
-package com.quantumbanking.infra.resilience;
+package com.quantumbanking.infra.async.transaction;
 
 import com.quantumbanking.infra.config.TransactionProcessingStreamConfig;
-import com.quantumbanking.infra.worker.TransactionProcessingWorker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -10,10 +9,10 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class TransactionProcessingWatchdog {
+public class TransactionSubscriptionWatchdog {
 
     private final TransactionProcessingStreamConfig transactionProcessingStreamConfig;
-    private final TransactionProcessingWorker worker;
+    private final TransactionProcessingListener transactionProcessingListener;
 
     @Scheduled(fixedRateString = "${transaction.watchdog.check-rate-ms}")
     public void checkAndRecoverSubscription() {
@@ -24,9 +23,9 @@ public class TransactionProcessingWatchdog {
 
         try {
             transactionProcessingStreamConfig.createConsumerGroup();
-            transactionProcessingStreamConfig.subscribe(worker);
+            transactionProcessingStreamConfig.subscribe(transactionProcessingListener);
 
-            log.info("Subscription recriada com sucesso. Worker voltou a processar transações.");
+            log.info("Subscription recriada com sucesso. Listener voltou a processar transações.");
         } catch (Exception e) {
             log.error("Falha ao tentar recriar a subscription. Nova tentativa no próximo ciclo.", e);
         }

@@ -1,7 +1,7 @@
 package com.quantumbanking.infra.config;
 
-import com.quantumbanking.infra.listener.CacheInvalidationPublisher;
-import com.quantumbanking.infra.worker.CacheInvalidationWorker;
+import com.quantumbanking.infra.async.cache.CacheInvalidationPublisher;
+import com.quantumbanking.infra.async.cache.CacheInvalidationListener;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +47,7 @@ public class RedisStreamConfig {
 
     @Bean
     public StreamMessageListenerContainer<String, MapRecord<String, String, String>> streamMessageListenerContainer(
-            @Qualifier("redisConnectionFactory") RedisConnectionFactory connectionFactory, CacheInvalidationWorker worker) {
+            @Qualifier("redisConnectionFactory") RedisConnectionFactory connectionFactory, CacheInvalidationListener worker) {
 
         var options = StreamMessageListenerContainer.StreamMessageListenerContainerOptions
                 .builder()
@@ -62,7 +62,7 @@ public class RedisStreamConfig {
         return container;
     }
 
-    public void subscribe(CacheInvalidationWorker worker) {
+    public void subscribe(CacheInvalidationListener worker) {
         this.subscription = container.receive(
                 Consumer.from(GROUP_NAME, consumerName),
                 StreamOffset.create(CacheInvalidationPublisher.STREAM_KEY, ReadOffset.lastConsumed()),

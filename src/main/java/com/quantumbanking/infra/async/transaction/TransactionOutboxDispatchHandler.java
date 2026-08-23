@@ -1,6 +1,5 @@
-package com.quantumbanking.infra.worker;
+package com.quantumbanking.infra.async.transaction;
 
-import com.quantumbanking.infra.listener.TransactionOutboxPublisher;
 import com.quantumbanking.modules.transaction.domain.TransactionOutbox;
 import com.quantumbanking.modules.transaction.repository.TransactionOutboxRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +15,7 @@ import java.util.Map;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class TransactionOutboxPublisherWorker {
+public class TransactionOutboxDispatchHandler {
 
     private final StringRedisTemplate redisTemplate;
     private final TransactionOutboxRepository transactionOutboxRepository;
@@ -26,7 +25,6 @@ public class TransactionOutboxPublisherWorker {
 
     @Transactional
     public void publishSingle(TransactionOutbox outbox) {
-
         try {
             Map<String, String> payload = Map.of("transactionId", outbox.getTransaction().getId().toString());
 

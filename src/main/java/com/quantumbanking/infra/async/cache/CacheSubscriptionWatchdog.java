@@ -1,7 +1,6 @@
-package com.quantumbanking.infra.resilience;
+package com.quantumbanking.infra.async.cache;
 
 import com.quantumbanking.infra.config.RedisStreamConfig;
-import com.quantumbanking.infra.worker.CacheInvalidationWorker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -10,10 +9,10 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class StreamSubscriptionWatchdog {
+public class CacheSubscriptionWatchdog {
 
     private final RedisStreamConfig redisStreamConfig;
-    private final CacheInvalidationWorker worker;
+    private final CacheInvalidationListener cacheInvalidationListener;
 
     @Scheduled(fixedRateString = "${cache.watchdog.check-rate-ms}")
     public void checkAndRecoverSubscription() {
@@ -24,7 +23,8 @@ public class StreamSubscriptionWatchdog {
 
         try {
             redisStreamConfig.createConsumerGroup();
-            redisStreamConfig.subscribe(worker);
+            redisStreamConfig.subscribe(cacheInvalidationListener);
+            log.info("Subscription recriada com sucesso. Listener voltou a processar invalidações de cache.");
         } catch (Exception e) {
             log.error("Falha ao tentar recriar a subscription. Nova tentativa no próximo ciclo.", e);
         }
