@@ -35,6 +35,14 @@ public class TransactionProcessingStreamConfig {
     private Subscription subscription;
     private StreamMessageListenerContainer<String, MapRecord<String, String, String>> container;
 
+    private static String resolveConsumerName() {
+        try {
+            return "transaction-listener-" + InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            return "transaction-listener-" + UUID.randomUUID();
+        }
+    }
+
     @PostConstruct
     public void createConsumerGroup() {
         try {
@@ -48,7 +56,7 @@ public class TransactionProcessingStreamConfig {
     @Bean
     public StreamMessageListenerContainer<String, MapRecord<String, String, String>> transactionProcessingListenerContainer(
             @Qualifier("redisConnectionFactory") RedisConnectionFactory connectionFactory,
-            TransactionProcessingListener worker) {
+            TransactionProcessingListener transactionProcessingListener) {
 
         var options = StreamMessageListenerContainer.StreamMessageListenerContainerOptions
                 .builder()
@@ -57,30 +65,22 @@ public class TransactionProcessingStreamConfig {
 
         this.container = StreamMessageListenerContainer.create(connectionFactory, options);
 
-        subscribe(worker);
+        subscribe(transactionProcessingListener);
 
         container.start();
         return container;
     }
 
-    public void subscribe(TransactionProcessingListener worker) {
+    public void subscribe(TransactionProcessingListener transactionProcessingListener) {
         this.subscription = container.receive(
                 Consumer.from(GROUP_NAME, consumerName),
                 StreamOffset.create(TransactionOutboxPublisher.STREAM_KEY, ReadOffset.lastConsumed()),
-                worker
+                transactionProcessingListener
         );
         log.info("Subscription registrada no stream '{}' com consumer '{}'.", TransactionOutboxPublisher.STREAM_KEY, consumerName);
     }
 
     public boolean isSubscriptionActive() {
         return subscription != null && subscription.isActive();
-    }
-
-    private static String resolveConsumerName() {
-        try {
-            return "transaction-worker-" + InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-            return "transaction-worker-" + UUID.randomUUID();
-        }
     }
 }

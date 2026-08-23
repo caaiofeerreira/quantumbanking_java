@@ -35,6 +35,14 @@ public class RedisStreamConfig {
 
     private final String consumerName = resolveConsumerName();
 
+    private static String resolveConsumerName() {
+        try {
+            return "cache-listener-" + InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            return "cache-listener-" + UUID.randomUUID();
+        }
+    }
+
     @PostConstruct
     public void createConsumerGroup() {
         try {
@@ -47,7 +55,8 @@ public class RedisStreamConfig {
 
     @Bean
     public StreamMessageListenerContainer<String, MapRecord<String, String, String>> streamMessageListenerContainer(
-            @Qualifier("redisConnectionFactory") RedisConnectionFactory connectionFactory, CacheInvalidationListener worker) {
+            @Qualifier("redisConnectionFactory") RedisConnectionFactory connectionFactory,
+            CacheInvalidationListener cacheInvalidationListener) {
 
         var options = StreamMessageListenerContainer.StreamMessageListenerContainerOptions
                 .builder()
@@ -56,30 +65,22 @@ public class RedisStreamConfig {
 
         this.container = StreamMessageListenerContainer.create(connectionFactory, options);
 
-        subscribe(worker);
+        subscribe(cacheInvalidationListener);
 
         container.start();
         return container;
     }
 
-    public void subscribe(CacheInvalidationListener worker) {
+    public void subscribe(CacheInvalidationListener cacheInvalidationListener) {
         this.subscription = container.receive(
                 Consumer.from(GROUP_NAME, consumerName),
                 StreamOffset.create(CacheInvalidationPublisher.STREAM_KEY, ReadOffset.lastConsumed()),
-                worker
+                cacheInvalidationListener
         );
         log.info("Subscription registrada no stream '{}' com consumer '{}'.", CacheInvalidationPublisher.STREAM_KEY, consumerName);
     }
 
     public boolean isSubscriptionActive() {
         return subscription != null && subscription.isActive();
-    }
-
-    private static String resolveConsumerName() {
-        try {
-            return "cache-worker-" + InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-            return "cache-worker-" + UUID.randomUUID();
-        }
     }
 }
