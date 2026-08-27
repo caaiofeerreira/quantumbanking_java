@@ -81,6 +81,10 @@ public class Account {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new TransactionNotAuthorizedException("O valor da liberação deve ser positivo");
         }
+
+        if (this.reservedBalance.compareTo(amount) < 0) {
+            throw new TransactionNotAuthorizedException("O valor a ser liberado excede o saldo atualmente reservado.");
+        }
         this.reservedBalance = this.reservedBalance.subtract(amount);
     }
 

@@ -245,8 +245,10 @@ public class TransactionService {
 
         redisAvailabilityGuard.ensureAvailable();
 
-        Account originAccount = accountService.getAuthenticatedUserAccount(userId, accountNumber);
-        Account destinationAccount = accountService.getAccountByNumber(requestDTO.destinationAccountNumber());
+        String cleanDestinationAccount = requestDTO.destinationAccountNumber().replace("-", "");
+
+        Account originAccount = accountService.getAccountByNumber(accountNumber);
+        Account destinationAccount = accountService.getAccountByNumber(cleanDestinationAccount);
 
         AccountPair accounts = lockAccountsInOrder(originAccount.getId(), destinationAccount.getId());
         originAccount = accounts.originAccount();
@@ -312,11 +314,13 @@ public class TransactionService {
 
         BankRegistry bankRegistry = bankRegistryService.getByCompe(requestDTO.compe());
 
+        String cleanDestinationAccount = requestDTO.destinationAccount().replace("-", "");
+
         duplicateTransactionService.checkAndRegister(
                 userId,
                 TransactionType.EXTERNAL_TRANSFER,
                 requestDTO.amount(),
-                requestDTO.destinationAccount()
+                cleanDestinationAccount
         );
 
         Transaction transaction = transactionFactory
@@ -361,7 +365,7 @@ public class TransactionService {
 
         PixKeyResolution resolution = pixKeyResolver.resolveKey(normalizedKey);
 
-        Account originAccount = accountService.getAccountForUpdate(userId, accountNumber);
+        Account originAccount = accountService.getAccountByNumber(accountNumber);
         Account destinationAccount = resolution.internalAccount();
 
         if (destinationAccount != null) {
@@ -369,7 +373,7 @@ public class TransactionService {
             originAccount = accounts.originAccount();
             destinationAccount = accounts.destinationAccount();
         } else {
-            originAccount = accountService.getByIdWithLock(originAccount.getId());
+            originAccount = accountService.getAccountForUpdate(userId, accountNumber);
         }
 
         transactionValidator.validatePix(

@@ -21,10 +21,13 @@ import com.quantumbanking.modules.transaction.domain.TransactionStatus;
 import com.quantumbanking.modules.transaction.dto.TransactionStatementDTO;
 import com.quantumbanking.modules.transaction.mapper.TransactionMapper;
 import com.quantumbanking.modules.transaction.repository.TransactionRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -52,11 +55,8 @@ public class AccountService {
     private final ObjectMapper objectMapper;
 
     private final StringRedisTemplate redisTemplate;
+    private final EntityManager entityManager;
 
-    public Account getAccountByNumber(String accountNumber) {
-        return accountRepository.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new AccountNotFoundException("Conta não encontrada."));
-    }
 
     public Account getAuthenticatedUserAccount(Long userId, String accountNumber) {
 
@@ -69,21 +69,34 @@ public class AccountService {
         return account;
     }
 
-    public Account getAccountForUpdate(Long userId, String accountNumber) {
-
-        Account account = accountRepository.findByAccountNumberWithLock(accountNumber)
+    public Account getAccountByNumber(String accountNumber) {
+        return accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new AccountNotFoundException("Conta não encontrada."));
+    }
 
-        if (!account.getClient().getId().equals(userId)) {
-            throw new UnauthorizedAccessException("Conta não pertence ao usuário autenticado.");
-        }
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Account getByIdWithLock(Long id) {
+
+        Account account = accountRepository.findByIdWithLock(id)
+                .orElseThrow(() -> new AccountNotFoundException("Conta não encontrada: " + id));
+
+        entityManager.refresh(account, LockModeType.PESSIMISTIC_WRITE);
 
         return account;
     }
 
-    public Account getByIdWithLock(Long id) {
-        return accountRepository.findByIdWithLock(id)
-                .orElseThrow(() -> new AccountNotFoundException ("Conta não encontrada: "+ id));
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Account getAccountForUpdate(Long userId, String accountNumber) {
+
+        Account account = getAccountByNumber(accountNumber);
+
+        Account lockedAccount = getByIdWithLock(account.getId());
+
+        if (!lockedAccount.getClient().getId().equals(userId)) {
+            throw new UnauthorizedAccessException("Conta não pertence ao usuário autenticado.");
+        }
+
+        return lockedAccount;
     }
 
     public List<Account> getAccountsByAgencyId(Long agencyId) {
