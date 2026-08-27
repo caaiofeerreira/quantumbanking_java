@@ -1,48 +1,63 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
+import { SharedArray } from 'k6/data';
+import { Trend } from 'k6/metrics';
 
-const URL = __ENV.URL || 'localhost:8080';
+const URL = __ENV.K6_URL || 'localhost:8080';
 const BASE_URL = `http://${URL}/api`;
 
-const users = [
-    { cpf: '52998224725', password: '123456789', originAccount: '639502571', agencyNumber: '0001'},
-    { cpf: '56607934870', password: '123456789', originAccount: '377156574', agencyNumber: '0001'},
-    { cpf: '11144477735', password: '123456789', originAccount: '510323111', agencyNumber: '0001'},
-    { cpf: '39053344705', password: '123456789', originAccount: '305838890', agencyNumber: '0001'},
-    { cpf: '16899523000', password: '123456789', originAccount: '871116553', agencyNumber: '0001'},
-    { cpf: '73013811820', password: '123456789', originAccount: '076987256', agencyNumber: '0002'},
-    { cpf: '67083136858', password: '123456789', originAccount: '295130148', agencyNumber: '0002'}
-];
+const PIX_KEYS = JSON.parse(open('../main/resources/dict/simulated-external-keys.json')).map(i => i.pixKey);
 
-const allAccounts = users.map(user => user.originAccount);
+const USERS = new SharedArray('users', function () {
+    return JSON.parse(open('./users_accounts.json'));
+});
 
-function getRandomAmount(min = 10, max = 200) {
-    const randomAmount = Math.random() * (max - min) + min;
-    return parseFloat(randomAmount.toFixed(2));
+const ALL_DESTINATIONS = USERS.map(user => ({
+    originAccount: user.account,
+    agencyNumber: user.agency
+}));
+
+function getRandomAmount(min = 10, max = 500) {
+    return parseFloat((Math.random() * (max - min) + min).toFixed(2));
 }
+
+function getRandomElement(array) {
+    return array[Math.floor(Math.random() * array.length)];
+}
+
+const loginDuration = new Trend('login_duration');
+const depositDuration = new Trend('deposit_duration');
+const internalDuration = new Trend('internal_duration');
+const externalDuration = new Trend('external_duration');
+const pixDuration = new Trend('pix_duration');
+const withdrawDuration = new Trend('withdraw_duration');
+const balanceDuration = new Trend('balance_duration');
+const statementDuration = new Trend('statement_duration');
 
 export const options = {
     scenarios: {
         concurrent_users: {
             executor: 'constant-vus',
-            vus: users.length,
-            duration: '30s'
-        }
+            vus: USERS.length,
+            duration: '30s',
+        },
     },
     thresholds: {
         http_req_failed: ['rate<0.01'],
-        http_req_duration: ['p(95)<600']
-    }
+        http_req_duration: ['p(95)<600'],
+    },
 };
 
-export default function() {
+export default function () {
 
-    const user = users[(__VU - 1) % users.length];
+    const user = USERS[(__VU - 1) % USERS.length];
 
     const loginRes = http.post(`${BASE_URL}/auth/login`, JSON.stringify({
         cpf: user.cpf,
         password: user.password,
-    }), { headers: {'Content-Type': 'application/json'}});
+    }), {headers: { 'Content-Type': 'application/json' }});
+
+    loginDuration.add(loginRes.timings.duration);
 
     const loginOk = check(loginRes, {
         'login: status 200': (r) => r.status === 200,
@@ -54,90 +69,99 @@ export default function() {
         return;
     }
 
-    const token = loginRes.json('token');
     const authHeaders = {
-        headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`}
+        headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${loginRes.json('token')}`}
     };
 
-    sleep(1);
+    sleep(2);
 
-    const possibleDestinations = users.filter(acc => acc.originAccount !== user.originAccount);
-
-    const randomUserDestination = possibleDestinations[Math.floor(Math.random() * possibleDestinations.length)];
-    const randomDestinationAccount = randomUserDestination.originAccount;
-    const destinationAgency = randomUserDestination.agencyNumber;
-
-    const actions = ['internal', 'external', 'pix', 'withdraw'];
-    const randomAction = actions[Math.floor(Math.random() * actions.length)];
-
-    const res_deposit = http.post(`${BASE_URL}/account/${user.originAccount}/transaction/deposit`, JSON.stringify({
-        amount: getRandomAmount(500, 1500),
-        description: 'Deposito automatico para carga'
+    const resDeposit = http.post(`${BASE_URL}/account/${user.account}/transaction/deposit`, JSON.stringify({
+        amount: getRandomAmount(),
+        description: ''
     }), authHeaders);
 
-    check(res_deposit, {'deposito inicial ok': (r) => r.status === 200 || r.status === 202});
+    depositDuration.add(resDeposit.timings.duration);
+    check(resDeposit, { 'deposito inicial ok': (r) => r.status === 200 || r.status === 201 });
+
+    const ACTIONS = ['internal', 'external', 'pix', 'withdraw'];
+    const randomAction = getRandomElement(ACTIONS);
+
     sleep(1);
+    switch (randomAction) {
 
-    if (randomAction === 'internal') {
-        const res_internal = http.post(`${BASE_URL}/account/${user.originAccount}/transaction/internal`, JSON.stringify({
-            destinationAccountNumber: randomDestinationAccount,
-            agencyNumber: destinationAgency,
-            amount: getRandomAmount(10, 100),
-            description: 'Teste interno'
-        }), authHeaders);
+        case 'internal': {
+            const possibleDestinations = ALL_DESTINATIONS.filter(acc => acc.originAccount !== user.account);
+            const randomDestination = getRandomElement(possibleDestinations);
 
-        check(res_internal, {
-            'transferencia interna ok': (r) => r.status === 200 || r.status === 202 || r.status === 400 || r.status === 422
-        });
+            const resInternal = http.post(`${BASE_URL}/account/${user.account}/transaction/internal`, JSON.stringify({
+                destinationAccountNumber: randomDestination.originAccount,
+                agencyNumber: randomDestination.agencyNumber,
+                amount: getRandomAmount(),
+                description: ''
+            }), authHeaders);
 
-        sleep(2);
-        const res_balance = http.get(`${BASE_URL}/account/${user.originAccount}/balance`, authHeaders);
-        check(res_balance, {'saldo ok': (r) => r.status === 200 });
+            internalDuration.add(resInternal.timings.duration);
+            check(resInternal, { 'transferencia interna ok': (r) => [200, 201].includes(r.status) });
 
-    } else if (randomAction === 'withdraw') {
-        const res_withdraw = http.post(`${BASE_URL}/account/${user.originAccount}/transaction/withdraw`, JSON.stringify({
-            amount: getRandomAmount(5, 50),
-            description: 'Saque teste'
-        }), authHeaders);
+            sleep(1);
+            break;
+        }
 
-        check(res_withdraw, {
-            'saque ok': (r) => r.status === 200 || r.status === 202 || r.status === 400 || r.status === 422
-        });
+        case 'withdraw': {
+            const resWithdraw = http.post(`${BASE_URL}/account/${user.account}/transaction/withdraw`, JSON.stringify({
+                amount: getRandomAmount(),
+                description: ''
+            }), authHeaders);
 
-        sleep(2);
+            withdrawDuration.add(resWithdraw.timings.duration);
+            check(resWithdraw, { 'saque ok': (r) => [200].includes(r.status) });
 
-    } else if (randomAction === 'external') {
-        const res_external = http.post(`${BASE_URL}/account/${user.originAccount}/transaction/external`, JSON.stringify({
-            destinationName: 'Tech Solucoes',
-            destinationAccount: '524920166',
-            destinationAgency: '0001',
-            compe: '260',
-            destinationDocument: '11.222.333/0001-81',
-            amount: getRandomAmount(10, 80),
-            description: 'Externa'
-        }), authHeaders);
+            const resBalance = http.get(`${BASE_URL}/account/${user.account}/balance`, authHeaders);
 
-        check(res_external, {
-            'transferencia externa ok': (r) => r.status === 200 || r.status === 202 || r.status === 400 || r.status === 422
-        });
+            balanceDuration.add(resBalance.timings.duration);
+            check(resBalance, { 'saldo ok': (r) => r.status === 200 });
 
-        sleep(2);
+            sleep(1);
+            break;
+        }
 
-    } else if (randomAction === 'pix') {
-        const res_pix = http.post(`${BASE_URL}/account/${user.originAccount}/transaction/pix`, JSON.stringify({
-            key: '11987654321',
-            amount: getRandomAmount(10, 60),
-            description: 'PIX teste'
-        }), authHeaders);
+        case 'external': {
+            const resExternal = http.post(`${BASE_URL}/account/${user.account}/transaction/external`, JSON.stringify({
+                destinationName: 'Tech Solucoes',
+                destinationAccount: '524920166',
+                destinationAgency: '0001',
+                compe: '260',
+                destinationDocument: '11.222.333/0001-81',
+                amount: getRandomAmount(),
+                description: ''
+            }), authHeaders);
 
-        check(res_pix, {
-            'pix ok': (r) => r.status === 200 || r.status === 202 || r.status === 400 || r.status === 422
-        });
+            externalDuration.add(resExternal.timings.duration);
+            check(resExternal, { 'transferencia externa ok': (r) => [200, 202].includes(r.status) });
 
-        sleep(2);
-        const res_statement = http.get(`${BASE_URL}/account/${user.originAccount}/statement`, authHeaders);
-        check(res_statement, {'extrato ok': (r) => r.status === 200 });
+            sleep(1);
+            break;
+        }
+
+        case 'pix': {
+            const randomPix = getRandomElement(PIX_KEYS);
+
+            const resPix = http.post(`${BASE_URL}/account/${user.account}/transaction/pix`, JSON.stringify({
+                key: randomPix,
+                amount: getRandomAmount(),
+                description: ''
+            }), authHeaders);
+
+            pixDuration.add(resPix.timings.duration);
+            check(resPix, { 'pix ok': (r) => [200, 202].includes(r.status) });
+
+            const resStatement = http.get(`${BASE_URL}/account/${user.account}/statement`, authHeaders);
+            statementDuration.add(resStatement.timings.duration);
+            check(resStatement, { 'extrato ok': (r) => r.status === 200 });
+
+            sleep(1);
+            break;
+        }
     }
-
     sleep(2);
 }
