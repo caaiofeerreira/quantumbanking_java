@@ -4,29 +4,39 @@ import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.bank.domain.bank.Bank;
 import com.quantumbanking.modules.loan.domain.Loan;
 import com.quantumbanking.modules.pixKey.domain.PixKeyType;
+import com.quantumbanking.modules.shared.util.FormattingUtils;
 import com.quantumbanking.modules.transaction.domain.Transaction;
 import com.quantumbanking.modules.transaction.domain.TransactionStatus;
 import com.quantumbanking.modules.transaction.domain.TransactionType;
+import com.quantumbanking.modules.transaction.dto.AccountHolderInfo;
+import com.quantumbanking.modules.transaction.resolver.AccountHolderInfoResolver;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
 @Component
+@RequiredArgsConstructor
 public class TransactionFactory {
+
+    private final AccountHolderInfoResolver accountHolderInfoResolver;
 
     private String normalizeDescription(String description) {
         return (description != null && !description.isBlank()) ? description.trim() : null;
     }
 
     public Transaction createDeposit(Account account, BigDecimal amount, String description, TransactionStatus status) {
+
+        AccountHolderInfo accountHolder = accountHolderInfoResolver.resolve(account);
+
         return Transaction.builder()
                 .destinationAccount(account)
-                .destinationName(account.getClient().getName())
+                .destinationName(accountHolder.name())
                 .destinationAccountNumber(account.getAccountNumber())
                 .destinationAgency(account.getAgency().getAgencyNumber())
                 .destinationBankCompe(account.getAgency().getBank().getCompe())
-                .destinationDocument(account.getClient().getCpf())
+                .destinationDocument(FormattingUtils.normalizeDocument(accountHolder.document()))
 
                 .amount(amount)
                 .type(TransactionType.DEPOSIT)
@@ -40,13 +50,16 @@ public class TransactionFactory {
     }
 
     public Transaction createWithdrawal(Account account, BigDecimal amount, String description, TransactionStatus status, Instant availableAt) {
+
+        AccountHolderInfo accountHolder = accountHolderInfoResolver.resolve(account);
+
         return Transaction.builder()
                 .originAccount(account)
-                .originName(account.getClient().getName())
+                .originName(accountHolder.name())
                 .originAccountNumber(account.getAccountNumber())
                 .originAgency(account.getAgency().getAgencyNumber())
                 .originBankCompe(account.getAgency().getBank().getCompe())
-                .originDocument(account.getClient().getCpf())
+                .originDocument(FormattingUtils.normalizeDocument(accountHolder.document()))
 
                 .amount(amount)
                 .type(TransactionType.WITHDRAWAL)
@@ -57,13 +70,16 @@ public class TransactionFactory {
     }
 
     public Transaction createFee(Account account, Bank bank , BigDecimal amount, TransactionStatus status) {
+
+        AccountHolderInfo accountHolder = accountHolderInfoResolver.resolve(account);
+
         return Transaction.builder()
                 .originAccount(account)
-                .originName(account.getClient().getName())
+                .originName(accountHolder.name())
                 .originAccountNumber(account.getAccountNumber())
                 .originAgency(account.getAgency().getAgencyNumber())
                 .originBankCompe(account.getAgency().getBank().getCompe())
-                .originDocument(account.getClient().getCpf())
+                .originDocument(FormattingUtils.normalizeDocument(accountHolder.document()))
                 .amount(amount)
                 .type(TransactionType.FEE)
                 .status(status)
@@ -77,20 +93,24 @@ public class TransactionFactory {
     }
 
     public Transaction createInternalTransfer(Account originAccount, Account destinationAccount, String destinationAgencyNumber, BigDecimal amount, String description, TransactionStatus status) {
+
+        AccountHolderInfo originHolder = accountHolderInfoResolver.resolve(originAccount);
+        AccountHolderInfo destinationHolder = accountHolderInfoResolver.resolve(destinationAccount);
+
         return Transaction.builder()
                 .originAccount(originAccount)
-                .originName(originAccount.getClient().getName())
+                .originName(originHolder.name())
                 .originAccountNumber(originAccount.getAccountNumber())
                 .originAgency(originAccount.getAgency().getAgencyNumber())
                 .originBankCompe(originAccount.getAgency().getBank().getCompe())
-                .originDocument(originAccount.getClient().getCpf())
+                .originDocument(FormattingUtils.normalizeDocument(originHolder.document()))
 
                 .destinationAccount(destinationAccount)
-                .destinationName(destinationAccount.getClient().getName())
+                .destinationName(destinationHolder.name())
                 .destinationAgency(destinationAgencyNumber)
                 .destinationAccountNumber(destinationAccount.getAccountNumber())
                 .destinationBankCompe(destinationAccount.getAgency().getBank().getCompe())
-                .destinationDocument(destinationAccount.getClient().getCpf())
+                .destinationDocument(FormattingUtils.normalizeDocument(destinationHolder.document()))
                 .destinationBankName(destinationAccount.getAgency().getBank().getName())
 
 
@@ -103,19 +123,22 @@ public class TransactionFactory {
 
     public Transaction createExternalTransfer(Account originAccount, String destinationAccountNumber, String destinationName, String destinationAgency,
                                               String compe, String destinationDocument, String bankName, BigDecimal amount, String description, TransactionStatus status) {
+
+        AccountHolderInfo originHolder = accountHolderInfoResolver.resolve(originAccount);
+
         return Transaction.builder()
                 .originAccount(originAccount)
-                .originName(originAccount.getClient().getName())
+                .originName(originHolder.name())
                 .originAccountNumber(originAccount.getAccountNumber())
                 .originAgency(originAccount.getAgency().getAgencyNumber())
                 .originBankCompe(originAccount.getAgency().getBank().getCompe())
-                .originDocument(originAccount.getClient().getCpf())
+                .originDocument(FormattingUtils.normalizeDocument(originHolder.document()))
 
                 .destinationAccountNumber(destinationAccountNumber)
                 .destinationName(destinationName)
                 .destinationAgency(destinationAgency)
                 .destinationBankCompe(compe)
-                .destinationDocument(destinationDocument)
+                .destinationDocument(FormattingUtils.normalizeDocument(destinationDocument))
                 .destinationBankName(bankName)
 
                 .amount(amount)
@@ -130,13 +153,15 @@ public class TransactionFactory {
                                  TransactionStatus status, String externalBankCompe,
                                  String externalBankName, String externalDocument, String externalName) {
 
+        AccountHolderInfo originHolder = accountHolderInfoResolver.resolve(originAccount);
+
         var builder = Transaction.builder()
                 .originAccount(originAccount)
-                .originName(originAccount.getClient().getName())
+                .originName(originHolder.name())
                 .originAccountNumber(originAccount.getAccountNumber())
                 .originAgency(originAccount.getAgency().getAgencyNumber())
                 .originBankCompe(originAccount.getAgency().getBank().getCompe())
-                .originDocument(originAccount.getClient().getCpf())
+                .originDocument(FormattingUtils.normalizeDocument(originHolder.document()))
                 .amount(amount)
                 .pixKey(pixKey)
                 .pixKeyType(pixKeyType)
@@ -145,17 +170,20 @@ public class TransactionFactory {
                 .description(normalizeDescription(description));
 
         if (destinationAccount != null) {
+
+            AccountHolderInfo destinationHolder = accountHolderInfoResolver.resolve(destinationAccount);
+
             builder.destinationAccount(destinationAccount)
-                    .destinationName(destinationAccount.getClient().getName())
+                    .destinationName(destinationHolder.name())
                     .destinationAccountNumber(destinationAccount.getAccountNumber())
                     .destinationAgency(destinationAccount.getAgency().getAgencyNumber())
                     .destinationBankCompe(destinationAccount.getAgency().getBank().getCompe())
-                    .destinationDocument(destinationAccount.getClient().getCpf())
+                    .destinationDocument(FormattingUtils.normalizeDocument(destinationHolder.document()))
                     .destinationBankName(destinationAccount.getAgency().getBank().getName());
         } else {
             builder.destinationBankCompe(externalBankCompe)
                     .destinationBankName(externalBankName)
-                    .destinationDocument(externalDocument)
+                    .destinationDocument(FormattingUtils.normalizeDocument(externalDocument))
                     .destinationName(externalName);
         }
 
@@ -167,6 +195,8 @@ public class TransactionFactory {
         Bank bank = loan.getAccount().getAgency().getBank();
         Account account = loan.getAccount();
 
+        AccountHolderInfo accountHolder = accountHolderInfoResolver.resolve(account);
+
         return Transaction.builder()
                 .originName(bank.getName())
                 .originBankCompe(bank.getCompe())
@@ -175,11 +205,11 @@ public class TransactionFactory {
                 .bankAccount(bank.getAccount())
 
                 .destinationAccount(account)
-                .destinationName(account.getClient().getName())
+                .destinationName(accountHolder.name())
                 .destinationAccountNumber(account.getAccountNumber())
                 .destinationAgency(account.getAgency().getAgencyNumber())
                 .destinationBankCompe(account.getAgency().getBank().getCompe())
-                .destinationDocument(account.getClient().getCpf())
+                .destinationDocument(FormattingUtils.normalizeDocument(accountHolder.document()))
 
                 .loan(loan)
                 .amount(loan.getAmount())

@@ -73,6 +73,12 @@ public final class FormattingUtils {
         return cnpj.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
     }
 
+    public static String normalizeDocument(String document) {
+        if (document == null || document.isBlank()) return null;
+
+        return document.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
+    }
+
 
     // ***** VALIDAÇÃO *****
     public static boolean isValidCpf(String cpf) {
