@@ -4,6 +4,7 @@
     "cpf": "52998224725",
     "password": "123456789",
     "account": "639502571",
+    "type": "CORRENTE",
     "agency": "0001"
   },
   {
@@ -11,6 +12,7 @@
     "cpf": "56607934870",
     "password": "123456789",
     "account": "377156574",
+    "type": "CORRENTE",
     "agency": "0001"
   },
   {
@@ -18,6 +20,7 @@
     "cpf": "98765432100",
     "password": "123456789",
     "account": "701842709",
+    "type": "POUPANCA",
     "agency": "0001"
   },
   {
@@ -25,6 +28,7 @@
     "cpf": "11144477735",
     "password": "123456789",
     "account": "510323111",
+    "type": "JURIDICA",
     "agency": "0001"
   },
   {
@@ -32,6 +36,7 @@
     "cpf": "39053344705",
     "password": "123456789",
     "account": "305838890",
+    "type": "CORRENTE",
     "agency": "0001"
   },
   {
@@ -39,6 +44,7 @@
     "cpf": "16899523000",
     "password": "123456789",
     "account": "871116553",
+    "type": "JURIDICA",
     "agency": "0001"
   },
   {
@@ -46,6 +52,7 @@
     "cpf": "73013811820",
     "password": "123456789",
     "account": "076987256",
+    "type": "CORRENTE",
     "agency": "0002"
   },
   {
@@ -53,6 +60,7 @@
     "cpf": "67083136858",
     "password": "123456789",
     "account": "295130148",
+    "type": "JURIDICA",
     "agency": "0002"
   }
 ]

@@ -14,6 +14,7 @@ const USERS = new SharedArray('users', function () {
 
 const ALL_DESTINATIONS = USERS.map(user => ({
     originAccount: user.account,
+    type: user.type,
     agencyNumber: user.agency
 }));
 
@@ -84,7 +85,9 @@ export default function () {
     check(resDeposit, { 'deposito inicial ok': (r) => r.status === 200 || r.status === 201 });
 
     const ACTIONS = ['internal', 'external', 'pix', 'withdraw'];
-    const randomAction = getRandomElement(ACTIONS);
+    const availableActions = user.type === 'POUPANCA' ? ['pix', 'withdraw'] : ACTIONS;
+
+    const randomAction = getRandomElement(availableActions);
 
     sleep(1);
     switch (randomAction) {
