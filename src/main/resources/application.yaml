@@ -23,6 +23,7 @@ api:
       expiration: ${JWT_EXPIRATION:15}
 
 bank:
+  id: ${BANK_ID:1}
   name: ${BANK_NAME:Quantum Banking S.A.}
   compe: ${BANK_CODE:999}
   ispb: ${BANK_ISPB:00000010}
