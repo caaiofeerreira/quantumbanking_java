@@ -6,7 +6,6 @@ import com.quantumbanking.infra.exception.TransactionNotFoundException;
 import com.quantumbanking.infra.resilience.RedisAvailabilityGuard;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.service.AccountService;
-import com.quantumbanking.modules.bank.domain.bank.Bank;
 import com.quantumbanking.modules.bank.domain.bank.BankAccount;
 import com.quantumbanking.modules.bank.domain.bank.BankRegistry;
 import com.quantumbanking.modules.bank.service.AgencyService;
@@ -125,18 +124,18 @@ public class TransactionService {
         }
 
         BigDecimal feeAmount = account.getType().getFeeAmount();
-        Bank bank = bankService.getBank();
+        Long bankId = bankService.getBank().getId();
+
         Transaction transactionFee = transactionFactory.createFee(
                 account,
-                bank,
+                bankService.getBank(),
                 feeAmount,
                 TransactionStatus.COMPLETED
         );
 
         account.debit(feeAmount);
-        bank.getAccount().credit(feeAmount);
+        bankService.creditFee(bankId, feeAmount);
 
-        bankService.save(bank.getAccount());
         transactionRepository.save(transactionFee);
 
         return new FeeDetailDTO(true, feeAmount,
