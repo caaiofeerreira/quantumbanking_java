@@ -4,8 +4,8 @@ import com.quantumbanking.infra.exception.InvalidPixKeyTypeException;
 import com.quantumbanking.infra.exception.PixKeyAlreadyExistsException;
 import com.quantumbanking.infra.exception.PixKeyLimitException;
 import com.quantumbanking.modules.account.domain.Account;
-import com.quantumbanking.modules.account.domain.AccountType;
 import com.quantumbanking.modules.client.domain.Client;
+import com.quantumbanking.modules.client.domain.ClientType;
 import com.quantumbanking.modules.client.domain.Company;
 import com.quantumbanking.modules.client.repository.CompanyRepository;
 import com.quantumbanking.modules.pixKey.domain.PixKeyType;
@@ -21,12 +21,12 @@ public class PixKeyValidator {
     private final CompanyRepository companyRepository;
 
     public void validatePixKey(PixKeyType type, String key, Client client, Account account) {
-        checkKeyOwnership(type, key, client, account);
+        checkKeyOwnership(type, key, client);
         checkCountByAccountId(account.getId());
         checkKeyAlreadyExists(key);
     }
 
-    private void checkKeyOwnership(PixKeyType type, String normalizedKey, Client client, Account account) {
+    private void checkKeyOwnership(PixKeyType type, String normalizedKey, Client client) {
         switch (type) {
             case CPF -> {
                 if (!normalizedKey.equals(client.getCpf())) {
@@ -44,8 +44,8 @@ public class PixKeyValidator {
                 }
             }
             case CNPJ -> {
-                if (account.getType() != AccountType.JURIDICA) {
-                    throw new InvalidPixKeyTypeException("Apenas contas jurídicas podem cadastrar chave Pix do tipo CNPJ.");
+                if (client.getType() != ClientType.JURIDICA) {
+                    throw new InvalidPixKeyTypeException("Apenas clientes jurídicos podem cadastrar chave Pix do tipo CNPJ.");
                 }
 
                 Company company = companyRepository.findByClient(client)

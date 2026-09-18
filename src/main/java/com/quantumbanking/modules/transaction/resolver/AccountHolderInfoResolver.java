@@ -1,8 +1,8 @@
 package com.quantumbanking.modules.transaction.resolver;
 
 import com.quantumbanking.modules.account.domain.Account;
-import com.quantumbanking.modules.account.domain.AccountType;
 import com.quantumbanking.modules.client.domain.Client;
+import com.quantumbanking.modules.client.domain.ClientType;
 import com.quantumbanking.modules.client.repository.CompanyRepository;
 import com.quantumbanking.modules.transaction.dto.AccountHolderInfo;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ public class AccountHolderInfoResolver {
 
         Client client = account.getClient();
 
-        if (account.getType() != AccountType.JURIDICA) {
+        if (client.getType() != ClientType.JURIDICA) {
             return new AccountHolderInfo(client.getName(), client.getCpf());
         }
 

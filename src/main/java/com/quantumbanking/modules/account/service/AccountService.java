@@ -13,7 +13,6 @@ import com.quantumbanking.modules.account.repository.AccountRepository;
 import com.quantumbanking.modules.account.service.validation.AccountValidator;
 import com.quantumbanking.modules.bank.domain.agency.Agency;
 import com.quantumbanking.modules.client.domain.Client;
-import com.quantumbanking.modules.client.domain.ClientType;
 import com.quantumbanking.modules.client.domain.Company;
 import com.quantumbanking.modules.client.repository.ClientRepository;
 import com.quantumbanking.modules.transaction.domain.Transaction;
@@ -61,10 +60,7 @@ public class AccountService {
     public Account getAuthenticatedUserAccount(Long userId, String accountNumber) {
 
         Account account = getAccountByNumber(accountNumber);
-
-        if (!account.getClient().getId().equals(userId)) {
-            throw new UnauthorizedAccessException("Conta não pertence ao usuário autenticado.");
-        }
+        accountValidator.checkOwnership(account, userId);
 
         return account;
     }
@@ -133,9 +129,9 @@ public class AccountService {
     }
 
     @Transactional
-    public Account openInitialAccount(ClientType clientType, AccountType accountType, Agency agency, Client client, Company company) {
+    public void openInitialAccount(AccountType accountType, Agency agency, Client client, Company company) {
 
-        accountValidator.validateAccount(clientType, accountType, client, company);
+        accountValidator.validateAccount(accountType, client, company);
 
         String accountNumber = accountNumberGenerator.generate();
 
@@ -145,9 +141,8 @@ public class AccountService {
                 agency,
                 client
         );
-
         save(account);
-        return account;
+        accountMapper.toAccountResponseDTO(account);
     }
 
     @Transactional
@@ -157,12 +152,15 @@ public class AccountService {
                 .orElseThrow(() -> new ClientNotFoundException("Cliente não encontrado."));
 
         List<Account> existingAccounts = accountRepository.findByClientId(userId);
-
         if (existingAccounts.isEmpty()) {
             throw new AccountNotFoundException("Nenhuma conta encontrada para o cliente.");
         }
 
-        accountValidator.validateAccount(client.getType(),accountType, client, null);
+        accountValidator.validateAccount(
+                accountType,
+                client,
+                null
+        );
 
         Agency agency = existingAccounts.get(0).getAgency();
 
