@@ -1,0 +1,1 @@
+UPDATE tb_account SET type = 'CORRENTE' WHERE type = 'JURIDICA';
