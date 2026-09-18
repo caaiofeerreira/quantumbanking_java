@@ -1,8 +1,11 @@
 package com.quantumbanking.modules.client.mapper;
 
+import com.quantumbanking.modules.client.domain.Client;
 import com.quantumbanking.modules.client.domain.Company;
+import com.quantumbanking.modules.client.dto.CompanyProfileResponseDTO;
 import com.quantumbanking.modules.client.dto.CompanyResponseDTO;
 import com.quantumbanking.modules.shared.mapper.AddressMapper;
+import com.quantumbanking.modules.shared.util.FormattingUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +22,19 @@ public class CompanyMapper {
                 company.getCnpj(),
                 company.getStateRegistration(),
                 addressMapper.toAddressDTO(company.getAddress())
+        );
+    }
+
+    public CompanyProfileResponseDTO toProfileResponseDTO(Client client, Company company) {
+
+        return new CompanyProfileResponseDTO(
+                client.getName(),
+                client.getEmail(),
+                FormattingUtils.formatPhone(client.getPhone()),
+                addressMapper.toAddressDTO(client.getAddress()),
+                client.getType(),
+                client.getStatus(),
+                toCompanyResponseDTO(company)
         );
     }
 }

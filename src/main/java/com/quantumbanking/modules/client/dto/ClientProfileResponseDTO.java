@@ -9,6 +9,5 @@ public record ClientProfileResponseDTO(String name,
                                        String phone,
                                        AddressDTO address,
                                        ClientType clientType,
-                                       UserStatus status,
-                                       CompanyResponseDTO company) {
+                                       UserStatus status) implements ProfileResponse {
 }

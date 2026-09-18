@@ -1,10 +1,17 @@
 package com.quantumbanking.modules.client.service;
 
+import com.quantumbanking.infra.exception.AccountNotFoundException;
+import com.quantumbanking.modules.account.service.AccountService;
+import com.quantumbanking.modules.bank.domain.agency.Agency;
+import com.quantumbanking.modules.bank.service.AgencyService;
 import com.quantumbanking.modules.client.domain.Client;
 import com.quantumbanking.modules.client.domain.ClientType;
 import com.quantumbanking.modules.client.domain.Company;
-import com.quantumbanking.modules.client.dto.ClientRegistrationDTO;
+import com.quantumbanking.modules.client.dto.CompanyProfileResponseDTO;
+import com.quantumbanking.modules.client.dto.CompanyRegistrationDTO;
+import com.quantumbanking.modules.client.dto.JuridicaRegistrationDTO;
 import com.quantumbanking.modules.client.factory.CompanyFactory;
+import com.quantumbanking.modules.client.mapper.CompanyMapper;
 import com.quantumbanking.modules.client.repository.CompanyRepository;
 import com.quantumbanking.modules.client.service.validator.CompanyValidator;
 import com.quantumbanking.modules.shared.service.validation.CepValidator;
@@ -22,32 +29,52 @@ public class CompanyService {
     private final CompanyFactory companyFactory;
     private final CompanyRepository companyRepository;
     private final CompanyValidator companyValidator;
+    private final CompanyMapper companyMapper;
+
     private final CepValidator cepValidator;
+
+    private final ClientService clientService;
+    private final AgencyService agencyService;
+    private final AccountService accountService;
 
     public Optional<Company> findByClient(Client client) {
         return companyRepository.findByClient(client);
     }
 
     @Transactional
-    public Company createIfApplicable(ClientRegistrationDTO dto, Client client) {
+    public void registerJuridica(JuridicaRegistrationDTO dto) {
 
-        companyValidator.checkCompanyDataConsistency(dto.clientType(), dto.company());
+        Client client = clientService.createClient(dto.data(), ClientType.JURIDICA);
+        Agency agency = agencyService.getAgencyByNumber(dto.agencyNumber());
+        Company company = create(dto.company(), client);
 
-        if (dto.clientType() != ClientType.JURIDICA) return null;
+        accountService.openInitialAccount(
+                dto.accountType(),
+                agency,
+                client,
+                company
+        );
+    }
 
-        String normalizedCep = cepValidator.normalizeCep(dto.company().address().zipCode());
+    private Company create(CompanyRegistrationDTO dto, Client client) {
 
-        String normalizedCnpj = FormattingUtils.normalizeCnpj(dto.company().cnpj());
+        companyValidator.checkCompanyDataConsistency(client.getType(), dto);
+        companyValidator.checkCompanyName(dto.companyName());
+
+        String normalizedCnpj = FormattingUtils.normalizeCnpj(dto.cnpj());
         companyValidator.checkCnpjValid(normalizedCnpj);
         companyValidator.checkCnpjNotRegistered(normalizedCnpj);
 
-        Company company = companyFactory.createCompany(
-                dto.company(),
-                normalizedCep,
-                normalizedCnpj,
-                client
-        );
+        String normalizedCep = cepValidator.normalizeCep(dto.address().zipCode());
+
+        Company company = companyFactory.createCompany(dto, normalizedCep, normalizedCnpj, client);
         companyRepository.save(company);
         return company;
+    }
+
+    public CompanyProfileResponseDTO getProfile(Client client) {
+        Company company = findByClient(client)
+                .orElseThrow(() -> new AccountNotFoundException("Conta jurídica não encontrada para este usuário."));
+        return companyMapper.toProfileResponseDTO(client, company);
     }
 }

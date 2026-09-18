@@ -3,7 +3,6 @@ package com.quantumbanking.modules.client.service.validator;
 import com.quantumbanking.infra.exception.CnpjAlreadyRegisteredException;
 import com.quantumbanking.infra.exception.IncompleteCompanyDataException;
 import com.quantumbanking.infra.exception.InvalidCompanyDataException;
-import com.quantumbanking.modules.account.domain.AccountType;
 import com.quantumbanking.modules.client.domain.ClientType;
 import com.quantumbanking.modules.client.domain.Company;
 import com.quantumbanking.modules.client.dto.CompanyRegistrationDTO;
@@ -18,20 +17,20 @@ public class CompanyValidator {
 
     private final CompanyRepository companyRepository;
 
-    public void checkCompanyRequiredForAccount(AccountType accountType, Company company) {
-        if (accountType == AccountType.JURIDICA && company == null) {
-            throw new IncompleteCompanyDataException("Conta jurídica requer uma empresa associada.");
+    public void checkCompanyRequiredForAccount(ClientType clientType, Company company) {
+        if (clientType == ClientType.JURIDICA && company == null) {
+            throw new IncompleteCompanyDataException("Cliente jurídico requer uma empresa associada.");
         }
 
-        if (accountType != AccountType.JURIDICA && company != null) {
-            throw new InvalidCompanyDataException("Conta física não deve estar associada a uma empresa.");
+        if (clientType != ClientType.JURIDICA && company != null) {
+            throw new InvalidCompanyDataException("Cliente pessoa física não deve estar associado a uma empresa.");
         }
     }
 
     public void checkCompanyDataConsistency(ClientType clientType, CompanyRegistrationDTO companyDto) {
         if (clientType != ClientType.JURIDICA) {
             if (companyDto != null) {
-                throw new InvalidCompanyDataException("Ao passar dados da empresa, é necessário que o cliente e a conta sejam do tipo jurídica.");
+                throw new InvalidCompanyDataException("Ao passar dados da empresa, é necessário que o cliente seja do tipo jurídico.");
             }
             return;
         }
@@ -48,7 +47,16 @@ public class CompanyValidator {
 
     public void checkCnpjNotRegistered(String normalizedCnpj) {
         if (companyRepository.existsByCnpj(normalizedCnpj)) {
-            throw new CnpjAlreadyRegisteredException("CNPJ já cadastrado: " + normalizedCnpj);
+            throw new CnpjAlreadyRegisteredException("Não foi possível concluir o cadastro com os dados informados.");
+        }
+    }
+
+    public void checkCompanyName(String companyName) {
+
+        if (companyRepository.existsByCompanyName(companyName)) {
+            throw new InvalidCompanyDataException(
+                    "A razão social '" + companyName + "' já está cadastrada no sistema."
+            );
         }
     }
 }

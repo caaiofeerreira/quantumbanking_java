@@ -1,7 +1,7 @@
 package com.quantumbanking.modules.client.controller;
 
-import com.quantumbanking.modules.client.dto.FisicaRegistrationDTO;
-import com.quantumbanking.modules.client.service.ClientService;
+import com.quantumbanking.modules.client.dto.JuridicaRegistrationDTO;
+import com.quantumbanking.modules.client.service.CompanyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -10,17 +10,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/client")
-public class ClientController {
+public class CompanyController {
 
-    private final ClientService clientService;
+    private final CompanyService companyService;
 
-    @PostMapping("/fisica")
-    public ResponseEntity<Void> registerFisica(@RequestBody @Valid FisicaRegistrationDTO dto) {
-        clientService.registerFisica(dto);
+    @PostMapping("/juridica")
+    public ResponseEntity<Void> registerJuridica(@RequestBody @Valid JuridicaRegistrationDTO dto) {
+        companyService.registerJuridica(dto);
         return ResponseEntity.status(201).build();
     }
 }
