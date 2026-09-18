@@ -44,7 +44,7 @@
     "cpf": "16899523000",
     "password": "123456789",
     "account": "871116553",
-    "type": "JURIDICA",
+    "type": "CORRENTE",
     "agency": "0001"
   },
   {
@@ -60,7 +60,7 @@
     "cpf": "67083136858",
     "password": "123456789",
     "account": "295130148",
-    "type": "JURIDICA",
+    "type": "CORRENTE",
     "agency": "0002"
   }
 ]
