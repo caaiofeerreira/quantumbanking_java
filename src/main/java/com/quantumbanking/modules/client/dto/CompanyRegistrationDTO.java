@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record CompanyRegistrationDTO(@NotBlank String companyName,
-                                     @NotBlank String tradeName,
+                                     String tradeName,
                                      @NotBlank String cnpj,
                                      @NotBlank String stateRegistration,
                                      @NotNull @Valid AddressRequestDTO address) {

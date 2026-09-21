@@ -20,11 +20,11 @@ public class Company {
     private Long id;
 
     @Setter
-    @Column(name = "company_name", nullable = false)
+    @Column(name = "company_name", nullable = false, unique = true)
     private String companyName;
 
     @Setter
-    @Column(name = "trade_name", nullable = false)
+    @Column(name = "trade_name")
     private String tradeName;
 
     @Column(unique = true, nullable = false)

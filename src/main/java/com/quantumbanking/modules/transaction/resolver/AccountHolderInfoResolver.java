@@ -23,7 +23,7 @@ public class AccountHolderInfoResolver {
         }
 
         return companyRepository.findByClient(client)
-                .map(company -> new AccountHolderInfo(company.getTradeName(), company.getCnpj()))
+                .map(company -> new AccountHolderInfo(company.getCompanyName(), company.getCnpj()))
                 .orElseGet(() -> new AccountHolderInfo(client.getName(), client.getCpf()));
     }
 }
