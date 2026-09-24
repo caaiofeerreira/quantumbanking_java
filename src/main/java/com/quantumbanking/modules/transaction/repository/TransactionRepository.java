@@ -18,12 +18,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
 
     @Query("SELECT t FROM Transaction t WHERE " +
             "(t.originAccount.id = :accountId OR t.destinationAccount.id = :accountId) " +
-            "AND MONTH(t.createdAt) = :month " +
-            "AND YEAR(t.createdAt) = :year " +
+            "AND t.createdAt >= :startDate AND t.createdAt < :endDate " +
             "ORDER BY t.createdAt DESC")
     List<Transaction> findByAccountAndPeriod(@Param("accountId") Long accountId,
-                                             @Param("month") int month,
-                                             @Param("year") int year);
+                                             @Param("startDate") Instant startDate,
+                                             @Param("endDate") Instant endDate
+    );
 
     @Query("""
     SELECT COUNT(t) FROM Transaction t

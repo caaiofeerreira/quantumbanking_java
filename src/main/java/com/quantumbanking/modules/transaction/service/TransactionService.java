@@ -59,8 +59,7 @@ public class TransactionService {
     private final ApplicationEventPublisher applicationEventPublisher;
     private final RedisAvailabilityGuard redisAvailabilityGuard;
 
-    @Value("${transaction.timezone}")
-    private String timezone;
+    private final ZoneId transactionTimezone;
 
     @Value("${transaction.max-atm-amount}")
     private BigDecimal maxAtmAmount;
@@ -185,16 +184,12 @@ public class TransactionService {
 
         Account account = accountService.getAccountForUpdate(userId, accountNumber);
 
-        ZoneId zoneId = ZoneId.of(timezone);
-
-        Instant start = LocalDate
-                .now(zoneId)
+        Instant start = LocalDate.now(transactionTimezone)
                 .withDayOfMonth(1)
-                .atStartOfDay(zoneId)
+                .atStartOfDay(transactionTimezone)
                 .toInstant();
 
-        Instant end = start
-                .atZone(zoneId)
+        Instant end = start.atZone(transactionTimezone)
                 .plusMonths(1)
                 .toInstant();
 
@@ -357,7 +352,7 @@ public class TransactionService {
 
         redisAvailabilityGuard.ensureAvailable();
 
-        LocalTime transactionTime = LocalDateTime.now(ZoneId.of(timezone)).toLocalTime();
+        LocalTime transactionTime = LocalDateTime.now(transactionTimezone).toLocalTime();
 
         PixKeyDetectionResult detection = PixKeyDetector.checkAndDetectKey(requestDTO.key());
         String normalizedKey = detection.normalizedKey();

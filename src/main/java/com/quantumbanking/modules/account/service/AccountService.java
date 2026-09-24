@@ -30,9 +30,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.YearMonth;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,6 +53,8 @@ public class AccountService {
 
     private final StringRedisTemplate redisTemplate;
     private final EntityManager entityManager;
+
+    private final ZoneId transactionTimezone;
 
 
     public Account getAuthenticatedUserAccount(Long userId, String accountNumber) {
@@ -249,10 +249,15 @@ public class AccountService {
                     account.getAccountNumber(), month, year, e.getMessage());
         }
 
+        YearMonth yearMonth = YearMonth.of(year, month);
+        Instant startDate = yearMonth.atDay(1).atStartOfDay(transactionTimezone).toInstant();
+        Instant endDate = yearMonth.plusMonths(1).atDay(1).atStartOfDay(transactionTimezone).toInstant();
+
+
         List<Transaction> transactions = transactionRepository.findByAccountAndPeriod(
                 account.getId(),
-                month,
-                year
+                startDate,
+                endDate
         );
 
         List<TransactionStatementDTO> mappedTransactions = transactions.stream()
