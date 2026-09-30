@@ -13,22 +13,23 @@ import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
-public class DuplicateTransactionService {
+public class TransactionCooldownGuard {
 
     private final StringRedisTemplate redisTemplate;
 
     @Value("${transaction.duplicate-windows}")
-    private Duration duplicateWindow;
+    private Duration duplicateSeconds;
 
     public void checkAndRegister(Long userId, TransactionType type, BigDecimal amount, String target) {
 
         String hash = buildHash(userId, type.name(), amount, target);
 
         Boolean isNew = redisTemplate.opsForValue()
-                .setIfAbsent(hash, "1", duplicateWindow);
+                .setIfAbsent(hash, "1", duplicateSeconds);
 
         if (Boolean.FALSE.equals(isNew)) {
-            throw new DuplicateTransactionException("Transação duplicada detectada. Aguarde alguns segundos.");
+            throw new DuplicateTransactionException("Identificamos uma transação semelhante enviada há poucos segundos. " +
+                    "Confira seu saldo ou extrato antes de tentar novamente.");
         }
     }
 
@@ -36,5 +37,11 @@ public class DuplicateTransactionService {
 
         String raw = userId + "|" + type + "|" + amount.toPlainString() + "|" + target;
         return DigestUtils.sha256Hex(raw);
+    }
+
+    public void release(Long userid, TransactionType type, BigDecimal amount, String target) {
+
+        String hash = buildHash(userid, type.name(), amount, target);
+        redisTemplate.delete(hash);
     }
 }

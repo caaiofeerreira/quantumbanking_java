@@ -4,6 +4,8 @@ import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.client.domain.Client;
 import com.quantumbanking.modules.client.domain.ClientType;
 import com.quantumbanking.modules.client.repository.CompanyRepository;
+import com.quantumbanking.modules.shared.repository.UserRepository;
+import com.quantumbanking.modules.shared.util.FormattingUtils;
 import com.quantumbanking.modules.transaction.dto.AccountHolderInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -13,6 +15,8 @@ import org.springframework.stereotype.Component;
 public class AccountHolderInfoResolver {
 
     private final CompanyRepository companyRepository;
+    private final UserRepository userRepository;
+
 
     public AccountHolderInfo resolve(Account account) {
 
@@ -25,5 +29,11 @@ public class AccountHolderInfoResolver {
         return companyRepository.findByClient(client)
                 .map(company -> new AccountHolderInfo(company.getCompanyName(), company.getCnpj()))
                 .orElseGet(() -> new AccountHolderInfo(client.getName(), client.getCpf()));
+    }
+
+    public boolean existsAccountForDocument(String document) {
+
+        String normalized = FormattingUtils.normalizeDocument(document);
+        return userRepository.existsByCpf(normalized) || companyRepository.existsByCnpj(document);
     }
 }

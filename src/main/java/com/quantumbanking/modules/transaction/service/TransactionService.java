@@ -45,7 +45,7 @@ public class TransactionService {
     private final AccountService accountService;
     private final AgencyService agencyService;
     private final BankRegistryService bankRegistryService;
-    private final DuplicateTransactionService duplicateTransactionService;
+    private final TransactionCooldownGuard transactionCooldownGuard;
     private final BankService bankService;
 
     private final TransactionRepository transactionRepository;
@@ -81,6 +81,110 @@ public class TransactionService {
                 originId.equals(firstId) ? first : second,
                 originId.equals(firstId) ? second : first
         );
+    }
+
+    @Transactional
+    public DepositResponseDTO executeDeposit(Long userId, String accountNumber, DepositRequestDTO requestDTO) {
+
+        redisAvailabilityGuard.ensureAvailable();
+
+        Account account = accountService.getAuthenticatedUserAccount(userId, accountNumber);
+
+        transactionValidator.validateDeposit(account, requestDTO.amount());
+
+        transactionCooldownGuard.checkAndRegister(
+                userId,
+                TransactionType.DEPOSIT,
+                requestDTO.amount(),
+                "self"
+        );
+
+        try {
+            Account lockedAccount = accountService.getByIdWithLock(account.getId());
+
+            Transaction transaction = transactionFactory.createDeposit(
+                    lockedAccount,
+                    requestDTO.amount(),
+                    requestDTO.description(),
+                    TransactionStatus.COMPLETED
+            );
+
+            lockedAccount.credit(requestDTO.amount());
+
+            accountService.save(lockedAccount);
+            transactionRepository.save(transaction);
+
+            applicationEventPublisher.publishEvent(new AccountBalanceChangedEvent(lockedAccount.getAccountNumber()));
+
+            return transactionMapper.toDepositResponse(transaction);
+        } catch (RuntimeException e) {
+            transactionCooldownGuard.release(userId, TransactionType.DEPOSIT, requestDTO.amount(), "self");
+            throw e;
+        }
+    }
+
+    @Transactional
+    public WithdrawResponseDTO executeWithdraw(Long userId, String accountNumber, WithdrawRequestDTO requestDTO) {
+
+        redisAvailabilityGuard.ensureAvailable();
+
+        Account account = accountService.getAuthenticatedUserAccount(userId, accountNumber);
+
+        Instant start = LocalDate.now(transactionTimezone)
+                .withDayOfMonth(1)
+                .atStartOfDay(transactionTimezone)
+                .toInstant();
+
+        Instant end = start.atZone(transactionTimezone)
+                .plusMonths(1)
+                .toInstant();
+
+        long withdrawalsThisMonth = transactionRepository.countByOriginAccountAndTypeAndPeriod(
+                account.getId(),
+                TransactionType.WITHDRAWAL,
+                start,
+                end
+        );
+
+        int freeWithdrawals = account.getType().getFreeWithdrawals();
+
+        WithdrawalFeeContext feeContext = new WithdrawalFeeContext(withdrawalsThisMonth, freeWithdrawals);
+        boolean shouldChargeFee = withdrawalsThisMonth >= freeWithdrawals;
+
+        transactionValidator.validateWithdraw(
+                account,
+                requestDTO.amount(),
+                shouldChargeFee
+        );
+
+        transactionCooldownGuard.checkAndRegister(
+                userId,
+                TransactionType.WITHDRAWAL,
+                requestDTO.amount(),
+                "self"
+        );
+
+        try {
+            Account lockedAccount = accountService.getByIdWithLock(account.getId());
+
+            FeeDetailDTO fee = applyWithdrawalFee(lockedAccount, shouldChargeFee, feeContext);
+
+            boolean isDelayed = requestDTO.amount().compareTo(maxAtmAmount) > 0;
+
+            Transaction transaction = isDelayed
+                    ? executeDelayedWithdraw(lockedAccount, requestDTO)
+                    : executeImmediateWithdraw(lockedAccount, requestDTO);
+
+            transactionRepository.save(transaction);
+            accountService.save(lockedAccount);
+
+            applicationEventPublisher.publishEvent(new AccountBalanceChangedEvent(lockedAccount.getAccountNumber()));
+
+            return transactionMapper.toWithdrawResponse(transaction, fee);
+        } catch (RuntimeException e) {
+            transactionCooldownGuard.release(userId, TransactionType.WITHDRAWAL, requestDTO.amount(), "self");
+            throw e;
+        }
     }
 
     private Transaction executeImmediateWithdraw(Account account, WithdrawRequestDTO requestDTO) {
@@ -144,109 +248,14 @@ public class TransactionService {
     }
 
     @Transactional
-    public DepositResponseDTO executeDeposit(Long userId, String accountNumber, DepositRequestDTO requestDTO) {
-
-        redisAvailabilityGuard.ensureAvailable();
-
-        Account account = accountService.getAccountForUpdate(userId, accountNumber);
-
-        transactionValidator.validateDeposit(account, requestDTO.amount());
-
-        duplicateTransactionService.checkAndRegister(
-                userId,
-                TransactionType.DEPOSIT,
-                requestDTO.amount(),
-                "self"
-        );
-
-        Transaction transaction = transactionFactory
-                .createDeposit(
-                        account,
-                        requestDTO.amount(),
-                        requestDTO.description(),
-                        TransactionStatus.COMPLETED
-                );
-
-        account.credit(requestDTO.amount());
-
-        accountService.save(account);
-        transactionRepository.save(transaction);
-
-        applicationEventPublisher.publishEvent(new AccountBalanceChangedEvent(account.getAccountNumber()));
-
-        return transactionMapper.toDepositResponse(transaction);
-    }
-
-    @Transactional
-    public WithdrawResponseDTO executeWithdraw(Long userId, String accountNumber, WithdrawRequestDTO requestDTO) {
-
-        redisAvailabilityGuard.ensureAvailable();
-
-        Account account = accountService.getAccountForUpdate(userId, accountNumber);
-
-        Instant start = LocalDate.now(transactionTimezone)
-                .withDayOfMonth(1)
-                .atStartOfDay(transactionTimezone)
-                .toInstant();
-
-        Instant end = start.atZone(transactionTimezone)
-                .plusMonths(1)
-                .toInstant();
-
-        long withdrawalsThisMonth = transactionRepository.countByOriginAccountAndTypeAndPeriod(
-                account.getId(),
-                TransactionType.WITHDRAWAL,
-                start,
-                end
-        );
-
-        int freeWithdrawals = account.getType().getFreeWithdrawals();
-
-        WithdrawalFeeContext feeContext = new WithdrawalFeeContext(withdrawalsThisMonth, freeWithdrawals);
-        boolean shouldChargeFee = withdrawalsThisMonth >= freeWithdrawals;
-
-        transactionValidator.validateWithdraw(
-                account,
-                requestDTO.amount(),
-                shouldChargeFee
-        );
-
-        duplicateTransactionService.checkAndRegister(
-                userId,
-                TransactionType.WITHDRAWAL,
-                requestDTO.amount(),
-                "self"
-        );
-
-        FeeDetailDTO fee = applyWithdrawalFee(account, shouldChargeFee, feeContext);
-
-        boolean isDelayed = requestDTO.amount().compareTo(maxAtmAmount) > 0;
-
-        Transaction transaction = isDelayed
-                ? executeDelayedWithdraw(account, requestDTO)
-                : executeImmediateWithdraw(account, requestDTO);
-
-        transactionRepository.save(transaction);
-        accountService.save(account);
-
-        applicationEventPublisher.publishEvent(new AccountBalanceChangedEvent(account.getAccountNumber()));
-
-        return transactionMapper.toWithdrawResponse(transaction, fee);
-    }
-
-    @Transactional
     public InternalTransactionResponseDTO executeInternalTransaction(Long userId, String accountNumber, InternalTransactionRequestDTO requestDTO) {
 
         redisAvailabilityGuard.ensureAvailable();
 
         String cleanDestinationAccount = requestDTO.destinationAccountNumber().replace("-", "");
 
-        Account originAccount = accountService.getAccountByNumber(accountNumber);
+        Account originAccount = accountService.getAuthenticatedUserAccount(userId, accountNumber);
         Account destinationAccount = accountService.getAccountByNumber(cleanDestinationAccount);
-
-        AccountPair accounts = lockAccountsInOrder(originAccount.getId(), destinationAccount.getId());
-        originAccount = accounts.originAccount();
-        destinationAccount = accounts.destinationAccount();
 
         Long agencyId = agencyService.getAgencyIdByNumber(requestDTO.agencyNumber());
 
@@ -254,41 +263,50 @@ public class TransactionService {
                 originAccount,
                 destinationAccount,
                 agencyId,
-                requestDTO.amount(),
-                userId
+                requestDTO.amount()
         );
 
-        duplicateTransactionService.checkAndRegister(
+        transactionCooldownGuard.checkAndRegister(
                 userId,
                 TransactionType.INTERNAL_TRANSFER,
                 requestDTO.amount(),
                 requestDTO.destinationAccountNumber()
         );
 
-        Transaction transaction = transactionFactory
-                .createInternalTransfer(
-                        originAccount,
-                        destinationAccount,
-                        requestDTO.agencyNumber(),
-                        requestDTO.amount(),
-                        requestDTO.description(),
-                        TransactionStatus.COMPLETED
-                );
+        try {
+            AccountPair lockedAccounts = lockAccountsInOrder(originAccount.getId(), destinationAccount.getId());
+            originAccount = lockedAccounts.originAccount();
+            destinationAccount = lockedAccounts.destinationAccount();
 
-        originAccount.debit(requestDTO.amount());
-        destinationAccount.credit(requestDTO.amount());
+            Transaction transaction = transactionFactory
+                    .createInternalTransfer(
+                            originAccount,
+                            destinationAccount,
+                            requestDTO.agencyNumber(),
+                            requestDTO.amount(),
+                            requestDTO.description(),
+                            TransactionStatus.COMPLETED
+                    );
 
-        accountService.save(originAccount);
-        accountService.save(destinationAccount);
-        transactionRepository.save(transaction);
+            originAccount.debit(requestDTO.amount());
+            destinationAccount.credit(requestDTO.amount());
 
-        Set<String> accountsToInvalidate = Set.of(
-                originAccount.getAccountNumber(),
-                destinationAccount.getAccountNumber()
-        );
-        applicationEventPublisher.publishEvent(new AccountBalanceChangedEvent(accountsToInvalidate));
+            accountService.save(originAccount);
+            accountService.save(destinationAccount);
+            transactionRepository.save(transaction);
 
-        return transactionMapper.toInternalResponse(transaction);
+            Set<String> accountsToInvalidate = Set.of(
+                    originAccount.getAccountNumber(),
+                    destinationAccount.getAccountNumber()
+            );
+            applicationEventPublisher.publishEvent(new AccountBalanceChangedEvent(accountsToInvalidate));
+
+            return transactionMapper.toInternalResponse(transaction);
+
+        } catch (RuntimeException e) {
+            transactionCooldownGuard.release(userId, TransactionType.INTERNAL_TRANSFER, requestDTO.amount(), requestDTO.destinationAccountNumber());
+            throw e;
+        }
     }
 
     @Transactional
@@ -296,55 +314,60 @@ public class TransactionService {
 
         redisAvailabilityGuard.ensureAvailable();
 
-        Account account = accountService.getAccountForUpdate(userId, accountNumber);
+        Account account = accountService.getAuthenticatedUserAccount(userId, accountNumber);
 
         transactionValidator.validateExternal(
                 account,
                 requestDTO.compe(),
                 requestDTO.amount(),
-                userId,
                 requestDTO.destinationDocument()
         );
 
         BankRegistry bankRegistry = bankRegistryService.getByCompe(requestDTO.compe());
 
-        String cleanDestinationAccount = requestDTO.destinationAccount().replace("-", "");
-
-        duplicateTransactionService.checkAndRegister(
+        transactionCooldownGuard.checkAndRegister(
                 userId,
                 TransactionType.EXTERNAL_TRANSFER,
                 requestDTO.amount(),
-                cleanDestinationAccount
+                requestDTO.destinationAccount()
         );
 
-        Transaction transaction = transactionFactory
-                .createExternalTransfer(
-                        account,
-                        requestDTO.destinationAccount(),
-                        requestDTO.destinationName(),
-                        requestDTO.destinationAgency(),
-                        bankRegistry.getCompe(),
-                        requestDTO.destinationDocument(),
-                        bankRegistry.getName(),
-                        requestDTO.amount(),
-                        requestDTO.description(),
-                        TransactionStatus.PENDING
-                );
+        try {
+            Account lockedAccount = accountService.getByIdWithLock(account.getId());
 
-        account.reserve(requestDTO.amount());
-        accountService.save(account);
+            Transaction transaction = transactionFactory
+                    .createExternalTransfer(
+                            lockedAccount,
+                            requestDTO.destinationAccount().replace("-", ""),
+                            requestDTO.destinationName(),
+                            requestDTO.destinationAgency(),
+                            bankRegistry.getCompe(),
+                            requestDTO.destinationDocument(),
+                            bankRegistry.getName(),
+                            requestDTO.amount(),
+                            requestDTO.description(),
+                            TransactionStatus.PENDING
+                    );
 
-        transaction = transactionRepository.save(transaction);
+            lockedAccount.reserve(requestDTO.amount());
+            accountService.save(lockedAccount);
 
-        TransactionOutbox transactionOutbox = TransactionOutbox.builder()
-                .transaction(transaction)
-                .build();
+            transaction = transactionRepository.save(transaction);
 
-        transactionOutboxRepository.save(transactionOutbox);
+            TransactionOutbox transactionOutbox = TransactionOutbox.builder()
+                    .transaction(transaction)
+                    .build();
 
-        applicationEventPublisher.publishEvent(new AccountBalanceChangedEvent(account.getAccountNumber()));
+            transactionOutboxRepository.save(transactionOutbox);
 
-        return transactionMapper.toExternalResponse(transaction);
+            applicationEventPublisher.publishEvent(new AccountBalanceChangedEvent(lockedAccount.getAccountNumber()));
+
+            return transactionMapper.toExternalResponse(transaction);
+
+        } catch (RuntimeException e) {
+            transactionCooldownGuard.release(userId, TransactionType.EXTERNAL_TRANSFER, requestDTO.amount(), requestDTO.destinationAccount());
+            throw e;
+        }
     }
 
     @Transactional
@@ -359,74 +382,79 @@ public class TransactionService {
 
         PixKeyResolution resolution = pixKeyResolver.resolveKey(normalizedKey);
 
-        Account originAccount = accountService.getAccountByNumber(accountNumber);
+        Account originAccount = accountService.getAuthenticatedUserAccount(userId, accountNumber);
         Account destinationAccount = resolution.internalAccount();
-
-        if (destinationAccount != null) {
-            AccountPair accounts = lockAccountsInOrder(originAccount.getId(), destinationAccount.getId());
-            originAccount = accounts.originAccount();
-            destinationAccount = accounts.destinationAccount();
-        } else {
-            originAccount = accountService.getAccountForUpdate(userId, accountNumber);
-        }
 
         transactionValidator.validatePix(
                 originAccount,
                 destinationAccount,
                 requestDTO.amount(),
-                transactionTime,
-                userId
+                transactionTime
         );
 
-        duplicateTransactionService.checkAndRegister(
+        transactionCooldownGuard.checkAndRegister(
                 userId,
                 TransactionType.PIX,
                 requestDTO.amount(),
                 normalizedKey
         );
 
-        Set<String> accountsToInvalidate = new HashSet<>();
-        accountsToInvalidate.add(originAccount.getAccountNumber());
+        try {
+            if (destinationAccount != null) {
+                AccountPair accounts = lockAccountsInOrder(originAccount.getId(), destinationAccount.getId());
+                originAccount = accounts.originAccount();
+                destinationAccount = accounts.destinationAccount();
+            } else {
+                originAccount = accountService.getByIdWithLock(originAccount.getId());
+            }
 
-        Transaction transaction;
+            Set<String> accountsToInvalidate = new HashSet<>();
+            accountsToInvalidate.add(originAccount.getAccountNumber());
 
-        if (!resolution.external()) {
-            transaction = transactionFactory.createPix(
-                    originAccount, destinationAccount, requestDTO.amount(), requestDTO.description(),
-                    normalizedKey, detection.type(), TransactionStatus.COMPLETED,
-                    null, null, null, null
-            );
+            Transaction transaction;
 
-            originAccount.debit(requestDTO.amount());
-            destinationAccount.credit(requestDTO.amount());
-            accountsToInvalidate.add(destinationAccount.getAccountNumber());
-            accountService.save(destinationAccount);
-            accountService.save(originAccount);
-            transaction = transactionRepository.save(transaction);
+            if (!resolution.external()) {
+                transaction = transactionFactory.createPix(
+                        originAccount, destinationAccount, requestDTO.amount(), requestDTO.description(),
+                        normalizedKey, detection.type(), TransactionStatus.COMPLETED,
+                        null, null, null, null
+                );
 
-        } else {
-            transaction = transactionFactory.createPix(
-                    originAccount, null, requestDTO.amount(), requestDTO.description(),
-                    normalizedKey, detection.type(), TransactionStatus.PENDING,
-                    resolution.destinationBank().getCompe(),
-                    resolution.destinationBank().getName(),
-                    resolution.externalEntry().ownerDocument(),
-                    resolution.externalEntry().ownerName()
-            );
+                originAccount.debit(requestDTO.amount());
+                destinationAccount.credit(requestDTO.amount());
+                accountsToInvalidate.add(destinationAccount.getAccountNumber());
+                accountService.save(destinationAccount);
+                accountService.save(originAccount);
+                transaction = transactionRepository.save(transaction);
 
-            originAccount.reserve(requestDTO.amount());
-            accountService.save(originAccount);
-            transaction = transactionRepository.save(transaction);
+            } else {
+                transaction = transactionFactory.createPix(
+                        originAccount, null, requestDTO.amount(), requestDTO.description(),
+                        normalizedKey, detection.type(), TransactionStatus.PENDING,
+                        resolution.destinationBank().getCompe(),
+                        resolution.destinationBank().getName(),
+                        resolution.externalEntry().ownerDocument(),
+                        resolution.externalEntry().ownerName()
+                );
 
-            TransactionOutbox outbox = TransactionOutbox.builder()
-                    .transaction(transaction)
-                    .build();
-            transactionOutboxRepository.save(outbox);
+                originAccount.reserve(requestDTO.amount());
+                accountService.save(originAccount);
+                transaction = transactionRepository.save(transaction);
+
+                TransactionOutbox outbox = TransactionOutbox.builder()
+                        .transaction(transaction)
+                        .build();
+                transactionOutboxRepository.save(outbox);
+            }
+
+            applicationEventPublisher.publishEvent(new AccountBalanceChangedEvent(accountsToInvalidate));
+
+            return transactionMapper.toPixResponse(transaction);
+
+        } catch (RuntimeException e) {
+            transactionCooldownGuard.release(userId, TransactionType.PIX, requestDTO.amount(), normalizedKey);
+            throw e;
         }
-
-        applicationEventPublisher.publishEvent(new AccountBalanceChangedEvent(accountsToInvalidate));
-
-        return transactionMapper.toPixResponse(transaction);
     }
 
     @Transactional

@@ -81,20 +81,6 @@ public class AccountService {
         return account;
     }
 
-    @Transactional(propagation = Propagation.MANDATORY)
-    public Account getAccountForUpdate(Long userId, String accountNumber) {
-
-        Account account = getAccountByNumber(accountNumber);
-
-        Account lockedAccount = getByIdWithLock(account.getId());
-
-        if (!lockedAccount.getClient().getId().equals(userId)) {
-            throw new UnauthorizedAccessException("Conta não pertence ao usuário autenticado.");
-        }
-
-        return lockedAccount;
-    }
-
     public List<Account> getAccountsByAgencyId(Long agencyId) {
         return accountRepository.findByAgencyId(agencyId);
     }

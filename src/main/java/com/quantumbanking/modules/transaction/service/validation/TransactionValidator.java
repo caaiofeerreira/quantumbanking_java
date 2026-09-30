@@ -5,6 +5,8 @@ import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.domain.AccountStatus;
 import com.quantumbanking.modules.account.domain.AccountType;
 import com.quantumbanking.modules.shared.util.FormattingUtils;
+import com.quantumbanking.modules.transaction.resolver.AccountHolderInfoResolver;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -12,11 +14,14 @@ import java.math.BigDecimal;
 import java.time.LocalTime;
 
 @Component
+@RequiredArgsConstructor
 public class TransactionValidator {
 
     private static final BigDecimal MIN_TRANSACTION_VALUE = new BigDecimal("0.01");
     private static final LocalTime NIGHTTIME_START = LocalTime.of(18, 0);
     private static final LocalTime NIGHTTIME_END   = LocalTime.of(6, 0);
+
+    private final AccountHolderInfoResolver accountHolderInfoResolver;
 
     @Value("${transaction.nighttime-limit}")
     private BigDecimal nighttimeLimit;
@@ -89,17 +94,16 @@ public class TransactionValidator {
         }
     }
 
-    private void checkAccountOwnership(Account account, Long userId) {
-        if (!account.getClient().getId().equals(userId)) {
-            throw new UnauthorizedAccessException("Conta não pertence ao usuário autenticado.");
-        }
-    }
-
-    private void checkDestinationDocument(String document) {
-        boolean isValid = FormattingUtils.isValidCpf(document) || FormattingUtils.isValidCnpj(document);
-
+    private void checkDestinationDocument(String destinationDocument) {
+        boolean isValid = FormattingUtils.isValidCpf(destinationDocument) || FormattingUtils.isValidCnpj(destinationDocument);
         if (!isValid) {
             throw new InvalidDocumentException("O documento informado para a conta de destino é inválido. Verifique o número digitado e tente novamente.");
+        }
+
+        boolean documentExistsInBank = accountHolderInfoResolver.existsAccountForDocument(destinationDocument);
+
+        if (documentExistsInBank) {
+            throw new InvalidDocumentException("Não foi possível processar a transferência para o documento informado. Verifique os dados e tente novamente.");
         }
     }
 
@@ -119,8 +123,7 @@ public class TransactionValidator {
         account.ensureSufficientBalance(amount.add(feeAmount));
     }
 
-    public void validateInternal(Account originAccount, Account destinationAccount, Long agencyId, BigDecimal amount, Long userId) {
-        checkAccountOwnership(originAccount, userId);
+    public void validateInternal(Account originAccount, Account destinationAccount, Long agencyId, BigDecimal amount) {
         checkDifferentAccounts(originAccount, destinationAccount);
         checkSavingsAccountInternal(originAccount, destinationAccount);
         checkMinimumTransactionAmount(amount);
@@ -130,11 +133,10 @@ public class TransactionValidator {
         }
     }
 
-    public void validateExternal(Account account, String bankingCode, BigDecimal amount, Long userId, String document) {
-        checkAccountOwnership(account, userId);
+    public void validateExternal(Account account, String bankingCode, BigDecimal amount, String destinationDocument) {
         checkSavingsAccountExternal(account);
         checkMinimumTransactionAmount(amount);
-        checkDestinationDocument(document);
+        checkDestinationDocument(destinationDocument);
 
         if (bankingCode.equals(compe)) {
             throw new TransactionNotAuthorizedException(
@@ -142,8 +144,7 @@ public class TransactionValidator {
         }
     }
 
-    public void validatePix(Account originAccount, Account destinationAccount, BigDecimal amount, LocalTime time, Long userId) {
-        checkAccountOwnership(originAccount, userId);
+    public void validatePix(Account originAccount, Account destinationAccount, BigDecimal amount, LocalTime time) {
         checkAccountActive(originAccount);
         checkPixAuthorized(amount, time);
         checkMinimumTransactionAmount(amount);
