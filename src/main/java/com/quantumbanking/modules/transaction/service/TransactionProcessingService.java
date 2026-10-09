@@ -5,7 +5,6 @@ import com.quantumbanking.infra.exception.ResourceNotFoundException;
 import com.quantumbanking.modules.account.domain.Account;
 import com.quantumbanking.modules.account.service.AccountService;
 import com.quantumbanking.modules.transaction.domain.Transaction;
-import com.quantumbanking.modules.transaction.domain.TransactionStatus;
 import com.quantumbanking.modules.transaction.repository.TransactionRepository;
 import com.quantumbanking.external.ExternalLiquidationSimulator;
 import lombok.RequiredArgsConstructor;
@@ -30,11 +29,11 @@ public class TransactionProcessingService {
     @Transactional
     public void processTransaction(UUID transactionId) {
 
-        Transaction transaction = transactionRepository.findById(transactionId)
+        Transaction transaction = transactionRepository.findByIdWithLock(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Transação não encontrada para processamento: " + transactionId));
 
-        if (transaction.getStatus() != TransactionStatus.PENDING) {
+        if (!transaction.isPending()) {
             log.info("Transação {} já processada anteriormente (status atual: {}). Ignorando.",
                     transactionId, transaction.getStatus());
             return;
@@ -62,5 +61,31 @@ public class TransactionProcessingService {
                 new AccountBalanceChangedEvent(Set.of(originAccount.getAccountNumber())));
 
         log.info("Transação {} processada. Status final: {}", transactionId, transaction.getStatus());
+    }
+
+    @Transactional
+    public void failByPublishExhaustion(UUID transactionId, String errorMessage) {
+
+        Transaction transaction = transactionRepository.findByIdWithLock(transactionId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Transação não encontrada para processamento: " + transactionId));
+
+        if (!transaction.isPending()) {
+            log.info("Transação {} já processada anteriormente (status atual: {}). Ignorando falha de outbox.",
+                    transactionId, transaction.getStatus());
+            return;
+        }
+
+        Account account = accountService.getByIdWithLock(transaction.getOriginAccount().getId());
+
+        account.releaseReservation(transaction.getAmount());
+        transaction.failWithoutProcessing("Não foi possível processar a transação no momento. Tente novamente mais tarde. O valor foi estornado para sua conta.");
+
+        accountService.save(account);
+        transactionRepository.save(transaction);
+
+        applicationEventPublisher.publishEvent(new AccountBalanceChangedEvent(Set.of(account.getAccountNumber())));
+
+        log.info("Transação {} finalizada por esgotamento de tentativas de publicação no outbox. Causa raiz: {}", transactionId, errorMessage);
     }
 }

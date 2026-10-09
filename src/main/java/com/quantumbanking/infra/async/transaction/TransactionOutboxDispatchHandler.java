@@ -1,7 +1,9 @@
 package com.quantumbanking.infra.async.transaction;
 
+import com.quantumbanking.modules.transaction.domain.OutboxStatus;
 import com.quantumbanking.modules.transaction.domain.TransactionOutbox;
 import com.quantumbanking.modules.transaction.repository.TransactionOutboxRepository;
+import com.quantumbanking.modules.transaction.service.TransactionProcessingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +21,7 @@ public class TransactionOutboxDispatchHandler {
 
     private final StringRedisTemplate redisTemplate;
     private final TransactionOutboxRepository transactionOutboxRepository;
+    private final TransactionProcessingService transactionProcessingService;
 
     @Value("${transaction.outbox.publisher.max-retry-attempts}")
     private int maxRetryAttempts;
@@ -42,6 +45,10 @@ public class TransactionOutboxDispatchHandler {
 
             log.error("Erro ao publicar outbox (id={}) no stream de processamento. Tentativa {}/{}",
                     outbox.getId(), outbox.getRetryCount(), maxRetryAttempts, e);
+
+            if (outbox.getStatus() == OutboxStatus.FAILED) {
+                transactionProcessingService.failByPublishExhaustion(outbox.getTransaction().getId(), e.getMessage());
+            }
         }
     }
 }

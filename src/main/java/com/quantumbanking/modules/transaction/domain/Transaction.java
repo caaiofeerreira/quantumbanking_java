@@ -128,6 +128,16 @@ public class Transaction {
         this.failureReason = reason;
     }
 
+    public void failWithoutProcessing(String reason) {
+        if (this.status != TransactionStatus.PENDING) {
+            throw new InvalidTransactionStatusException(
+                    "Não é possível marcar como falha sem processamento: transação " + id + " está em status " + status);
+        }
+
+        this.status = TransactionStatus.FAILED;
+        this.failureReason = reason;
+    }
+
     public boolean isPending() {
         return this.status == TransactionStatus.PENDING;
     }
